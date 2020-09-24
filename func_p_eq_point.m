@@ -12,14 +12,14 @@ dpu_dt = -1*((1/2)*Lambda*w*(epsilon+1)*(exp((pw-pu)/2)-1)-(1/2)*Lambda*w*(1-eps
 sol = solve([dpu_dt,dpw_dt],[pu,pw]);
 pusol = real(double(sol.pu));
 pwsol = real(double(sol.pw));
-
+pwsol(pwsol==0)=[]
 for i=1:length(pusol)
     if pusol(1)~=pusol(i)
         problem=true;
     end
 end
-for i=2:length(pwsol)
-    if pwsol(2)~=pwsol(i)
+for i=1:length(pwsol)
+    if pwsol(1)~=pwsol(i)
         problem=true;
     end
 end
