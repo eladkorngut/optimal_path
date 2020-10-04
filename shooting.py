@@ -34,7 +34,7 @@ def onedshooting():
     # ODE parameters
     abserr = 1.0e-8
     relerr = 1.0e-6
-    stoptime = 25.0
+    stoptime = 40.0
     numpoints = 1000
 
     # create the time samples for the output of the ODE solver
@@ -72,11 +72,10 @@ def onedshooting():
     title('Optimal path p vs I shooting')
     plt.savefig('best_path.png', dpi=500)
     plt.show()
-    print('This no love song')
 
 
 def hetro_degree_shooting():
-    lam, k_avg, epsilon =1.6,50.0,1.0e-12
+    lam, k_avg, epsilon =5.0,50.0,0.0
     Reproductive = lam/(2*(1+epsilon**2))
     ecl_dist = lambda r0, rf: np.sqrt((r0[0] - rf[0]) ** 2 + (r0[1] - rf[1]) ** 2+(r0[2] - rf[2]) ** 2+(r0[3] - rf[3]) ** 2)
     dw_dt = lambda w, u, p_w, p_u: (Reproductive*(w-u*epsilon)*((1/2)*(1-epsilon)*(-u-w+1)*np.exp((p_u+p_w)/2)+(1/2)*(epsilon+1)*(u-w+1)*np.exp((p_w-p_u)/2))
@@ -94,55 +93,52 @@ def hetro_degree_shooting():
     H = lambda q: Reproductive*(q[0]-epsilon*q[1])*((1-epsilon)*(1-q[0]-q[1])*(np.exp((q[2]+q[3])/2)-1)+(1+epsilon)*(1-(q[0]-q[1]))*(np.exp((q[2]-q[3])/2)-1))+((q[0]+q[1])/2)*(np.exp(-(q[2]+q[3])/2)-1)+((q[0]-q[1])/2)*(np.exp(-(q[2]-q[3])/2)-1)
     Jacobian_H = ndft.Jacobian(H)
     dq_dt_corrected = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
-    jacob_exp = Jacobian_H([0.0,0.0,0.0,0.1])
-    temp2 = [dw_dt(0.0,0.0,0.0,0.1),du_dt(0.0,0.0,0.0,0.1),dp_w_dt(0.0,0.0,0.0,0.1),dp_u_dt(0.0,0.0,0.0,0.1)]
-    temp3 = dq_dt_corrected([0.0,0.0,0.0,0.1])
+    jacob_exp = Jacobian_H([0.1,0.1,0.1,0.1])
+    temp2 = [dw_dt(0.1,0.1,0.1,0.1),du_dt(0.1,0.1,0.1,0.1),dp_w_dt(0.1,0.1,0.1,0.1),dp_u_dt(0.1,0.1,0.1,0.1)]
+    temp3 = dq_dt_corrected([0.1,0.1,0.1,0.1])
     print('This no love song')
 
 
     def vectorfiled(q,t):
-        w,u,p_u,p_w = q
+        w,u,p_w,p_u = q
         f = [dw_dt(w,u, p_w, p_u), du_dt(w,u,p_w,p_u),dp_w_dt(w,u,p_w,p_u),dp_u_dt(w,u,p_w,p_u)]
         return f
 
     def vectorfiled_corrected(q,t):
-        w, u, p_u, p_w = q
-        f = dq_dt_corrected([w,u,p_u,p_w])
+        w, u, p_w, p_u = q
+        f = dq_dt_corrected([w,u,p_w,p_u])
         # f=np.array([f[0][2],f[0][3],f[0][0],f[0][1]])
         return f[0]
 
-    def shoot(w0,u0,pu_0,pw_0, t, abserr, relerr):
+    def shoot(w0,u0,pw_0,pu_0, t, abserr, relerr):
         # ODE parameters
-        q0 = (w0,u0,pu_0,pw_0)
+        # q0 = (w0,u0,pu_0,pw_0)
+        q0 = (w0, u0, pw_0, pu_0)
         qsol = odeint(vectorfiled, q0, t, atol=abserr, rtol=relerr)
         return qsol
 
 
-    def inital_conditon(r,w0,uo,pw_0,pu_0):
-        phi1 = np.linspace(np.pi / 100, np.pi, 2)
-        phi2 = np.linspace(np.pi / 100, np.pi, 2)
-        phi3 = np.linspace(np.pi / 100, 2 * np.pi, 2)
+    def inital_conditon(r,w0,u0,pw_0,pu_0):
+        theta=np.linspace(np.pi/100,2*np.pi,20)
         q=[]
-        for p1 in phi1:
-            w = w0 + r*np.cos(p1)
-            for p2 in phi2:
-                u = uo + r*np.sin(p1)*np.cos(p2)
-                for p3 in phi3:
-                    pw = pw_0 + r*np.sin(p1)*np.sin(p2)*np.cos(p3)
-                    pu = pu_0 + r*np.sin(p1)*np.sin(p2)*np.sin(p3)
-                    q.append((w,u,pw,pu))
+        wi = [w0 + r * np.cos(t) for t in theta]
+        # ui = [u0 + r * np.sin(t) for t in theta]
+        pw_i = [pw_0 - r * np.sin(t) for t in theta]
+        for w, pw in zip(wi, pw_i):
+            q.append((w,u0,pw,pu_0))
         return q
 
 
     # ODE parameters
     abserr = 1.0e-8
     relerr = 1.0e-6
-    stoptime = 25.0
+    stoptime = 5.0
     numpoints = 1000
 
     # create the time samples for the output of the ODE solver
     t = [stoptime * float(i) / (numpoints - 1) for i in range(numpoints)]
-    r,dt,alpha,x0=0.01,0.00000000001,0.5,(lam-1)/lam
+    r,dt,x0=0.001,stoptime/ (numpoints - 1),(lam-1)/lam
+    weight_of_eig_vec=np.linspace(0.0,1.0,10)
     paths,residual=[],[]
     w0, u0, pu_0, pw_0 = x0*(1-(2/lam)*epsilon**2), -(x0/lam)*epsilon, 0, 0
     wf, uf, pu_f, pw_f = 0, 0, 2*x0*epsilon, -2*np.log(lam)+(x0*(3*lam+1)/lam)*epsilon**2
@@ -157,19 +153,25 @@ def hetro_degree_shooting():
                 postive_eig_value.append(eigen_value[e].real)
                 postive_eig_vec.append(eigen_vec[:,e].reshape(4,1).real)
         # current_path = shoot(q0[0]+alpha*float(postive_eig_vec[0][0])*dt+(1-alpha)*float(postive_eig_vec[1][0])*dt,q0[1]+float(alpha*postive_eig_vec[0][1])*dt+(1-alpha)*float(postive_eig_vec[1][1])*dt,q0[2]+float(postive_eig_vec[0][2])*dt+(1-alpha)*float(postive_eig_vec[1][2])*dt,q0[3]+alpha*float(postive_eig_vec[0][3])*dt+(1-alpha)*float(postive_eig_vec[1][3])*dt,t,abserr,relerr)
-
-        current_path = shoot(q0[0]+alpha*float(postive_eig_vec[0][0])*dt+(1-alpha)*float(postive_eig_vec[1][0])*dt,q0[1]+float(alpha*postive_eig_vec[0][1])*dt+(1-alpha)*float(postive_eig_vec[1][1])*dt,q0[2]+float(postive_eig_vec[0][2])*dt+(1-alpha)*float(postive_eig_vec[1][2])*dt,q0[3]+alpha*float(postive_eig_vec[0][3])*dt+(1-alpha)*float(postive_eig_vec[1][3])*dt,t,abserr,relerr)
-        paths.append(current_path)
-        path_distances = find_path_distance(current_path, rf)
-        residual.append(min(path_distances))
+        for alpha in weight_of_eig_vec:
+            w_i,u_i,pw_i,pu_i= q0[0]+alpha*float(postive_eig_vec[0][0])*dt+(1-alpha)*float(postive_eig_vec[1][0])*dt,q0[1]+float(alpha*postive_eig_vec[0][1])*dt+(1-alpha)*float(postive_eig_vec[1][1])*dt,q0[2]+float(postive_eig_vec[0][2])*dt+(1-alpha)*float(postive_eig_vec[1][2])*dt,q0[3]+alpha*float(postive_eig_vec[0][3])*dt+(1-alpha)*float(postive_eig_vec[1][3])*dt
+            # current_path = shoot(q0[0]+alpha*float(postive_eig_vec[0][0])*dt+(1-alpha)*float(postive_eig_vec[1][0])*dt,q0[1]+float(alpha*postive_eig_vec[0][1])*dt+(1-alpha)*float(postive_eig_vec[1][1])*dt,q0[2]+float(postive_eig_vec[0][2])*dt+(1-alpha)*float(postive_eig_vec[1][2])*dt,q0[3]+alpha*float(postive_eig_vec[0][3])*dt+(1-alpha)*float(postive_eig_vec[1][3])*dt,t,abserr,relerr)
+            current_path=shoot(w_i,u_i,pw_i,pu_i,t,abserr,relerr)
+            paths.append(current_path)
+            path_distances = find_path_distance(current_path, rf)
+            residual.append(max(path_distances))
     index_of_best_path = residual.index(min(residual))
     figure(1)
-    plot(paths[index_of_best_path][:,0],paths[index_of_best_path][:,2])
-    # plot(paths[index_of_best_path][:,0][-1],paths[index_of_best_path][:,1][-1])
+    plot(paths[index_of_best_path][:,0],paths[index_of_best_path][:,2],linewidth=4,label='Numerical')
+    x=np.linspace(0.2,0.4,20)
+    theory_p=[2*np.log(1/(lam*(1-j))) for j in paths[index_of_best_path][:,0]]
+    plot(paths[index_of_best_path][:,0],theory_p,'--y',linewidth=4,label='Theory')
+    plt.scatter((paths[index_of_best_path][:,0][0],paths[index_of_best_path][:,0][-1]),(paths[index_of_best_path][:,2][0],paths[index_of_best_path][:,2][-1]),c=('g','r'),s=(100,100))
+    plt.legend()
     xlabel('w')
     ylabel('p_w')
-    title('p_w vs w for hetro degree network')
-    savefig('het_net_pu_v_t.png',dpi=500)
+    title('p_w vs w for hetro degree network lambda=5')
+    savefig('het_net_pw_w.png',dpi=500)
     plt.show()
 
 
