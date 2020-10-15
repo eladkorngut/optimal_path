@@ -206,6 +206,27 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
         ax.plot_surface(X, Y, z, facecolors=cm.Oranges(weight))
 
 
+    def plot_all_paths(all_paths,horizantal,vertical,savename,hozname,vertname,titlename,parameters,w0):
+        fig,ax=plt.subplots()
+        for path,par in zip(all_paths,parameters):
+            ax.plot(path[:,horizantal],path[:,vertical],linewidth=4,label='a='+str(par[0])
+            + ',wi='+ str(round(par[1],6))+',ui='+str(round(par[2],6))+',t='+str(round(np.arccos(par[1]-w0),6)),linestyle='None',Marker='.')
+        ax.scatter((path[:,horizantal][0],path[:,horizantal][-1]),
+        (path[:,vertical][0],path[:,vertical][-1]),c=('g','r'),s=(100,100))
+        label_params = ax.get_legend_handles_labels()
+        xlabel(hozname)
+        ylabel(vertname)
+        title(titlename)
+        savefig(savename+'.png',dpi=500)
+        plt.show()
+        ax.legend(loc='best')
+
+        figl, axl = plt.subplots()
+        axl.axis(False)
+        axl.legend(*label_params, loc="center")
+        figl.savefig("LABEL_ONLY.png")
+        plt.show()
+
     # End of deceleration of assisting functions and start of algorithm
 
     # Theortical start and End point of the path. and intalization
@@ -236,34 +257,35 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
 
     index_of_best_path = residual.index(min(residual))
 
+    # plot_all_paths(paths, plotvar[0], plotvar[1], savename, hozname, vertname, titlename,parameters_path,w0)
     plot_best_numerical_path(paths[index_of_best_path], plotvar[0], plotvar[1], savename,hozname,vertname,titlename,plottheory,rf)
     # plot_numerical_normalized_path(paths[index_of_best_path], plotvar[0], plotvar[1], savename, hozname, vertname, titlename, plottheory)
     # plot_best_numerical_path(current_path, plotvar[0], plotvar[1], savename,hozname,vertname,titlename,plottheory)
     # plot_numerical_normalized_path(current_path, plotvar[0], plotvar[1], savename, hozname, vertname, titlename, plottheory)
-    print('The best path index is: ',index_of_best_path,' Alpha = ',parameters_path[index_of_best_path][0],' w_i = ',parameters_path[index_of_best_path][1],
-          ' ui = ',parameters_path[index_of_best_path][2],' pw= ',parameters_path[index_of_best_path][3],' pu = ',parameters_path[index_of_best_path][3])
+    # print('The best path index is: ',index_of_best_path,' Alpha = ',parameters_path[index_of_best_path][0],' w_i = ',parameters_path[index_of_best_path][1],
+    #       ' ui = ',parameters_path[index_of_best_path][2],' pw= ',parameters_path[index_of_best_path][3],' pu = ',parameters_path[index_of_best_path][3])
     # plt.scatter([p[0] for p in parameters_path], residual)
-    # plt.scatter([np.arccos(p[1]-x0) for p in parameters_path], residual)
+    # plt.scatter([np.arccos(p[1]-w0) for p in parameters_path], residual)
     # plt.scatter([np.arcsin(p[1]) for p in parameters_path], residual)
     plt.show()
 
 
 if __name__=='__main__':
     #Network Parameters
-    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.001,'h'
+    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.1,'h'
 
     # ODE parameters
     abserr = 1.0e-20
     relerr = 1.0e-13
-    stoptime = 32.23945
+    stoptime = 27.5
     numpoints = 10000
 
     # Create the time samples for the output of the ODE solver
     t = [stoptime * float(i) / (numpoints - 1) for i in range(numpoints)]
 
     # Radius around eq point,Time of to advance the self vector
-    r,dt=1.829,stoptime/ (numpoints - 1)
-    low_theta,up_theta,space=1.57221,1.57221,1
+    r,dt=0.03004,stoptime/ (numpoints - 1)
+    low_theta,up_theta,space=1.5711,1.5711,1
 
     # Linear combination of eigen vector vlaues for loop
     weight_of_eig_vec=np.linspace(1.0,1.0,1)
