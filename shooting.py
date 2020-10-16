@@ -277,14 +277,14 @@ if __name__=='__main__':
     # ODE parameters
     abserr = 1.0e-20
     relerr = 1.0e-13
-    stoptime = 27.5
+    stoptime = 30.6931
     numpoints = 10000
 
     # Create the time samples for the output of the ODE solver
     t = [stoptime * float(i) / (numpoints - 1) for i in range(numpoints)]
 
     # Radius around eq point,Time of to advance the self vector
-    r,dt=0.03004,stoptime/ (numpoints - 1)
+    r,dt=0.0334358,stoptime/ (numpoints - 1)
     low_theta,up_theta,space=1.5711,1.5711,1
 
     # Linear combination of eigen vector vlaues for loop
