@@ -259,7 +259,7 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
 
     # plot_all_paths(paths, plotvar[0], plotvar[1], savename, hozname, vertname, titlename,parameters_path,w0)
     plot_best_numerical_path(paths[index_of_best_path], plotvar[0], plotvar[1], savename,hozname,vertname,titlename,plottheory,rf)
-    # plot_numerical_normalized_path(paths[index_of_best_path], plotvar[0], plotvar[1], savename, hozname, vertname, titlename, plottheory)
+    plot_numerical_normalized_path(paths[index_of_best_path], plotvar[0], plotvar[1], savename, hozname, vertname, titlename, plottheory)
     # plot_best_numerical_path(current_path, plotvar[0], plotvar[1], savename,hozname,vertname,titlename,plottheory)
     # plot_numerical_normalized_path(current_path, plotvar[0], plotvar[1], savename, hozname, vertname, titlename, plottheory)
     # print('The best path index is: ',index_of_best_path,' Alpha = ',parameters_path[index_of_best_path][0],' w_i = ',parameters_path[index_of_best_path][1],
@@ -277,14 +277,14 @@ if __name__=='__main__':
     # ODE parameters
     abserr = 1.0e-20
     relerr = 1.0e-13
-    stoptime = 30.6931
+    stoptime = 30.709824
     numpoints = 10000
 
     # Create the time samples for the output of the ODE solver
     t = [stoptime * float(i) / (numpoints - 1) for i in range(numpoints)]
 
     # Radius around eq point,Time of to advance the self vector
-    r,dt=0.0334358,stoptime/ (numpoints - 1)
+    r,dt=0.03345353,stoptime/ (numpoints - 1)
     low_theta,up_theta,space=1.5711,1.5711,1
 
     # Linear combination of eigen vector vlaues for loop
