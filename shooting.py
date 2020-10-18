@@ -268,8 +268,8 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
     index_of_best_path = residual.index(min(residual))
     # plot_all_paths(paths, plotvar[0], plotvar[1], savename, hozname, vertname, titlename,parameters_path,w0)
     plot_best_numerical_path(paths[index_of_best_path], plotvar[0], plotvar[1], savename,hozname,vertname,titlename,plottheory,rf,(u_theory_path,pu_theory_path_first_order))
-    # plot_numerical_normalized_path(paths[index_of_best_path], plotvar[0], plotvar[1],
-    #         savename, hozname, vertname, titlename, plottheory,(w_theory_path,pw_theory_path_first_order))
+    plot_numerical_normalized_path(paths[index_of_best_path], plotvar[0], plotvar[1],
+            savename, hozname, vertname, titlename, plottheory,(w_theory_path,pw_theory_path_first_order))
     # plot_best_numerical_path(current_path, plotvar[0], plotvar[1], savename,hozname,vertname,titlename,plottheory)
     # plot_numerical_normalized_path(current_path, plotvar[0], plotvar[1], savename, hozname, vertname, titlename, plottheory)
     # print('The best path index is: ',index_of_best_path,' Alpha = ',parameters_path[index_of_best_path][0],' w_i = ',parameters_path[index_of_best_path][1],
@@ -277,28 +277,29 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
     # plt.scatter([p[0] for p in parameters_path], residual)
     # plt.scatter([np.arccos(p[1]-w0) for p in parameters_path], residual)
     # plt.scatter([np.arcsin(p[1]) for p in parameters_path], residual)
+    # temp2=np.gradient(current_path[:,0])
     plt.show()
 
 
 if __name__=='__main__':
     #Network Parameters
-    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.1,'h'
+    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.16,'h'
 
     # ODE parameters
     abserr = 1.0e-20
     relerr = 1.0e-13
-    stoptime = 30.709824
+    stoptime = 30.231
     numpoints = 10000
 
     # Create the time samples for the output of the ODE solver
     t = [stoptime * float(i) / (numpoints - 1) for i in range(numpoints)]
 
     # Radius around eq point,Time of to advance the self vector
-    r,dt=0.03345353,stoptime/ (numpoints - 1)
+    r,dt=0.019881915,stoptime/ (numpoints - 1)
     low_theta,up_theta,space=1.5711,1.5711,1
 
     # Linear combination of eigen vector vlaues for loop
     weight_of_eig_vec=np.linspace(1.0,1.0,1)
-    plottheory,plotvar,titlename,hozname,vertname,savename=True,(0,2),'w vs p_u','w','p_u','pu_v_w_eps01_lam16'
+    plottheory,plotvar,titlename,hozname,vertname,savename=True,(0,2),'w vs p_w','w','p_w','pw_v_w_eps016_lam16'
 
     onedshooting(lam,abserr,relerr,dt,t,r,savename) if sim=='o' else hetro_degree_shooting(lam,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,savename,hozname,vertname,titlename,plotvar,plottheory,low_theta,up_theta,space)
