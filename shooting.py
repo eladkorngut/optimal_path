@@ -70,51 +70,44 @@ def onedshooting(b,abserr,relerr,dt,t,r,savename):
     plt.show()
 
 
-def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,savename,hozname,vertname,titlename,plotvar,plottheory,low_theta,up_theta,space):
-    Reproductive = lam/(2*(1+epsilon**2))
-    ecl_dist = lambda r0, rf: np.sqrt((r0[0] - rf[0]) ** 2 + (r0[1] - rf[1]) ** 2+(r0[2] - rf[2]) ** 2+(r0[3] - rf[3]) ** 2)
-    find_path_distance = lambda qsol, rf: [ecl_dist(q, rf) for q in qsol]
-    find_path_dis_1d = lambda qsol:[(q[1]-2*np.log(1/(lam*(1-q[0]))))**2 for q in qsol]
+def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,savename,hozname,vertname,titlename,plotvar,plottheory,theta,space):
+    # Reproductive = lam/(2*(1+epsilon**2))
+    # ecl_dist = lambda r0, rf: np.sqrt((r0[0] - rf[0]) ** 2 + (r0[1] - rf[1]) ** 2+(r0[2] - rf[2]) ** 2+(r0[3] - rf[3]) ** 2)
+    # find_path_distance = lambda qsol, rf: [ecl_dist(q, rf) for q in qsol]
+    # find_path_dis_1d = lambda qsol:[(q[1]-2*np.log(1/(lam*(1-q[0]))))**2 for q in qsol]
+    #
+    # #Equations of motion
+    # dw_dt = lambda w, u, p_w, p_u: (Reproductive*(w-u*epsilon)*((1/2)*(1-epsilon)*(-u-w+1)*np.exp((p_u+p_w)/2)+(1/2)*(epsilon+1)*(u-w+1)*np.exp((p_w-p_u)/2))
+    #         -(1/4)*(w-u)*np.exp((p_u-p_w)/2)-(1/4)*(u+w)*np.exp((-p_u-p_w)/2))
+    # du_dt = lambda w, u, p_w, p_u: (Reproductive*(w-u*epsilon)*((1/2)*(1-epsilon)*(-u-w+1)*np.exp((p_u+p_w)/2)-(1/2)*(epsilon+1)*(u-w+1)*np.exp((p_w-p_u)/2))
+    #         +(1/4)*(w-u)*np.exp((p_u-p_w)/2)-(1/4)*(u+w)*np.exp((-p_u-p_w)/2))
+    # dp_w_dt = lambda w, u, p_w, p_u: -(Reproductive*((1-epsilon)*(-u-w+1)*(np.exp((p_u+p_w)/2)-1)+(1+epsilon)*(u-w+1)*(np.exp((p_w-p_u)/2)-1))
+    #         +Reproductive*(w-u*epsilon)*((1-epsilon)*(-(np.exp((p_u+p_w)/2)-1))-(epsilon+1)*(np.exp((p_w-p_u)/2)-1))
+    #         +(1/2)*(np.exp((-p_u-p_w)/2)-1)+(1/2)*(np.exp((p_u-p_w)/2)-1))
+    # dp_u_dt = lambda w, u, p_w, p_u:-(Reproductive*(w-epsilon*u)*((epsilon+1)*(np.exp((p_w-p_u)/2)-1)-(1-epsilon)*(np.exp((p_u+p_w)/2)-1))
+    #         -Reproductive*epsilon*((1-epsilon)*(-u-w+1)*(np.exp((p_u+p_w)/2)-1)+(epsilon+1)*(u-w+1)*(np.exp((p_w-p_u)/2)-1))
+    #         +(1/2)*(np.exp((-p_u-p_w)/2)-1)+(1/2)*(1-np.exp((p_u-p_w)/2)))
+    #
+    # dq_dt = lambda q:np.array([dw_dt(q[0], q[1], q[2], q[3]),du_dt(q[0], q[1], q[2], q[3]),dp_w_dt(q[0], q[1], q[2], q[3]),dp_u_dt(q[0], q[1], q[2], q[3])])
 
-    #Equations of motion
-    dw_dt = lambda w, u, p_w, p_u: (Reproductive*(w-u*epsilon)*((1/2)*(1-epsilon)*(-u-w+1)*np.exp((p_u+p_w)/2)+(1/2)*(epsilon+1)*(u-w+1)*np.exp((p_w-p_u)/2))
-            -(1/4)*(w-u)*np.exp((p_u-p_w)/2)-(1/4)*(u+w)*np.exp((-p_u-p_w)/2))
-    du_dt = lambda w, u, p_w, p_u: (Reproductive*(w-u*epsilon)*((1/2)*(1-epsilon)*(-u-w+1)*np.exp((p_u+p_w)/2)-(1/2)*(epsilon+1)*(u-w+1)*np.exp((p_w-p_u)/2))
-            +(1/4)*(w-u)*np.exp((p_u-p_w)/2)-(1/4)*(u+w)*np.exp((-p_u-p_w)/2))
-    dp_w_dt = lambda w, u, p_w, p_u: -(Reproductive*((1-epsilon)*(-u-w+1)*(np.exp((p_u+p_w)/2)-1)+(1+epsilon)*(u-w+1)*(np.exp((p_w-p_u)/2)-1))
-            +Reproductive*(w-u*epsilon)*((1-epsilon)*(-(np.exp((p_u+p_w)/2)-1))-(epsilon+1)*(np.exp((p_w-p_u)/2)-1))
-            +(1/2)*(np.exp((-p_u-p_w)/2)-1)+(1/2)*(np.exp((p_u-p_w)/2)-1))
-    dp_u_dt = lambda w, u, p_w, p_u:-(Reproductive*(w-epsilon*u)*((epsilon+1)*(np.exp((p_w-p_u)/2)-1)-(1-epsilon)*(np.exp((p_u+p_w)/2)-1))
-            -Reproductive*epsilon*((1-epsilon)*(-u-w+1)*(np.exp((p_u+p_w)/2)-1)+(epsilon+1)*(u-w+1)*(np.exp((p_w-p_u)/2)-1))
-            +(1/2)*(np.exp((-p_u-p_w)/2)-1)+(1/2)*(1-np.exp((p_u-p_w)/2)))
-
-    dq_dt = lambda q:np.array([dw_dt(q[0], q[1], q[2], q[3]),du_dt(q[0], q[1], q[2], q[3]),dp_w_dt(q[0], q[1], q[2], q[3]),dp_u_dt(q[0], q[1], q[2], q[3])])
-
-    #Numerical calcuation of eq of motion
-    H = lambda q: Reproductive*(q[0]-epsilon*q[1])*((1-epsilon)*(1-q[0]-q[1])*(np.exp((q[2]+q[3])/2)-1)+(1+epsilon)*(1-(q[0]-q[1]))*(np.exp((q[2]-q[3])/2)-1))+((q[0]+q[1])/2)*(np.exp(-(q[2]+q[3])/2)-1)+((q[0]-q[1])/2)*(np.exp(-(q[2]-q[3])/2)-1)
-    Jacobian_H = ndft.Jacobian(H)
-    dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
-
-
-    def vectorfiled(q,t):
-        w,u,p_w,p_u = q
-        f = [dw_dt(float128(w),float128(u), float128(p_w), float128(p_u)), du_dt(float128(w),float128(u), float128(p_w), float128(p_u)),dp_w_dt(float128(w),float128(u), float128(p_w), float128(p_u)),dp_u_dt(float128(w),float128(u), float128(p_w), float128(p_u))]
-        # if math.isnan(f[0]) or math.isnan(f[1]) or math.isinf(f[2]) or math.isinf(3):
-        #     stop=True
-        return f
+    # #Numerical calcuation of eq of motion
+    # H = lambda q: Reproductive*(q[0]-epsilon*q[1])*((1-epsilon)*(1-q[0]-q[1])*(np.exp((q[2]+q[3])/2)-1)+(1+epsilon)*(1-(q[0]-q[1]))*(np.exp((q[2]-q[3])/2)-1))+((q[0]+q[1])/2)*(np.exp(-(q[2]+q[3])/2)-1)+((q[0]-q[1])/2)*(np.exp(-(q[2]-q[3])/2)-1)
+    # Jacobian_H = ndft.Jacobian(H)
+    # dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
 
 
-    def vectorfiled_numerical(q,t):
-        w, u, p_w, p_u = q
-        f = dq_dt_numerical([w,u,p_w,p_u])
-        return f[0]
+    # def vectorfiled(q,t):
+    #     w,u,p_w,p_u = q
+    #     f = [dw_dt(float128(w),float128(u), float128(p_w), float128(p_u)), du_dt(float128(w),float128(u), float128(p_w), float128(p_u)),dp_w_dt(float128(w),float128(u), float128(p_w), float128(p_u)),dp_u_dt(float128(w),float128(u), float128(p_w), float128(p_u))]
+    #     # if math.isnan(f[0]) or math.isnan(f[1]) or math.isinf(f[2]) or math.isinf(3):
+    #     #     stop=True
+    #     return f
 
-    def shoot(w0,u0,pw_0,pu_0, t, abserr, relerr,J):
-        q0 = (w0, u0, pw_0, pu_0)
-        vect_J=lambda q,t:J(q)
-        # [qsol,temp] = odeint(vectorfiled, q0, t,atol=abserr, rtol=relerr, mxstep=10000000, hmin=1e-30,Dfun=vect_J,full_output=1)
-        qsol = odeint(vectorfiled, q0, t, atol=abserr, rtol=relerr, mxstep=1000000000, hmin=1e-30,Dfun=vect_J)
-        return qsol
+
+    # def vectorfiled_numerical(q,t):
+    #     w, u, p_w, p_u = q
+    #     f = dq_dt_numerical([w,u,p_w,p_u])
+    #     return f[0]
 
 
     def inital_condtion_1d(r,w0,u0,pw_0,pu_0,low_theta,up_theta,space):
@@ -126,7 +119,6 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
         for w, u in zip(wi, ui):
             q.append((w,u,pw_0,pu_0))
         return q
-
 
     def inital_conditon(r,w0,u0,pw_0,pu_0):
         theta=np.linspace(np.pi/100,2*np.pi,20)
@@ -151,29 +143,29 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
 
     def plot_best_numerical_path(path,horizantal,vertical,savename,hozname,vertname,titlename,plottheory,qf,theortical_plot):
         figure(1)
-        plot(path[:,horizantal],path[:,vertical],linewidth=4,label='Numerical',linestyle='None',Marker='.')
-        theory_p=[2*np.log(1/(lam*(1-j))) for j in path[:,horizantal]]
-        if plottheory is True and horizantal is 0 and vertical is 2 : plot(path[:,horizantal],theory_p,'--y',linewidth=4,label='Theory')
+        plot(path[:, horizantal][path[:,3]>0.0003], path[:, vertical][path[:,3]>0.0003], linewidth=4, label='Numerical', linestyle='None', Marker='.')
+        theory_p=[2*np.log(1/(lam*(1-j))) for j in path[:,horizantal][path[:,3]>0.0003]]
+        if plottheory is True and horizantal is 0 and vertical is 2 : plot(path[:,horizantal][path[:,3]>0.0003],theory_p,'--y',linewidth=4,label='Theory')
         if plottheory is True and horizantal is 1 and vertical is 3 :
             plot(theortical_plot[0],theortical_plot[1],'--y',linewidth=4,label='Theory')
             plt.scatter((theortical_plot[0][0],theortical_plot[0][-1]),
                         (path[:, vertical][0], path[:, vertical][-1]), c=('m', 'k'), s=(100, 100),marker='v',label='Theory start point')
-        plt.scatter((path[:,horizantal][0],path[:,horizantal][-1]),(path[:,vertical][0],path[:,vertical][-1]),c=('g','r'),s=(100,100),label='Numerical start point')
+        plt.scatter((path[:,horizantal][path[:,3]>0.0003][0],path[:,horizantal][path[:,3]>0.0003][-1]),(path[:,vertical][0],path[:,vertical][-1]),c=('g','r'),s=(100,100),label='Numerical start point')
         plt.legend()
         xlabel(hozname)
         ylabel(vertname)
         title(titlename)
         print('The value of x axis at the end of path: ', path[:,horizantal][-1])
         print('The value of the y axis at the end of path: ',path[:,vertical][-1],'The theory is: ',qf[vertical])
-        print('The error is: ',(rf[vertical]-path[:,vertical][-1])/qf[vertical]*100,'%')
+        print('The error is: ',(qf[vertical]-path[:,vertical][-1])/qf[vertical]*100,'%')
         savefig(savename+'.png',dpi=500)
         plt.show()
 
     def plot_numerical_normalized_path(path,horizantal,vertical,savename,hozname,vertname,titlename,plottheory,theortical_plot):
         figure(2)
-        theory_p = [2 * np.log(1 / (lam * (1 - j))) for j in path[:, horizantal]]
-        plot(path[:, horizantal], path[:, vertical]-theory_p, linewidth=4, label='Numerical path Pw-pw(0)',linestyle='None',Marker='.')
-        plt.scatter((path[:,horizantal][0],path[:,horizantal][-1]),(path[:,vertical][0]-theory_p[0],path[:,vertical][-1]-theory_p[-1]),c=('g','r'),s=(100,100),label='Start point')
+        theory_p = [2 * np.log(1 / (lam * (1 - j))) for j in path[:, horizantal][path[:,3]>0.0003]]
+        plot(path[:, horizantal][path[:,3]>0.0003], path[:, vertical][path[:,3]>0.0003]-theory_p, linewidth=4, label='Numerical path Pw-pw(0)',linestyle='None',Marker='.')
+        plt.scatter((path[:,horizantal][0],path[:,horizantal][path[:,3]>0.0003][-1]),(path[:,vertical][path[:,3]>0.0003][0]-theory_p[0],path[:,vertical][-1]-theory_p[-1]),c=('g','r'),s=(100,100),label='Start point')
         if plottheory is True: plt.plot(theortical_plot[0],theortical_plot[1],linewidth=4,label='Theory pw(1)',linestyle='--')
         plt.legend()
         xlabel(hozname)
@@ -235,71 +227,240 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
     # End of deceleration of assisting functions and start of algorithm
 
     # Theortical start and End point of the path. and intalization
-    paths=[]
-    residual=[]
-    x0 = (lam-1)/lam
-    w0, u0, pu_0, pw_0 = x0*(1-(2/lam)*epsilon**2), -(x0/lam)*epsilon, 0, 0
-    wf, uf, pu_f, pw_f = 0, 0, 2*x0*epsilon, -2*np.log(lam)+(x0*(3*lam+1)/lam)*epsilon**2
-    rf=(wf, uf, pw_f, pu_f)
+    def plot_paths_functions():
 
-    w_theory_path = np.linspace(w0,wf,numpoints)
-    u_theory_path = np.linspace(u0,uf,numpoints)
-    pw_theory_path_first_order = [(3*(1-i)-(1+2*lam)/(lam**2)+(i*(3+i)/(lam*(1-i))))*epsilon**2 for i in w_theory_path]
-    pu_theory_path_first_order = [(2*epsilon*(lam-1)/lam)*(1+(i*lam**2)/(epsilon*(lam-1))) for i in u_theory_path]
+        Reproductive = lam / (2 * (1 + epsilon ** 2))
+        ecl_dist = lambda r0, rf: np.sqrt(
+            (r0[0] - rf[0]) ** 2 + (r0[1] - rf[1]) ** 2 + (r0[2] - rf[2]) ** 2 + (r0[3] - rf[3]) ** 2)
+        find_path_distance = lambda qsol, rf: [ecl_dist(q, rf) for q in qsol]
+        find_path_dis_1d = lambda qsol: [(q[1] - 2 * np.log(1 / (lam * (1 - q[0])))) ** 2 for q in qsol]
 
-    # An array with radius r around the eq points
-    q0_array=inital_condtion_1d(r,w0,u0,pw_0,pu_0,low_theta,up_theta,space)
+        # Equations of motion
+        dw_dt = lambda w, u, p_w, p_u: (Reproductive * (w - u * epsilon) * (
+                    (1 / 2) * (1 - epsilon) * (-u - w + 1) * np.exp((p_u + p_w) / 2) + (1 / 2) * (epsilon + 1) * (
+                        u - w + 1) * np.exp((p_w - p_u) / 2))
+                                        - (1 / 4) * (w - u) * np.exp((p_u - p_w) / 2) - (1 / 4) * (u + w) * np.exp(
+                    (-p_u - p_w) / 2))
+        du_dt = lambda w, u, p_w, p_u: (Reproductive * (w - u * epsilon) * (
+                    (1 / 2) * (1 - epsilon) * (-u - w + 1) * np.exp((p_u + p_w) / 2) - (1 / 2) * (epsilon + 1) * (
+                        u - w + 1) * np.exp((p_w - p_u) / 2))
+                                        + (1 / 4) * (w - u) * np.exp((p_u - p_w) / 2) - (1 / 4) * (u + w) * np.exp(
+                    (-p_u - p_w) / 2))
+        dp_w_dt = lambda w, u, p_w, p_u: -(Reproductive * (
+                    (1 - epsilon) * (-u - w + 1) * (np.exp((p_u + p_w) / 2) - 1) + (1 + epsilon) * (u - w + 1) * (
+                        np.exp((p_w - p_u) / 2) - 1))
+                                           + Reproductive * (w - u * epsilon) * (
+                                                       (1 - epsilon) * (-(np.exp((p_u + p_w) / 2) - 1)) - (
+                                                           epsilon + 1) * (np.exp((p_w - p_u) / 2) - 1))
+                                           + (1 / 2) * (np.exp((-p_u - p_w) / 2) - 1) + (1 / 2) * (
+                                                       np.exp((p_u - p_w) / 2) - 1))
+        dp_u_dt = lambda w, u, p_w, p_u: -(Reproductive * (w - epsilon * u) * (
+                    (epsilon + 1) * (np.exp((p_w - p_u) / 2) - 1) - (1 - epsilon) * (np.exp((p_u + p_w) / 2) - 1))
+                                           - Reproductive * epsilon * (
+                                                       (1 - epsilon) * (-u - w + 1) * (np.exp((p_u + p_w) / 2) - 1) + (
+                                                           epsilon + 1) * (u - w + 1) * (np.exp((p_w - p_u) / 2) - 1))
+                                           + (1 / 2) * (np.exp((-p_u - p_w) / 2) - 1) + (1 / 2) * (
+                                                       1 - np.exp((p_u - p_w) / 2)))
 
-    #The jacobian for finding the eigen vector in which to shoot
-    J = ndft.Jacobian(dq_dt)
-    parameters_path=[]
-    for q0 in q0_array:
-        postive_eig_vec=postive_eigen_vec(J,q0)
-        for alpha in weight_of_eig_vec:
-            w_i,u_i,pw_i,pu_i= q0[0]+alpha*float(postive_eig_vec[0][0])*dt+(1-alpha)*float(postive_eig_vec[1][0])*dt,q0[1]+float(alpha*postive_eig_vec[0][1])*dt+(1-alpha)*float(postive_eig_vec[1][1])*dt,q0[2]+float(postive_eig_vec[0][2])*dt+(1-alpha)*float(postive_eig_vec[1][2])*dt,q0[3]+alpha*float(postive_eig_vec[0][3])*dt+(1-alpha)*float(postive_eig_vec[1][3])*dt
-            current_path=shoot(w_i,u_i,pw_i,pu_i,t,abserr,relerr,J)
-            paths.append(current_path)
-            parameters_path.append((alpha,w_i,u_i,pw_i,pu_i))
-            path_distances = find_path_distance(current_path, rf)
-            # path_distances =find_path_dis_1d(current_path)
-            # residual.append(max(path_distances))
-            residual.append(np.sum(path_distances) / ecl_dist(q0, current_path[-20]))
+        dq_dt = lambda q: np.array(
+            [dw_dt(q[0], q[1], q[2], q[3]), du_dt(q[0], q[1], q[2], q[3]), dp_w_dt(q[0], q[1], q[2], q[3]),
+             dp_u_dt(q[0], q[1], q[2], q[3])])
 
-    index_of_best_path = residual.index(min(residual))
-    # plot_all_paths(paths, plotvar[0], plotvar[1], savename, hozname, vertname, titlename,parameters_path,w0)
-    plot_best_numerical_path(paths[index_of_best_path], plotvar[0], plotvar[1], savename,hozname,vertname,titlename,plottheory,rf,(u_theory_path,pu_theory_path_first_order))
-    plot_numerical_normalized_path(paths[index_of_best_path], plotvar[0], plotvar[1],
-            savename, hozname, vertname, titlename, plottheory,(w_theory_path,pw_theory_path_first_order))
-    # plot_best_numerical_path(current_path, plotvar[0], plotvar[1], savename,hozname,vertname,titlename,plottheory)
-    # plot_numerical_normalized_path(current_path, plotvar[0], plotvar[1], savename, hozname, vertname, titlename, plottheory)
-    # print('The best path index is: ',index_of_best_path,' Alpha = ',parameters_path[index_of_best_path][0],' w_i = ',parameters_path[index_of_best_path][1],
-    #       ' ui = ',parameters_path[index_of_best_path][2],' pw= ',parameters_path[index_of_best_path][3],' pu = ',parameters_path[index_of_best_path][3])
-    # plt.scatter([p[0] for p in parameters_path], residual)
-    # plt.scatter([np.arccos(p[1]-w0) for p in parameters_path], residual)
-    # plt.scatter([np.arcsin(p[1]) for p in parameters_path], residual)
-    # temp2=np.gradient(current_path[:,0])
-    plt.show()
+        def vectorfiled(q, t):
+            w, u, p_w, p_u = q
+            f = [dw_dt(float128(w), float128(u), float128(p_w), float128(p_u)),
+                 du_dt(float128(w), float128(u), float128(p_w), float128(p_u)),
+                 dp_w_dt(float128(w), float128(u), float128(p_w), float128(p_u)),
+                 dp_u_dt(float128(w), float128(u), float128(p_w), float128(p_u))]
+            # if math.isnan(f[0]) or math.isnan(f[1]) or math.isinf(f[2]) or math.isinf(3):
+            #     stop=True
+            return f
+
+        low_theta, up_theta=theta[0],theta[1]
+        paths=[]
+        residual=[]
+        x0 = (lam-1)/lam
+        w0, u0, pu_0, pw_0 = x0*(1-(2/lam)*epsilon**2), -(x0/lam)*epsilon, 0, 0
+        wf, uf, pu_f, pw_f = 0, 0, 2*x0*epsilon, -2*np.log(lam)+(x0*(3*lam+1)/lam)*epsilon**2
+        rf=(wf, uf, pw_f, pu_f)
+
+        w_theory_path = np.linspace(w0,wf,numpoints)
+        u_theory_path = np.linspace(u0,uf,numpoints)
+        pw_theory_path_first_order = [(3*(1-i)-(1+2*lam)/(lam**2)+(i*(3+i)/(lam*(1-i))))*epsilon**2 for i in w_theory_path]
+        pu_theory_path_first_order = [(2*epsilon*(lam-1)/lam)*(1+(i*lam**2)/(epsilon*(lam-1))) for i in u_theory_path]
+
+        def shoot(w0, u0, pw_0, pu_0, t, abserr, relerr, J):
+            q0 = (w0, u0, pw_0, pu_0)
+            vect_J = lambda q, t: J(q)
+            # [qsol,temp] = odeint(vectorfiled, q0, t,atol=abserr, rtol=relerr, mxstep=10000000, hmin=1e-30,Dfun=vect_J,full_output=1)
+            qsol = odeint(vectorfiled, q0, t, atol=abserr, rtol=relerr, mxstep=1000000000, hmin=1e-30, Dfun=vect_J)
+            return qsol
+
+        # An array with radius r around the eq points
+        q0_array=inital_condtion_1d(r,w0,u0,pw_0,pu_0,low_theta,up_theta,space)
+
+        #The jacobian for finding the eigen vector in which to shoot
+        J = ndft.Jacobian(dq_dt)
+        parameters_path=[]
+        for q0 in q0_array:
+            postive_eig_vec=postive_eigen_vec(J,q0)
+            for alpha in weight_of_eig_vec:
+                w_i,u_i,pw_i,pu_i= q0[0]+alpha*float(postive_eig_vec[0][0])*dt+(1-alpha)*float(postive_eig_vec[1][0])*dt,q0[1]+float(alpha*postive_eig_vec[0][1])*dt+(1-alpha)*float(postive_eig_vec[1][1])*dt,q0[2]+float(postive_eig_vec[0][2])*dt+(1-alpha)*float(postive_eig_vec[1][2])*dt,q0[3]+alpha*float(postive_eig_vec[0][3])*dt+(1-alpha)*float(postive_eig_vec[1][3])*dt
+                current_path=shoot(w_i,u_i,pw_i,pu_i,t,abserr,relerr,J)
+                paths.append(current_path)
+                parameters_path.append((alpha,w_i,u_i,pw_i,pu_i))
+                path_distances = find_path_distance(current_path, rf)
+                # path_distances =find_path_dis_1d(current_path)
+                # residual.append(max(path_distances))
+                residual.append(np.sum(path_distances) / ecl_dist(q0, current_path[-20]))
+
+        index_of_best_path = residual.index(min(residual))
+        # plot_all_paths(paths, plotvar[0], plotvar[1], savename, hozname, vertname, titlename,parameters_path,w0)
+        plot_best_numerical_path(paths[index_of_best_path], plotvar[0], plotvar[1], savename,hozname,vertname,titlename,plottheory,rf,(u_theory_path,pu_theory_path_first_order))
+        plot_numerical_normalized_path(paths[index_of_best_path], plotvar[0], plotvar[1],
+                savename, hozname, vertname, titlename, plottheory,(w_theory_path,pw_theory_path_first_order))
+        # plot_best_numerical_path(current_path, plotvar[0], plotvar[1], savename,hozname,vertname,titlename,plottheory)
+        # plot_numerical_normalized_path(current_path, plotvar[0], plotvar[1], savename, hozname, vertname, titlename, plottheory)
+        # print('The best path index is: ',index_of_best_path,' Alpha = ',parameters_path[index_of_best_path][0],' w_i = ',parameters_path[index_of_best_path][1],
+        #       ' ui = ',parameters_path[index_of_best_path][2],' pw= ',parameters_path[index_of_best_path][3],' pu = ',parameters_path[index_of_best_path][3])
+        # plt.scatter([p[0] for p in parameters_path], residual)
+        # plt.scatter([np.arccos(p[1]-w0) for p in parameters_path], residual)
+        # plt.scatter([np.arcsin(p[1]) for p in parameters_path], residual)
+        # temp2=np.gradient(current_path[:,2])
+        # plt.show()
+        # print('bla',temp2[-1])
+
+    # def one_path(J,q0,tf):
+    #     postive_eig_vec=postive_eigen_vec(J,q0)
+    #     w_i,u_i,pw_i,pu_i= q0[0]+weight_of_eig_vec*float(postive_eig_vec[0][0])*dt+(1-weight_of_eig_vec)*float(postive_eig_vec[1][0])*dt,q0[1]+float(weight_of_eig_vec*postive_eig_vec[0][1])*dt+(1-weight_of_eig_vec)*float(postive_eig_vec[1][1])*dt,q0[2]+float(postive_eig_vec[0][2])*dt+(1-weight_of_eig_vec)*float(postive_eig_vec[1][2])*dt,q0[3]+weight_of_eig_vec*float(postive_eig_vec[0][3])*dt+(1-weight_of_eig_vec)*float(postive_eig_vec[1][3])*dt
+    #     current_path=shoot(w_i,u_i,pw_i,pu_i,tf,abserr,relerr,J)
+    #     return current_path
+
+    def multi_epsilons_path():
+        def vectorfiled(q, t):
+            w, u, p_w, p_u = q
+            f = [dw_dt(float128(w), float128(u), float128(p_w), float128(p_u)),
+                 du_dt(float128(w), float128(u), float128(p_w), float128(p_u)),
+                 dp_w_dt(float128(w), float128(u), float128(p_w), float128(p_u)),
+                 dp_u_dt(float128(w), float128(u), float128(p_w), float128(p_u))]
+            # if math.isnan(f[0]) or math.isnan(f[1]) or math.isinf(f[2]) or math.isinf(3):
+            #     stop=True
+            return f
+
+        def shoot(w0, u0, pw_0, pu_0, t, abserr, relerr, J):
+            q0 = (w0, u0, pw_0, pu_0)
+            vect_J = lambda q, t: J(q)
+            # [qsol,temp] = odeint(vectorfiled, q0, t,atol=abserr, rtol=relerr, mxstep=10000000, hmin=1e-30,Dfun=vect_J,full_output=1)
+            qsol = odeint(vectorfiled, q0, t, atol=abserr, rtol=relerr, mxstep=1000000000, hmin=1e-30, Dfun=vect_J)
+            return qsol
+
+        x0 = (lam-1)/lam
+        paths=[]
+        for eps,tf,dt_path,r_path in zip(epsilon,t,dt,r):
+            Reproductive = lam / (2 * (1 + eps ** 2))
+            # Equations of motion
+            dw_dt = lambda w, u, p_w, p_u: (Reproductive * (w - u * eps) * (
+                    (1 / 2) * (1 - eps) * (-u - w + 1) * np.exp((p_u + p_w) / 2) + (1 / 2) * (eps + 1) * (
+                    u - w + 1) * np.exp((p_w - p_u) / 2))
+                                            - (1 / 4) * (w - u) * np.exp((p_u - p_w) / 2) - (1 / 4) * (u + w) * np.exp(
+                        (-p_u - p_w) / 2))
+            du_dt = lambda w, u, p_w, p_u: (Reproductive * (w - u * eps) * (
+                    (1 / 2) * (1 - eps) * (-u - w + 1) * np.exp((p_u + p_w) / 2) - (1 / 2) * (eps + 1) * (
+                    u - w + 1) * np.exp((p_w - p_u) / 2))
+                                            + (1 / 4) * (w - u) * np.exp((p_u - p_w) / 2) - (1 / 4) * (u + w) * np.exp(
+                        (-p_u - p_w) / 2))
+            dp_w_dt = lambda w, u, p_w, p_u: -(Reproductive * (
+                    (1 - eps) * (-u - w + 1) * (np.exp((p_u + p_w) / 2) - 1) + (1 + eps) * (u - w + 1) * (
+                    np.exp((p_w - p_u) / 2) - 1))
+                                               + Reproductive * (w - u * eps) * (
+                                                       (1 - eps) * (-(np.exp((p_u + p_w) / 2) - 1)) - (
+                                                       eps + 1) * (np.exp((p_w - p_u) / 2) - 1))
+                                               + (1 / 2) * (np.exp((-p_u - p_w) / 2) - 1) + (1 / 2) * (
+                                                       np.exp((p_u - p_w) / 2) - 1))
+            dp_u_dt = lambda w, u, p_w, p_u: -(Reproductive * (w - eps * u) * (
+                    (eps + 1) * (np.exp((p_w - p_u) / 2) - 1) - (1 - eps) * (np.exp((p_u + p_w) / 2) - 1))
+                                               - Reproductive * eps * (
+                                                       (1 - eps) * (-u - w + 1) * (np.exp((p_u + p_w) / 2) - 1) + (
+                                                       eps + 1) * (u - w + 1) * (np.exp((p_w - p_u) / 2) - 1))
+                                               + (1 / 2) * (np.exp((-p_u - p_w) / 2) - 1) + (1 / 2) * (
+                                                       1 - np.exp((p_u - p_w) / 2)))
+
+            dq_dt = lambda q: np.array(
+                [dw_dt(q[0], q[1], q[2], q[3]), du_dt(q[0], q[1], q[2], q[3]), dp_w_dt(q[0], q[1], q[2], q[3]),
+                 dp_u_dt(q[0], q[1], q[2], q[3])])
+            J = ndft.Jacobian(dq_dt)
+            w0, u0, pu_0, pw_0 = x0 * (1 - (2 / lam) * eps ** 2), -(x0 / lam) * eps, 0, 0
+            q0 = (w0 + r_path * np.cos(theta), u0 + r_path * np.sin(theta), pw_0, pu_0)
+            postive_eig_vec = postive_eigen_vec(J, q0)
+            w_i, u_i, pw_i, pu_i = q0[0] + weight_of_eig_vec * float(postive_eig_vec[0][0]) * dt_path + (
+                        1 - weight_of_eig_vec) * float(postive_eig_vec[1][0]) * dt_path, q0[1] + float(
+                weight_of_eig_vec * postive_eig_vec[0][1]) * dt_path + (1 - weight_of_eig_vec) * float(
+                postive_eig_vec[1][1]) * dt_path, q0[2] + float(postive_eig_vec[0][2]) * dt_path + (
+                                               1 - weight_of_eig_vec) * float(postive_eig_vec[1][2]) * dt_path, q0[
+                                       3] + weight_of_eig_vec * float(postive_eig_vec[0][3]) * dt_path + (
+                                               1 - weight_of_eig_vec) * float(postive_eig_vec[1][3]) * dt_path
+            current_path=shoot(w_i,u_i,pw_i,pu_i,tf,abserr,relerr,J)
+            theory_p_1d = [2 * np.log(1 / (lam * (1 - j))) for j in current_path[:, 0][current_path[:,3]>0.001]]
+            # normalized_path=[current_path[:,0],current_path[:,1]/eps,(current_path[:,2]-theory_p_1d)/eps**2,current_path[:,3]/eps]
+            normalized_path = [current_path[:, 0][current_path[:,3]>0.001], current_path[:, 1][current_path[:,3]>0.001] / eps,
+                               (current_path[:, 2][current_path[:,3]>0.001]- theory_p_1d) / eps ** 2, current_path[:, 3][current_path[:,3]>0.001] / eps]
+            paths.append(normalized_path)
+            u_theory_path = np.linspace(u0, 0.0, numpoints)/eps
+            pu_theory_path_first_order = [(2 * (lam - 1) / lam) * (1 + (i * lam ** 2) / ((lam - 1)))
+                                          for i in u_theory_path]
+            plt.plot(u_theory_path,pu_theory_path_first_order,linestyle='--',color='g',linewidth=4.0)
+            plt.plot(normalized_path[1],normalized_path[3],linewidth=4,label='epsilon='+ str(eps))
+            plt.legend()
+        # w_theory_path = np.linspace(w0, 0.0, numpoints)
+        # pw_theory_path_first_order = [
+        #     (3 * (1 - i) - (1 + 2 * lam) / (lam ** 2) + (i * (3 + i) / (lam * (1 - i))))  for i in
+        #     w_theory_path]
+        # plt.plot(w_theory_path,pw_theory_path_first_order,linestyle='--',linewidth=4.0,label='Theory')
+
+        plt.title('Multi epsilon pu/epsilon vs w')
+        plt.xlabel('u/epsilon')
+        plt.ylabel('pu/epsilon')
+        plt.legend()
+        plt.savefig('pu_v_u_eps01_eps016_multi_eps_plot.png',dpi=500)
+        plt.show()
+        return paths
+
+
+    # temp = multi_epsilons_path()
+    plot_paths_functions()
+    # print('This no love song')
+
 
 
 if __name__=='__main__':
     #Network Parameters
-    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.16,'h'
+    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.02,'h'
+    # lam, k_avg, epsilon, sim = 1.6, 50.0, [0.16,0.1],'h'
+
 
     # ODE parameters
     abserr = 1.0e-20
     relerr = 1.0e-13
-    stoptime = 30.231
+    stoptime=30.171
+    # stoptime = [30.272,30.709824]
     numpoints = 10000
 
     # Create the time samples for the output of the ODE solver
     t = [stoptime * float(i) / (numpoints - 1) for i in range(numpoints)]
+    # t,dt=[],[]
+    dt=stoptime/(numpoints-1)
+    # for s in stoptime:
+    #     t.append([s * float(i) / (numpoints - 1) for i in range(numpoints)])
+    #     dt.append(s/ (numpoints - 1))
 
     # Radius around eq point,Time of to advance the self vector
-    r,dt=0.019881915,stoptime/ (numpoints - 1)
-    low_theta,up_theta,space=1.5711,1.5711,1
+    # r=[0.019909484,0.03345353]
+    r=0.163259745
+    theta,space=(1.5711,1.5711),1
 
     # Linear combination of eigen vector vlaues for loop
     weight_of_eig_vec=np.linspace(1.0,1.0,1)
-    plottheory,plotvar,titlename,hozname,vertname,savename=True,(0,2),'w vs p_w','w','p_w','pw_v_w_eps016_lam16'
+    plottheory,plotvar,titlename,hozname,vertname,savename=True,(1,3),'pu vs u','u','pu','pu_v_u_eps002_lam16'
 
-    onedshooting(lam,abserr,relerr,dt,t,r,savename) if sim=='o' else hetro_degree_shooting(lam,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,savename,hozname,vertname,titlename,plotvar,plottheory,low_theta,up_theta,space)
+    onedshooting(lam,abserr,relerr,dt,t,r,savename) if sim=='o' else hetro_degree_shooting(lam,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,savename,hozname,vertname,titlename,plotvar,plottheory,theta,space)
+    # hetro_degree_shooting(lam, epsilon, abserr, relerr, t, r, dt, 1.0, savename, hozname, vertname,titlename, plotvar, plottheory, 1.5711, space)
