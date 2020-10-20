@@ -408,59 +408,60 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
             u_theory_path = np.linspace(u0, 0.0, numpoints)/eps
             pu_theory_path_first_order = [(2 * (lam - 1) / lam) * (1 + (i * lam ** 2) / ((lam - 1)))
                                           for i in u_theory_path]
-            plt.plot(u_theory_path,pu_theory_path_first_order,linestyle='--',color='g',linewidth=4.0)
-            plt.plot(normalized_path[1],normalized_path[3],linewidth=4,label='epsilon='+ str(eps))
-            plt.legend()
-        # w_theory_path = np.linspace(w0, 0.0, numpoints)
-        # pw_theory_path_first_order = [
-        #     (3 * (1 - i) - (1 + 2 * lam) / (lam ** 2) + (i * (3 + i) / (lam * (1 - i))))  for i in
-        #     w_theory_path]
-        # plt.plot(w_theory_path,pw_theory_path_first_order,linestyle='--',linewidth=4.0,label='Theory')
+            # plt.plot(u_theory_path,pu_theory_path_first_order,linestyle='--',color='k',linewidth=4.0)
+            plt.plot(normalized_path[0],normalized_path[2],linewidth=4,label='epsilon='+ str(eps))
+            # plt.legend()
+        w_theory_path = np.linspace(w0, 0.0, numpoints)
+        pw_theory_path_first_order = [
+            (3 * (1 - i) - (1 + 2 * lam) / (lam ** 2) + (i * (3 + i) / (lam * (1 - i))))  for i in
+            w_theory_path]
+        plt.plot(w_theory_path,pw_theory_path_first_order,linestyle='--',linewidth=4.0,label='Theory',color='k')
 
-        plt.title('Multi epsilon pu/epsilon vs w')
-        plt.xlabel('u/epsilon')
-        plt.ylabel('pu/epsilon')
+        plt.title('Multi epsilon, (pw-pw(0))    /epsilon^2 vs w')
+        plt.xlabel('w')
+        plt.ylabel('pw-pw(0)/epsilon^2')
         plt.legend()
-        plt.savefig('pu_v_u_eps01_eps016_multi_eps_plot.png',dpi=500)
+        plt.savefig('pw_v_w_eps01_eps016_eps002_multi_eps_plot.png',dpi=500)
         plt.show()
         return paths
 
 
-    # temp = multi_epsilons_path()
-    plot_paths_functions()
+    temp = multi_epsilons_path()
+    # plot_paths_functions()
     # print('This no love song')
 
 
 
 if __name__=='__main__':
     #Network Parameters
-    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.02,'h'
-    # lam, k_avg, epsilon, sim = 1.6, 50.0, [0.16,0.1],'h'
+    # lam, k_avg, epsilon, sim = 1.6, 50.0, 0.16,'h'
+    lam, k_avg, epsilon, sim = 1.6, 50.0, [0.16,0.1,0.02],'h'
 
 
     # ODE parameters
     abserr = 1.0e-20
     relerr = 1.0e-13
-    stoptime=30.171
-    # stoptime = [30.272,30.709824]
+    # stoptime=30.272
+    stoptime = [30.272,30.709824,30.171]
     numpoints = 10000
 
     # Create the time samples for the output of the ODE solver
-    t = [stoptime * float(i) / (numpoints - 1) for i in range(numpoints)]
-    # t,dt=[],[]
-    dt=stoptime/(numpoints-1)
-    # for s in stoptime:
-    #     t.append([s * float(i) / (numpoints - 1) for i in range(numpoints)])
-    #     dt.append(s/ (numpoints - 1))
+    # t = [stoptime * float(i) / (numpoints - 1) for i in range(numpoints)]
+
+    t,dt=[],[]
+    # dt=stoptime/(numpoints-1)
+    for s in stoptime:
+        t.append([s * float(i) / (numpoints - 1) for i in range(numpoints)])
+        dt.append(s/ (numpoints - 1))
 
     # Radius around eq point,Time of to advance the self vector
-    # r=[0.019909484,0.03345353]
-    r=0.163259745
+    r=[0.019909484,0.03345353,0.163259745]
+    # r=0.019909484
     theta,space=(1.5711,1.5711),1
 
     # Linear combination of eigen vector vlaues for loop
     weight_of_eig_vec=np.linspace(1.0,1.0,1)
-    plottheory,plotvar,titlename,hozname,vertname,savename=True,(1,3),'pu vs u','u','pu','pu_v_u_eps002_lam16'
+    plottheory,plotvar,titlename,hozname,vertname,savename=True,(0,2),'pw-pw(0) vs w','w','pw-pw(0)','pw_only_resd_v_w_eps016_lam16'
 
-    onedshooting(lam,abserr,relerr,dt,t,r,savename) if sim=='o' else hetro_degree_shooting(lam,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,savename,hozname,vertname,titlename,plotvar,plottheory,theta,space)
-    # hetro_degree_shooting(lam, epsilon, abserr, relerr, t, r, dt, 1.0, savename, hozname, vertname,titlename, plotvar, plottheory, 1.5711, space)
+    # onedshooting(lam,abserr,relerr,dt,t,r,savename) if sim=='o' else hetro_degree_shooting(lam,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,savename,hozname,vertname,titlename,plotvar,plottheory,theta,space)
+    hetro_degree_shooting(lam, epsilon, abserr, relerr, t, r, dt, 1.0, savename, hozname, vertname,titlename, plotvar, plottheory, 1.5711, space)
