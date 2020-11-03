@@ -6,6 +6,7 @@ from scipy.optimize import least_squares
 from scipy.integrate import ode
 import scipy.linalg as la
 from scipy.integrate import odeint
+from scipy.integrate import simps
 from pylab import figure, plot, xlabel, grid, legend, title,savefig,ylabel
 from matplotlib.font_manager import FontProperties
 import csv
@@ -143,14 +144,14 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
 
     def plot_best_numerical_path(path,horizantal,vertical,savename,hozname,vertname,titlename,plottheory,qf,theortical_plot):
         figure(1)
-        plot(path[:, horizantal][path[:,3]>0.0003], path[:, vertical][path[:,3]>0.0003], linewidth=4, label='Numerical', linestyle='None', Marker='.')
-        theory_p=[2*np.log(1/(lam*(1-j))) for j in path[:,horizantal][path[:,3]>0.0003]]
-        if plottheory is True and horizantal is 0 and vertical is 2 : plot(path[:,horizantal][path[:,3]>0.0003],theory_p,'--y',linewidth=4,label='Theory')
+        plot(path[:, horizantal], path[:, vertical], linewidth=4, label='Numerical', linestyle='None', Marker='.')
+        theory_p=[2*np.log(1/(lam*(1-j))) for j in path[:,horizantal]]
+        if plottheory is True and horizantal is 0 and vertical is 2 : plot(path[:,horizantal],theory_p,'--y',linewidth=4,label='Theory')
         if plottheory is True and horizantal is 1 and vertical is 3 :
             plot(theortical_plot[0],theortical_plot[1],'--y',linewidth=4,label='Theory')
             plt.scatter((theortical_plot[0][0],theortical_plot[0][-1]),
                         (path[:, vertical][0], path[:, vertical][-1]), c=('m', 'k'), s=(100, 100),marker='v',label='Theory start point')
-        plt.scatter((path[:,horizantal][path[:,3]>0.0003][0],path[:,horizantal][path[:,3]>0.0003][-1]),(path[:,vertical][0],path[:,vertical][-1]),c=('g','r'),s=(100,100),label='Numerical start point')
+        plt.scatter((path[:,horizantal][0],path[:,horizantal][-1]),(path[:,vertical][0],path[:,vertical][-1]),c=('g','r'),s=(100,100),label='Numerical start point')
         plt.legend()
         xlabel(hozname)
         ylabel(vertname)
@@ -158,14 +159,19 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
         print('The value of x axis at the end of path: ', path[:,horizantal][-1])
         print('The value of the y axis at the end of path: ',path[:,vertical][-1],'The theory is: ',qf[vertical])
         print('The error is: ',(qf[vertical]-path[:,vertical][-1])/qf[vertical]*100,'%')
+        temp_integration = simps(path[:, vertical],path[:, horizantal])
+        print(0.5*temp_integration)
+        theory_interation=((lam-1)**2/(2*math.pow(lam,3)))*epsilon**2 if horizantal is 1 and vertical is 3 else 1/lam + np.log(lam)-1 -( ( (lam-1)*(3*lam**2-10*lam-1) )/(4*math.pow(lam,3)) +(2/lam)*np.log(lam) )*epsilon**2
+        print(theory_interation)
+        print((theory_interation-0.5*temp_integration)/theory_interation*100)
         savefig(savename+'.png',dpi=500)
         plt.show()
 
     def plot_numerical_normalized_path(path,horizantal,vertical,savename,hozname,vertname,titlename,plottheory,theortical_plot):
         figure(2)
-        theory_p = [2 * np.log(1 / (lam * (1 - j))) for j in path[:, horizantal][path[:,3]>0.0003]]
-        plot(path[:, horizantal][path[:,3]>0.0003], path[:, vertical][path[:,3]>0.0003]-theory_p, linewidth=4, label='Numerical path Pw-pw(0)',linestyle='None',Marker='.')
-        plt.scatter((path[:,horizantal][0],path[:,horizantal][path[:,3]>0.0003][-1]),(path[:,vertical][path[:,3]>0.0003][0]-theory_p[0],path[:,vertical][-1]-theory_p[-1]),c=('g','r'),s=(100,100),label='Start point')
+        theory_p = [-2 * np.log((lam * (1 - j))) for j in path[:, horizantal]]
+        plot(path[:, horizantal], path[:, vertical]-theory_p, linewidth=4, label='Numerical path Pw-pw(0)',linestyle='None',Marker='.')
+        plt.scatter((path[:,horizantal][0],path[:,horizantal][-1]),(path[:,vertical][0]-theory_p[0],path[:,vertical][-1]-theory_p[-1]),c=('g','r'),s=(100,100),label='Start point')
         if plottheory is True: plt.plot(theortical_plot[0],theortical_plot[1],linewidth=4,label='Theory pw(1)',linestyle='--')
         plt.legend()
         xlabel(hozname)
@@ -302,23 +308,28 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
         #The jacobian for finding the eigen vector in which to shoot
         J = ndft.Jacobian(dq_dt)
         parameters_path=[]
+        fig, ax = plt.subplots()
         for q0 in q0_array:
             postive_eig_vec=postive_eigen_vec(J,q0)
+            dist_from_theory = []
             for alpha in weight_of_eig_vec:
                 w_i,u_i,pw_i,pu_i= q0[0]+alpha*float(postive_eig_vec[0][0])*dt+(1-alpha)*float(postive_eig_vec[1][0])*dt,q0[1]+float(alpha*postive_eig_vec[0][1])*dt+(1-alpha)*float(postive_eig_vec[1][1])*dt,q0[2]+float(postive_eig_vec[0][2])*dt+(1-alpha)*float(postive_eig_vec[1][2])*dt,q0[3]+alpha*float(postive_eig_vec[0][3])*dt+(1-alpha)*float(postive_eig_vec[1][3])*dt
                 current_path=shoot(w_i,u_i,pw_i,pu_i,t,abserr,relerr,J)
                 paths.append(current_path)
                 parameters_path.append((alpha,w_i,u_i,pw_i,pu_i))
-                path_distances = find_path_distance(current_path, rf)
-                # path_distances =find_path_dis_1d(current_path)
-                # residual.append(max(path_distances))
-                residual.append(np.sum(path_distances) / ecl_dist(q0, current_path[-20]))
+                # path_distances = find_path_distance(current_path, rf)
+                path_distances =find_path_dis_1d(current_path)
+                residual.append(max(path_distances))
+            #     residual.append(np.sum(path_distances) / ecl_dist(q0, current_path[-20]))
+            #     dist_from_theory.append(
+            #         la.norm(np.array([w_i, pw_i]) - np.array([w_theory_path[0], pw_theory_path_first_order[0]])))
+            # ax.scatter(weight_of_eig_vec, dist_from_theory,label=str(np.arccos((q0[0]-w0)/r)))
 
         index_of_best_path = residual.index(min(residual))
         # plot_all_paths(paths, plotvar[0], plotvar[1], savename, hozname, vertname, titlename,parameters_path,w0)
         plot_best_numerical_path(paths[index_of_best_path], plotvar[0], plotvar[1], savename,hozname,vertname,titlename,plottheory,rf,(u_theory_path,pu_theory_path_first_order))
-        plot_numerical_normalized_path(paths[index_of_best_path], plotvar[0], plotvar[1],
-                savename, hozname, vertname, titlename, plottheory,(w_theory_path,pw_theory_path_first_order))
+        # plot_numerical_normalized_path(paths[index_of_best_path], plotvar[0], plotvar[1],
+        #         savename, hozname, vertname, titlename, plottheory,(w_theory_path,pw_theory_path_first_order))
         # plot_best_numerical_path(current_path, plotvar[0], plotvar[1], savename,hozname,vertname,titlename,plottheory)
         # plot_numerical_normalized_path(current_path, plotvar[0], plotvar[1], savename, hozname, vertname, titlename, plottheory)
         # print('The best path index is: ',index_of_best_path,' Alpha = ',parameters_path[index_of_best_path][0],' w_i = ',parameters_path[index_of_best_path][1],
@@ -326,9 +337,23 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
         # plt.scatter([p[0] for p in parameters_path], residual)
         # plt.scatter([np.arccos(p[1]-w0) for p in parameters_path], residual)
         # plt.scatter([np.arcsin(p[1]) for p in parameters_path], residual)
+        # plt.scatter([p[0] for p in parameters_path],dist_from_theory)
         # temp2=np.gradient(current_path[:,2])
         # plt.show()
-        # print('bla',temp2[-1])
+        # # print('bla',temp2[-1])
+        # label_params = ax.get_legend_handles_labels()
+        # xlabel('alpha')
+        # ylabel('dist')
+        # title('dist v alpha')
+        # savefig(savename+'.png',dpi=500)
+        # plt.show()
+        # ax.legend(loc='best')
+
+        # figl, axl = plt.subplots()
+        # axl.axis(False)
+        # axl.legend(*label_params, loc="center")
+        # figl.savefig("LABEL_ONLY.png")
+        # plt.show()
 
     # def one_path(J,q0,tf):
     #     postive_eig_vec=postive_eigen_vec(J,q0)
@@ -426,42 +451,43 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
         return paths
 
 
-    temp = multi_epsilons_path()
-    # plot_paths_functions()
+    # temp = multi_epsilons_path()
+    plot_paths_functions()
     # print('This no love song')
 
 
 
 if __name__=='__main__':
     #Network Parameters
-    # lam, k_avg, epsilon, sim = 1.6, 50.0, 0.16,'h'
-    lam, k_avg, epsilon, sim = 1.6, 50.0, [0.16,0.1,0.02],'h'
+    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.02,'h'
+    # lam, k_avg, epsilon, sim = 1.6, 50.0, [0.16,0.1,0.02],'h'
 
 
     # ODE parameters
     abserr = 1.0e-20
     relerr = 1.0e-13
-    # stoptime=30.272
-    stoptime = [30.272,30.709824,30.171]
+    stoptime=30.171
+    # stoptime = [30.272,30.709824,30.171]
     numpoints = 10000
 
     # Create the time samples for the output of the ODE solver
-    # t = [stoptime * float(i) / (numpoints - 1) for i in range(numpoints)]
+    t = [stoptime * float(i) / (numpoints - 1) for i in range(numpoints)]
 
-    t,dt=[],[]
-    # dt=stoptime/(numpoints-1)
-    for s in stoptime:
-        t.append([s * float(i) / (numpoints - 1) for i in range(numpoints)])
-        dt.append(s/ (numpoints - 1))
+    dt=stoptime/(numpoints-1)
+    # t,dt=[],[]
+    # for s in stoptime:
+    #     t.append([s * float(i) / (numpoints - 1) for i in range(numpoints)])
+    #     dt.append(s/ (numpoints - 1))
 
     # Radius around eq point,Time of to advance the self vector
-    r=[0.019909484,0.03345353,0.163259745]
-    # r=0.019909484
+    # r=[0.019909484,0.03345353,0.163259745]
+    r=0.163259745
     theta,space=(1.5711,1.5711),1
+    # theta=np.linspace(np.pi/1000,2*np.pi,10)
 
     # Linear combination of eigen vector vlaues for loop
     weight_of_eig_vec=np.linspace(1.0,1.0,1)
-    plottheory,plotvar,titlename,hozname,vertname,savename=True,(0,2),'pw-pw(0) vs w','w','pw-pw(0)','pw_only_resd_v_w_eps016_lam16'
+    plottheory,plotvar,titlename,hozname,vertname,savename=True,(1,3),'pu vs u for epsilon=0.16','u','pu','pu_v_u_eps016_lam16'
 
-    # onedshooting(lam,abserr,relerr,dt,t,r,savename) if sim=='o' else hetro_degree_shooting(lam,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,savename,hozname,vertname,titlename,plotvar,plottheory,theta,space)
-    hetro_degree_shooting(lam, epsilon, abserr, relerr, t, r, dt, 1.0, savename, hozname, vertname,titlename, plotvar, plottheory, 1.5711, space)
+    onedshooting(lam,abserr,relerr,dt,t,r,savename) if sim=='o' else hetro_degree_shooting(lam,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,savename,hozname,vertname,titlename,plotvar,plottheory,theta,space)
+    # hetro_degree_shooting(lam, epsilon, abserr, relerr, t, r, dt, 1.0, savename, hozname, vertname,titlename, plotvar, plottheory, 1.5711, space)
