@@ -161,9 +161,14 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
         print('The error is: ',(qf[vertical]-path[:,vertical][-1])/qf[vertical]*100,'%')
         temp_integration = simps(path[:, vertical],path[:, horizantal])
         print(0.5*temp_integration)
+        s0=1/lam + np.log(lam)-1
+        s1=( ( (lam-1)*(3*lam**2-10*lam-1) )/(4*math.pow(lam,3)) +(2/lam)*np.log(lam) )*epsilon**2
         theory_interation=((lam-1)**2/(2*math.pow(lam,3)))*epsilon**2 if horizantal is 1 and vertical is 3 else 1/lam + np.log(lam)-1 -( ( (lam-1)*(3*lam**2-10*lam-1) )/(4*math.pow(lam,3)) +(2/lam)*np.log(lam) )*epsilon**2
         print(theory_interation)
         print((theory_interation-0.5*temp_integration)/theory_interation*100)
+        print(s0)
+        print(0.5*temp_integration-s0)
+        print(s1)
         savefig(savename+'.png',dpi=500)
         plt.show()
 
@@ -459,14 +464,14 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
 
 if __name__=='__main__':
     #Network Parameters
-    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.02,'h'
+    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.1,'h'
     # lam, k_avg, epsilon, sim = 1.6, 50.0, [0.16,0.1,0.02],'h'
 
 
     # ODE parameters
     abserr = 1.0e-20
     relerr = 1.0e-13
-    stoptime=30.171
+    stoptime=30.709824
     # stoptime = [30.272,30.709824,30.171]
     numpoints = 10000
 
@@ -481,13 +486,13 @@ if __name__=='__main__':
 
     # Radius around eq point,Time of to advance the self vector
     # r=[0.019909484,0.03345353,0.163259745]
-    r=0.163259745
+    r=0.03345353
     theta,space=(1.5711,1.5711),1
     # theta=np.linspace(np.pi/1000,2*np.pi,10)
 
     # Linear combination of eigen vector vlaues for loop
     weight_of_eig_vec=np.linspace(1.0,1.0,1)
-    plottheory,plotvar,titlename,hozname,vertname,savename=True,(1,3),'pu vs u for epsilon=0.16','u','pu','pu_v_u_eps016_lam16'
+    plottheory,plotvar,titlename,hozname,vertname,savename=True,(0,2),'pu vs u for epsilon=0.16','u','pu','pu_v_u_eps016_lam16'
 
     onedshooting(lam,abserr,relerr,dt,t,r,savename) if sim=='o' else hetro_degree_shooting(lam,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,savename,hozname,vertname,titlename,plotvar,plottheory,theta,space)
     # hetro_degree_shooting(lam, epsilon, abserr, relerr, t, r, dt, 1.0, savename, hozname, vertname,titlename, plotvar, plottheory, 1.5711, space)
