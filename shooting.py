@@ -228,7 +228,6 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
         savefig(savename+'.png',dpi=500)
         plt.show()
         ax.legend(loc='best')
-
         figl, axl = plt.subplots()
         axl.axis(False)
         axl.legend(*label_params, loc="center")
@@ -462,16 +461,136 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
 
 
 
+def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
+
+    def postive_eigen_vec(J,q0):
+        # Find eigen vectors
+        eigen_value, eigen_vec = la.eig(J(q0))
+        postive_eig_vec = []
+        for e in range(np.size(eigen_value)):
+            if eigen_value[e].real > 0:
+                postive_eig_vec.append(eigen_vec[:, e].reshape(4, 1).real)
+        return postive_eig_vec
+
+    def vectorfiled(q, t):
+        w, u, p_w, p_u = q
+        f = [dy1_dt(float128(w), float128(u), float128(p_w), float128(p_u)),
+             dy2_dt(float128(w), float128(u), float128(p_w), float128(p_u)),
+             dp1_dt(float128(w), float128(u), float128(p_w), float128(p_u)),
+             dp2_dt(float128(w), float128(u), float128(p_w), float128(p_u))]
+        return f
+
+    def shoot(y1_0, y2_0, p1_0, p2_0, t, abserr, relerr, J):
+        q0 = (y1_0, y2_0, p1_0, p2_0)
+        vect_J = lambda q, t: J(q)
+        qsol = odeint(vectorfiled, q0, t, atol=abserr, rtol=relerr, mxstep=1000000000, hmin=1e-30, Dfun=vect_J)
+        return qsol
+
+    # #Numerical calcuation of eq of motion
+    H = lambda q: beta*((q[0]+q[1])+epsilon*(q[0]-q[1]))*((1/2-q[0])*(np.exp(q[2])-1)+(1/2-q[1])*(np.exp(q[3])-1))+gamma*(q[0]*(np.exp(-q[2])-1)+q[1]*(np.exp(-q[3])-1))
+    Jacobian_H = ndft.Jacobian(H)
+    dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
+
+
+    # Equations of motion
+    dy1_dt = lambda y1, y2, p1, p2: -y1*gamma*np.exp(-p1) + (1/2 - y1)*beta*(y1 + y2 + (-y1 + y2)*epsilon)*np.exp(p1)
+    dy2_dt = lambda y1, y2, p1, p2: (-y2)*gamma*np.exp(-p2) + (1/2 - y2)*beta*(y1 + y2 + (-y1 + y2)*epsilon)*np.exp(p2)
+    dp1_dt = lambda y1, y2, p1, p2: -(gamma*(-1 + np.exp(-p1)) + beta*(y1 + y2 + (-y1 + y2)*epsilon)*(1 - np.exp(p1)) + beta*(1 - epsilon)*((1/2 - y1)*(-1 + np.exp(p1)) + (1/2 - y2)*(-1 + np.exp(p2))))
+    dp2_dt = lambda y1, y2, p1, p2: -(gamma*(-1 + np.exp(-p2)) + beta*(1 + epsilon)*((1/2 - y1)*(-1 + np.exp(p1)) + (1/2 - y2)*(-1 + np.exp(p2))) + beta*(y1 + y2 + (-y1 + y2)*epsilon)*(1 - np.exp(p2)))
+
+    dq_dt = lambda q: np.array([dy1_dt(q[0], q[1], q[2], q[3]), dy2_dt(q[0], q[1], q[2], q[3]), dp1_dt(q[0], q[1], q[2], q[3]), dp2_dt(q[0], q[1], q[2], q[3])])
+    # temp=dq_dt([0.1,0.2,0.3,0.4])
+    J = ndft.Jacobian(dq_dt)
+    # temp_numeric= dq_dt_numerical([0.1, 0.2, 0.3, 0.4])
+    y1_0, y2_0, p1_0, p2_0 = (1/2)*(1-gamma/beta), (1/2)*(1-gamma/beta), 0, 0
+
+    def one_shot(shot_angle,lin_weight,radius=r):
+        q0 = (y1_0 + radius * np.cos(shot_angle), y2_0 + radius * np.sin(shot_angle), p1_0, p2_0)
+        postive_eig_vec = postive_eigen_vec(J, q0)
+        y1_i, y2_i, p1_i, p2_i = q0[0] + lin_weight * float(postive_eig_vec[0][0]) * dt + (
+                    1 - lin_weight) * float(postive_eig_vec[1][0]) * dt \
+            , q0[1] + float(lin_weight * postive_eig_vec[0][1]) * dt + (1 - lin_weight) * float(
+            postive_eig_vec[1][1]) * dt \
+            , q0[2] + float(postive_eig_vec[0][2]) * dt + (1 - lin_weight) * float(postive_eig_vec[1][2]) * dt \
+            , q0[3] + lin_weight * float(postive_eig_vec[0][3]) * dt + (1 - lin_weight) * float(
+            postive_eig_vec[1][3]) * dt
+        return shoot(y1_i, y2_i, p1_i, p2_i, t, abserr, relerr, J)
+
+
+    def eps0():
+        path=one_shot(np.pi/4,1.0)
+        plt.plot(path[:, 0] + path[:, 1], path[:, 2] + path[:, 3], linewidth=4,
+                 linestyle='None', Marker='.', label='Numerical for epsilon=' + str(epsilon))
+        plt.plot(path[:, 0] + path[:, 1],
+                 [2 * np.log(gamma / (beta * (1 - (i + j)))) for i, j in zip(path[:, 0], path[:, 1])],
+                 linewidth=4, linestyle='--', color='y', label='Theory')
+        xlabel('y1+y2')
+        ylabel('p1+p2')
+        title('For epsilon=0 theory vs numerical results, clancy different lambdas')
+        plt.legend()
+        plt.scatter((path[:,0][0]+path[:,1][0],path[:,0][-1]+path[:,1][-1]),
+        (path[:,2][0]+path[:,3][0],path[:,2][-1]+path[:,3][-1]),c=('g','r'),s=(100,100))
+        savefig('clancy_eps0' + '.png', dpi=500)
+        plt.show()
+
+    def plot_one_shot():
+        path = one_shot(theta, weight_of_eig_vec)
+        plt.plot(path[:, 0] + path[:, 1], path[:, 2] + path[:, 3], linewidth=4,
+                 linestyle='None', Marker='.', label='Numerical for epsilon=' + str(epsilon))
+        plt.plot(path[:, 0] + path[:, 1],
+                 [2 * np.log(gamma / (beta * (1 - (i + j)))) for i, j in zip(path[:, 0], path[:, 1])],
+                 linewidth=4, linestyle='--', color='y', label='Theory')
+        xlabel('y1+y2')
+        ylabel('p1+p2')
+        title('For epsilon=0 theory vs numerical results, clancy different lambdas')
+        plt.legend()
+        plt.scatter((path[:, 0][0] + path[:, 1][0], path[:, 0][-1] + path[:, 1][-1]),
+                    (path[:, 2][0] + path[:, 3][0], path[:, 2][-1] + path[:, 3][-1]), c=('g', 'r'), s=(100, 100))
+        plt.show()
+
+    def multi_shot_lin_angle():
+        paths = []
+        fig, ax = plt.subplots()
+        for lin_combo in weight_of_eig_vec:
+            for angle in theta:
+                for radius in r:
+                    current_path = one_shot(angle, lin_combo,radius)
+                    paths.append(current_path)
+                    ax.plot(current_path[:, 0], current_path[:, 2], linewidth=4, label='shot angle=' + str(round(angle, 10))
+                                                                                       + ',linear weight=' + str(
+                        round(lin_combo, 10))+', r='+str(round(radius,10)), linestyle='None', Marker='.')
+        # ax.scatter((paths[:, 0][0], paths[:, 0][-1]),(paths[:, 1][0], paths[:, 1][-1]), c=('g', 'r'), s=(100, 100))
+        label_params = ax.get_legend_handles_labels()
+        xlabel('y')
+        ylabel('p')
+        # plt.xlim([y1_0,0.4])
+        title('Multi epsilon')
+        savefig('multi_shoot' + '.png', dpi=500)
+        plt.show()
+
+        figl, axl = plt.subplots()
+        ax.legend(loc='best')
+        axl.axis(False)
+        axl.legend(*label_params, loc="center")
+        figl.savefig("LABEL_ONLY.png")
+        plt.show()
+        return paths
+
+
+    # eps0()
+    # multi_shot_lin_angle()
+    plot_one_shot()
+
 if __name__=='__main__':
     #Network Parameters
-    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.1,'h'
+    lam, k_avg, epsilon, sim = 5.0, 50.0, 0.1,'h'
     # lam, k_avg, epsilon, sim = 1.6, 50.0, [0.16,0.1,0.02],'h'
 
 
-    # ODE parameters
+    # ODE parameters22
     abserr = 1.0e-20
     relerr = 1.0e-13
-    stoptime=30.709824
+    stoptime=10.0
     # stoptime = [30.272,30.709824,30.171]
     numpoints = 10000
 
@@ -486,13 +605,19 @@ if __name__=='__main__':
 
     # Radius around eq point,Time of to advance the self vector
     # r=[0.019909484,0.03345353,0.163259745]
-    r=0.03345353
-    theta,space=(1.5711,1.5711),1
+    r=0.00001
+    theta,space=(0,2*np.pi),10
     # theta=np.linspace(np.pi/1000,2*np.pi,10)
+    beta,gamma=1.6,1.0
 
     # Linear combination of eigen vector vlaues for loop
-    weight_of_eig_vec=np.linspace(1.0,1.0,1)
+    weight_of_eig_vec=np.linspace(0.0,1.0,10)
     plottheory,plotvar,titlename,hozname,vertname,savename=True,(0,2),'pu vs u for epsilon=0.16','u','pu','pu_v_u_eps016_lam16'
 
-    onedshooting(lam,abserr,relerr,dt,t,r,savename) if sim=='o' else hetro_degree_shooting(lam,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,savename,hozname,vertname,titlename,plotvar,plottheory,theta,space)
+    # onedshooting(lam,abserr,relerr,dt,t,r,savename) if sim=='o' else hetro_degree_shooting(lam,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,savename,hozname,vertname,titlename,plotvar,plottheory,theta,space)
+
     # hetro_degree_shooting(lam, epsilon, abserr, relerr, t, r, dt, 1.0, savename, hozname, vertname,titlename, plotvar, plottheory, 1.5711, space)
+
+    theta_clancy=np.linspace(0,2*np.pi,10)
+    multi_r=np.linspace(0.0001,0.01,10)
+    hetro_inf(beta, gamma, epsilon, abserr, relerr, t, r, dt, 1.0, np.pi/4)
