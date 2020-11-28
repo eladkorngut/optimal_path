@@ -562,7 +562,7 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
                  linewidth=4, linestyle='--', color='y', label='Theory')
         xlabel('y1+y2')
         ylabel('p1+p2')
-        title('For epsilon=0 theory vs numerical results, clancy different lambdas')
+        title('For epsilon=0.5 theory vs numerical results, clancy different lambdas')
         plt.legend()
         plt.scatter((path[:, 0][0] + path[:, 1][0], path[:, 0][-1] + path[:, 1][-1]),
                     (path[:, 2][0] + path[:, 3][0], path[:, 2][-1] + path[:, 3][-1]), c=('g', 'r'), s=(100, 100))
@@ -645,7 +645,7 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
                     (z1[0], z2[-1]), c=('g', 'r'), s=(100, 100))
         xlabel('Time')
         ylabel('z')
-        title('z=(exp(-p)-1)\(1-epsilon),(exp(-p)-1)\(1+epsilon), lam=1.6 eps=0.1')
+        title('z=(exp(-p)-1)\(1-epsilon),(exp(-p)-1)\(1+epsilon), lam=1.6 eps=0.5')
         plt.legend()
         plt.savefig('z_v_time' + '.png', dpi=500)
         plt.show()
@@ -653,7 +653,7 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
         plt.plot(path[:,1],z2,linewidth=4,label='z for the 1+epsilon population',linestyle='--')
         xlabel('y')
         ylabel('z')
-        title('The z=(exp(-p)-1)\(1-epsilon),(exp(-p)-1)\(1+epsilon), lam=1.6 eps=0.1')
+        title('The z=(exp(-p)-1)\(1-epsilon),(exp(-p)-1)\(1+epsilon), lam=1.6 eps=0.5')
         plt.legend()
         plt.scatter((path[:,0][0], path[:,1][-1]),
                     (z1[0], z2[-1]), c=('g', 'r'), s=(100, 100))
@@ -665,7 +665,7 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
                     (z1[0], z2[-1]), c=('g', 'r'), s=(100, 100))
         xlabel('p')
         ylabel('z')
-        title('z=(exp(-p)-1)\(1-epsilon),(exp(-p)-1)\(1+epsilon), lam=1.6 eps=0.1')
+        title('z=(exp(-p)-1)\(1-epsilon),(exp(-p)-1)\(1+epsilon), lam=1.6 eps=0.5')
         plt.legend()
         plt.savefig('z_v_p' + '.png', dpi=500)
         plt.show()
@@ -709,14 +709,14 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
 
 if __name__=='__main__':
     #Network Parameters
-    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.1,'h'
+    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.5,'h'
     # lam, k_avg, epsilon, sim = 1.6, 50.0, [0.16,0.1,0.02],'h'
 
 
     # ODE parameters22
     abserr = 1.0e-20
     relerr = 1.0e-13
-    stoptime=15.792
+    stoptime=15.88
     # stoptime = [30.272,30.709824,30.171]
     numpoints = 10000
 
@@ -746,4 +746,4 @@ if __name__=='__main__':
 
     theta_clancy=np.linspace(0,2*np.pi,2)
     multi_r=np.linspace(0.0001,0.01,2)
-    hetro_inf(beta, gamma, epsilon, abserr, relerr, t, r, dt, 0.99996499052, np.pi/4-0.785084)
+    hetro_inf(beta, gamma, epsilon, abserr, relerr, t, r, dt, 0.99988218, np.pi/4-0.785084)
