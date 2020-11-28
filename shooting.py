@@ -635,6 +635,42 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
         plt.savefig('all_y_v_all_p' + '.png', dpi=500)
         plt.show()
 
+    def plot_z():
+        path = one_shot(theta, weight_of_eig_vec)
+        z1=[(np.exp(-x)-1)/(1-epsilon) for x in path[:,2]]
+        z2=[(np.exp(-x)-1)/(1+epsilon) for x in path[:,3]]
+        plt.plot(t,z1,linewidth=4,label='z for the 1-epsilon population')
+        plt.plot(t,z2,linewidth=4,label='z for the 1+epsilon population',linestyle='--')
+        plt.scatter((t[0], t[-1]),
+                    (z1[0], z2[-1]), c=('g', 'r'), s=(100, 100))
+        xlabel('Time')
+        ylabel('z')
+        title('z=(exp(-p)-1)\(1-epsilon),(exp(-p)-1)\(1+epsilon), lam=1.6 eps=0.1')
+        plt.legend()
+        plt.savefig('z_v_time' + '.png', dpi=500)
+        plt.show()
+        plt.plot(path[:,0],z1,linewidth=4,label='z for the 1-epsilon population')
+        plt.plot(path[:,1],z2,linewidth=4,label='z for the 1+epsilon population',linestyle='--')
+        xlabel('y')
+        ylabel('z')
+        title('The z=(exp(-p)-1)\(1-epsilon),(exp(-p)-1)\(1+epsilon), lam=1.6 eps=0.1')
+        plt.legend()
+        plt.scatter((path[:,0][0], path[:,1][-1]),
+                    (z1[0], z2[-1]), c=('g', 'r'), s=(100, 100))
+        plt.savefig('z_v_y' + '.png', dpi=500)
+        plt.show()
+        plt.plot(path[:,2],z1,linewidth=4,label='z for the 1-epsilon population')
+        plt.plot(path[:,3],z2,linewidth=4,label='z for the 1+epsilon population',linestyle='--')
+        plt.scatter((path[:,2][0], path[:,3][-1]),
+                    (z1[0], z2[-1]), c=('g', 'r'), s=(100, 100))
+        xlabel('p')
+        ylabel('z')
+        title('z=(exp(-p)-1)\(1-epsilon),(exp(-p)-1)\(1+epsilon), lam=1.6 eps=0.1')
+        plt.legend()
+        plt.savefig('z_v_p' + '.png', dpi=500)
+        plt.show()
+
+
     def multi_shot_lin_angle():
         paths = []
         fig, ax = plt.subplots()
@@ -668,18 +704,19 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
     # multi_shot_lin_angle()
     # plot_one_shot()
     plot_all_var()
+    plot_z()
     # advance_one_dt_at_time(8.0)
 
 if __name__=='__main__':
     #Network Parameters
-    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.001,'h'
+    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.1,'h'
     # lam, k_avg, epsilon, sim = 1.6, 50.0, [0.16,0.1,0.02],'h'
 
 
     # ODE parameters22
     abserr = 1.0e-20
     relerr = 1.0e-13
-    stoptime=16.35
+    stoptime=15.792
     # stoptime = [30.272,30.709824,30.171]
     numpoints = 10000
 
@@ -694,7 +731,7 @@ if __name__=='__main__':
 
     # Radius around eq point,Time of to advance the self vector
     # r=[0.019909484,0.03345353,0.163259745]
-    r=0.0000089871
+    r=0.0000089873
     theta,space=(0,2*np.pi),10
     # theta=np.linspace(np.pi/1000,2*np.pi,10)
     beta,gamma=1.6,1.0
@@ -709,4 +746,4 @@ if __name__=='__main__':
 
     theta_clancy=np.linspace(0,2*np.pi,2)
     multi_r=np.linspace(0.0001,0.01,2)
-    hetro_inf(beta, gamma, epsilon, abserr, relerr, t, r, dt, 0.99999869374, np.pi/4-0.78504)
+    hetro_inf(beta, gamma, epsilon, abserr, relerr, t, r, dt, 0.99996499052, np.pi/4-0.785084)
