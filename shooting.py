@@ -796,14 +796,14 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
 
 if __name__=='__main__':
     #Network Parameters
-    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.5,'h'
+    lam, k_avg, epsilon, sim = 5.0, 50.0, 0.1,'h'
     # lam, k_avg, epsilon, sim = 1.6, 50.0, [0.16,0.1,0.02],'h'
 
 
     # ODE parameters22
     abserr = 1.0e-20
     relerr = 1.0e-13
-    stoptime=15.93
+    stoptime=3.5
     # stoptime = [30.272,30.709824,30.171]
     numpoints = 10000
 
@@ -821,7 +821,7 @@ if __name__=='__main__':
     r=0.0000089873
     theta,space=(0,2*np.pi),10
     # theta=np.linspace(np.pi/1000,2*np.pi,10)
-    beta,gamma=1.6,1.0
+    beta,gamma=5.0,1.0
 
     # Linear combination of eigen vector vlaues for loop
     weight_of_eig_vec=np.linspace(0.0,1.0,2)
@@ -833,4 +833,4 @@ if __name__=='__main__':
 
     theta_clancy=np.linspace(0,2*np.pi,2)
     multi_r=np.linspace(0.0001,0.01,2)
-    hetro_inf(beta, gamma, epsilon, abserr, relerr, t, r, dt, 0.9998818182, np.pi/4-0.785084)
+    hetro_inf(beta, gamma, epsilon, abserr, relerr, t, r, dt, 0.99998769806, np.pi/4-0.785084)
