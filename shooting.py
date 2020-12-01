@@ -504,6 +504,15 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
     # temp_numeric= dq_dt_numerical([0.1, 0.2, 0.3, 0.4])
     y1_0, y2_0, p1_0, p2_0 = (1/2)*(1-gamma/beta), (1/2)*(1-gamma/beta), 0, 0
 
+    # p1_star_eq_motion=np.log((-2*gamma*epsilon+beta*(-1+epsilon**2)+np.sqrt(4*(gamma**2)*(epsilon**2)+(beta**2)*(-1+epsilon**2)**2))/(2*beta*epsilon*(-1+epsilon)))
+    # p2_star_eq_motion=np.log((2*gamma*epsilon+beta*(-1+epsilon**2)+np.sqrt(4*(gamma**2)*(epsilon**2)+(beta**2)*(-1+epsilon**2)**2))/(2*beta*epsilon*(1+epsilon)))
+    p1_star_clancy = -np.log((epsilon + np.sqrt(
+        epsilon ** 2 + (1 / 4) * ((beta / gamma) ** 2) * (1 - epsilon ** 2) ** 2) + (1 / 2) * (beta / gamma) * (
+                                          1 - epsilon ** 2)) / (1 + epsilon))
+    p2_star_clancy = -np.log((-epsilon + np.sqrt(
+        epsilon ** 2 + (1 / 4) * ((beta / gamma) ** 2) * (1 - epsilon ** 2) ** 2) + (1 / 2) * (beta / gamma) * (
+                                          1 - epsilon ** 2)) / (1 - epsilon))
+
     def one_shot(shot_angle,lin_weight,radius=r,final_time_path=t):
         q0 = (y1_0 + radius * np.cos(shot_angle), y2_0, p1_0+radius * np.sin(shot_angle), p2_0)
         postive_eig_vec = postive_eigen_vec(J, q0)
@@ -522,11 +531,12 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
         return False
 
 
-    def iterate_path(shot_angle,lin_weight,radius,tstop,range_weight,delta_t,stop_at_infection,number_of_inspection_points):
+    def iterate_path(shot_angle,radius,tstop,range_weight,delta_t,stop_at_infection,number_of_inspection_points):
         path= one_shot(theta, (range_weight[0]+range_weight[1])/2,radius,t)
         while path[:,0][-1]+path[:,1][-1] > stop_at_infection:
             tstop=tstop+delta_t
-            new_range_weight = path_boundries(shot_angle,lin_weight,radius,t,range_weight,number_of_inspection_points)
+            time_vec=np.linspace(0.0,tstop,number_of_inspection_points)
+            new_range_weight = path_boundries(shot_angle,radius,time_vec,range_weight,number_of_inspection_points)
             if new_range_weight is None:
                 delta_t = delta_t / 2
             else:
@@ -537,10 +547,12 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
 
     def path_boundries(shot_angle,radius,t0,range_weight,number_of_weight_inspect):
         left,right = range_weight[0],range_weight[1]
+        path_left,path_right = one_shot(shot_angle, left, radius, t0),one_shot(shot_angle, right, radius, t0)
+        if path_diverge(path_left) is False and path_diverge(path_right) is False: return range_weight
         while range_weight is not None:
             path_points_to_check = np.linspace(range_weight[0], range_weight[1], number_of_weight_inspect)
             found_l, found_r = False, False
-            count = 0
+            count = 1
             while found_l is not True and found_r is not True:
                 if found_l is False:
                     left=path_points_to_check[count]
@@ -663,18 +675,22 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
 
     def plot_all_var():
         path = one_shot(theta, weight_of_eig_vec)
+        f_of_d=(1/2)*(beta/gamma)*(1-epsilon**2)
+        D=(-1+f_of_d+np.sqrt(epsilon**2+f_of_d**2))/(1-epsilon**2)
+        A_theory=-(1/2)*(p1_star_clancy+p2_star_clancy)-(gamma/beta)*D
+        A_integration = simps(path[:, 2],path[:, 0])+simps(path[:, 3],path[:, 1])
         plt.plot(path[:, 0] + path[:, 1], path[:, 2] + path[:, 3], linewidth=4,
                  linestyle='None', Marker='.', label='Numerical for epsilon=' + str(epsilon))
         plt.plot(path[:, 0] + path[:, 1],
                  [2 * np.log(gamma / (beta * (1 - (i + j)))) for i, j in zip(path[:, 0], path[:, 1])],
-                 linewidth=4, linestyle='--', color='y', label='Theory')
+                 linewidth=4, linestyle='--', color='y', label='Theory 1d homo')
         xlabel('y1+y2')
         ylabel('p1+p2')
-        title('For epsilon=0 theory vs numerical results, clancy different lambdas')
-        plt.legend()
+        title('pw vs w; eps='+str(epsilon)+' Lam='+str(lam)+' Action theory='+str(round(A_theory,4))+' Action int='+str(round(A_integration,4)))
         plt.scatter((path[:, 0][0] + path[:, 1][0], path[:, 0][-1] + path[:, 1][-1]),
                     (path[:, 2][0] + path[:, 3][0], path[:, 2][-1] + path[:, 3][-1]), c=('g', 'r'), s=(100, 100))
-        plt.savefig('tot_y_v_tot_p' + '.png', dpi=500)
+        plt.legend()
+        plt.savefig('pw_v_w' + '.png', dpi=500)
         plt.show()
         plt.plot(path[:, 0], path[:, 2], linewidth=4,
                  linestyle='None', Marker='.', label='y1 vs p1 for epsilon=' + str(epsilon))
@@ -682,13 +698,28 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
                  linestyle='--',  label='y2 vs p2 for epsilon=' + str(epsilon))
         plt.scatter((path[:, 0][0] , path[:, 0][-1] ),
                     (path[:, 2][0], path[:, 2][-1]), c=('g', 'r'), s=(100, 100))
-
+        plt.scatter((0 , 0 ),
+                    (p1_star_clancy, p2_star_clancy), c=('m', 'k'), s=(100, 100))
         xlabel('Coordinate')
         ylabel('Momentum')
-        title('The momentum of each group vs coordinate')
+        title('y1,y2 vs p1,p2 for epsilon='+str(epsilon)+' and Lambda='+str(lam))
         plt.legend()
-        plt.savefig('all_y_v_all_p' + '.png', dpi=500)
+        plt.savefig('p1p2_v_y1y2' + '.png', dpi=500)
         plt.show()
+        plt.plot(path[:, 1]-path[:, 0], path[:, 3]-path[:, 2], linewidth=4,
+                 linestyle='None', Marker='.', label='y2-y1 vs p2-p1 for epsilon=' + str(epsilon))
+        plt.scatter((path[:, 1][0]-path[:, 0][0] , path[:, 1][-1]-path[:, 0][-1] ),
+                    (path[:, 3][0]-path[:, 2][0], path[:, 3][-1]-path[:, 2][-1]), c=('g', 'r'), s=(100, 100))
+        plt.scatter((y2_0-y1_0 , 0 ),
+                    (0, p2_star_clancy-p1_star_clancy), c=('m', 'k'), s=(100, 100))
+        xlabel('y2-y1')
+        ylabel('p2-p1')
+        title('p_u vs u for epsilon='+str(epsilon)+' and Lambda='+str(lam))
+        plt.legend()
+        plt.savefig('pu_vu_eps' + '.png', dpi=500)
+        plt.show()
+
+
 
     def plot_z():
         path = one_shot(theta, weight_of_eig_vec)
@@ -757,10 +788,11 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
 
     # eps0()
     # multi_shot_lin_angle()
-    plot_one_shot()
-    # plot_all_var()
+    # plot_one_shot()
+    plot_all_var()
     # plot_z()
     # advance_one_dt_at_time(8.0)
+    # temp_path,temp_range=iterate_path(theta,r,stoptime,(0.9998818085,0.9998818285),0.1,0.001,numpoints)
 
 if __name__=='__main__':
     #Network Parameters
@@ -801,4 +833,4 @@ if __name__=='__main__':
 
     theta_clancy=np.linspace(0,2*np.pi,2)
     multi_r=np.linspace(0.0001,0.01,2)
-    hetro_inf(beta, gamma, epsilon, abserr, relerr, t, r, dt, 0.9998818185, np.pi/4-0.785084)
+    hetro_inf(beta, gamma, epsilon, abserr, relerr, t, r, dt, 0.9998818182, np.pi/4-0.785084)
