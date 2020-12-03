@@ -499,6 +499,12 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
     dp2_dt = lambda y1, y2, p1, p2: -(gamma*(-1 + np.exp(-p2)) + beta*(1 + epsilon)*((1/2 - y1)*(-1 + np.exp(p1)) + (1/2 - y2)*(-1 + np.exp(p2))) + beta*(y1 + y2 + (-y1 + y2)*epsilon)*(1 - np.exp(p2)))
 
     dq_dt = lambda q: np.array([dy1_dt(q[0], q[1], q[2], q[3]), dy2_dt(q[0], q[1], q[2], q[3]), dp1_dt(q[0], q[1], q[2], q[3]), dp2_dt(q[0], q[1], q[2], q[3])])
+
+    z= lambda y1,y2: (beta - y1*beta - y2*beta - 2*gamma - beta*epsilon**2 + y1*beta*epsilon**2 + y2*beta*epsilon**2 + np.sqrt((-beta + y1*beta + y2*beta + 2*gamma + beta*epsilon**2 - y1*beta*epsilon**2 - y2*beta*epsilon**2)**2 -
+        4*(-beta + y1*beta + y2*beta + gamma - y1*beta*epsilon + y2*beta*epsilon)*(gamma - gamma*epsilon**2)))/(2*(gamma - gamma*epsilon**2))
+    # z_w_u_space=lambda w,u: (2*gamma + beta*(-1 + 2*w + epsilon**2 - (2*w*epsilon**2)*np.sqrt(4*(gamma**2)*(epsilon**2) + 8*u*beta*gamma*epsilon*(-1 + epsilon**2) + ((1 - 2*w)**2)*(beta**2)*(-1 + epsilon**2)**2)))/(2*gamma*(-1 + epsilon**2))
+    # z_w_u_space = lambda w,u: -((-2*gamma + (-1 + w)*beta*(-1 + epsilon**2) + np.sqrt(4*gamma**2*epsilon**2 - 4*u*beta*gamma*epsilon*(-1 + epsilon**2) + (-1 + w)**2*beta**2*(-1 + epsilon**2)**2))/(2*gamma*(-1 + epsilon**2)))
+    z_w_u_space = lambda w,u: -((-2*gamma + (-1 + 2*w)*beta*(-1 + epsilon**2) + np.sqrt(4*gamma**2*epsilon**2 - 8*u*beta*gamma*epsilon*(-1 + epsilon**2) + (1 - 2*w)**2*beta**2*(-1 + epsilon**2)**2))/(2*gamma*(-1 + epsilon**2)))
     # temp=dq_dt([0.1,0.2,0.3,0.4])
     J = ndft.Jacobian(dq_dt)
     # temp_numeric= dq_dt_numerical([0.1, 0.2, 0.3, 0.4])
@@ -591,8 +597,6 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
         return (time_when_diverge[1][1],time_when_diverge[0][1])
 
 
-
-
     def shot_dt_multi(range_lin_combo,range_angle,stoping_time):
         linear_combination_vector = np.linspace(range_lin_combo[0],range_lin_combo[1],2)
         angle_vector = np.linspace(range_angle[0],range_angle[1],2)
@@ -675,6 +679,11 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
 
     def plot_all_var():
         path = one_shot(theta, weight_of_eig_vec)
+        theory_path_theta1 = np.array([-np.log(1+(1-epsilon)*z(x1,x2)) for x1,x2 in zip(path[:,0],path[:,1])])
+        theory_path_theta2 = np.array([-np.log(1+(1+epsilon)*z(x1,x2)) for x1,x2 in zip(path[:,0],path[:,1])])
+        w_for_path,u_for_path=(path[:,0]+path[:,1])/2,(path[:,0]-path[:,1])/2
+        pw_theory = np.array([-np.log(1+(1-epsilon)*z_w_u_space(w,u))-np.log(1+(1+epsilon)*z_w_u_space(w,u)) for w,u in zip(w_for_path,u_for_path)])
+        pu_theory = np.array([-np.log(1+(1-epsilon)*z_w_u_space(w,u))+np.log(1+(1+epsilon)*z_w_u_space(w,u)) for w,u in zip(w_for_path,u_for_path)])
         f_of_d=(1/2)*(beta/gamma)*(1-epsilon**2)
         D=(-1+f_of_d+np.sqrt(epsilon**2+f_of_d**2))/(1-epsilon**2)
         A_theory=-(1/2)*(p1_star_clancy+p2_star_clancy)-(gamma/beta)*D
@@ -684,6 +693,8 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
         plt.plot(path[:, 0] + path[:, 1],
                  [2 * np.log(gamma / (beta * (1 - (i + j)))) for i, j in zip(path[:, 0], path[:, 1])],
                  linewidth=4, linestyle='--', color='y', label='Theory 1d homo')
+        plt.plot(path[:, 0] + path[:, 1], theory_path_theta1+theory_path_theta2, linewidth=4,
+                 linestyle=':',  label='Theory Clancy=' + str(epsilon))
         xlabel('y1+y2')
         ylabel('p1+p2')
         title('pw vs w; eps='+str(epsilon)+' Lam='+str(lam)+' Action theory='+str(round(A_theory,4))+' Action int='+str(round(A_integration,4)))
@@ -694,8 +705,9 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
         plt.show()
         plt.plot(path[:, 0], path[:, 2], linewidth=4,
                  linestyle='None', Marker='.', label='y1 vs p1 for epsilon=' + str(epsilon))
-        plt.plot(path[:, 1], path[:, 3], linewidth=4,
-                 linestyle='--',  label='y2 vs p2 for epsilon=' + str(epsilon))
+        plt.plot(path[:, 1], path[:, 3], linewidth=4, label='y2 vs p2 for epsilon=' + str(epsilon),color='y')
+        plt.plot(path[:, 0], theory_path_theta1, linewidth=4,linestyle=':',label='Theory Clancy',color='w')
+        plt.plot(path[:, 1], theory_path_theta2, linewidth=4,linestyle='--',label='Theory Clancy',color='r')
         plt.scatter((path[:, 0][0] , path[:, 0][-1] ),
                     (path[:, 2][0], path[:, 2][-1]), c=('g', 'r'), s=(100, 100))
         plt.scatter((0 , 0 ),
@@ -708,6 +720,7 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
         plt.show()
         plt.plot(path[:, 1]-path[:, 0], path[:, 3]-path[:, 2], linewidth=4,
                  linestyle='None', Marker='.', label='y2-y1 vs p2-p1 for epsilon=' + str(epsilon))
+        plt.plot(path[:, 1]-path[:, 0], theory_path_theta2-theory_path_theta1, linewidth=4,linestyle='--',label='Theory Clancy')
         plt.scatter((path[:, 1][0]-path[:, 0][0] , path[:, 1][-1]-path[:, 0][-1] ),
                     (path[:, 3][0]-path[:, 2][0], path[:, 3][-1]-path[:, 2][-1]), c=('g', 'r'), s=(100, 100))
         plt.scatter((y2_0-y1_0 , 0 ),
@@ -718,6 +731,35 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
         plt.legend()
         plt.savefig('pu_vu_eps' + '.png', dpi=500)
         plt.show()
+        plt.plot(w_for_path, path[:, 2]+path[:, 3], linewidth=4,
+                 linestyle='None', Marker='.', label='w vs pw for epsilon=' + str(epsilon))
+        plt.plot(w_for_path,pw_theory,linestyle='--',linewidth=4)
+        # plt.plot(path[:, 1]-path[:, 0], theory_path_theta2-theory_path_theta1, linewidth=4,linestyle='--',label='Theory Clancy')
+        # plt.scatter((path[:, 1][0]-path[:, 0][0] , path[:, 1][-1]-path[:, 0][-1] ),
+        #             (path[:, 3][0]-path[:, 2][0], path[:, 3][-1]-path[:, 2][-1]), c=('g', 'r'), s=(100, 100))
+        plt.scatter(((y2_0+y1_0)/2 , 0 ),(0, (p2_star_clancy+p1_star_clancy)), c=('g', 'r'), s=(100, 100))
+        xlabel('w')
+        ylabel('pw')
+        title('p_w vs w for epsilon='+str(epsilon)+' and Lambda='+str(lam))
+        plt.legend()
+        # plt.savefig('pw_vs_eps' + '.png', dpi=500)u
+        plt.show()
+        plt.plot(u_for_path, path[:, 2]-path[:, 3], linewidth=4,
+                 linestyle='None', Marker='.', label='w vs pw for epsilon=' + str(epsilon))
+        plt.plot(u_for_path,pu_theory,linestyle='--',linewidth=4)
+        # plt.plot(path[:, 1]-path[:, 0], theory_path_theta2-theory_path_theta1, linewidth=4,linestyle='--',label='Theory Clancy')
+        # plt.scatter((path[:, 1][0]-path[:, 0][0] , path[:, 1][-1]-path[:, 0][-1] ),
+        #             (path[:, 3][0]-path[:, 2][0], path[:, 3][-1]-path[:, 2][-1]), c=('g', 'r'), s=(100, 100))
+        plt.scatter(((y1_0-y2_0)/2 , 0 ),
+                    (0, p1_star_clancy-p2_star_clancy), c=('g', 'r'), s=(100, 100))
+        xlabel('u')
+        ylabel('pu')
+        title('p_u vs u for epsilon='+str(epsilon)+' and Lambda='+str(lam))
+        plt.legend()
+        # plt.savefig('pw_vs_eps' + '.png', dpi=500)
+        plt.show()
+
+
 
 
 
