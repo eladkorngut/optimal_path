@@ -461,7 +461,7 @@ def hetro_degree_shooting(lam, epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,sa
 
 
 
-def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
+def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,sample_size):
 
     def postive_eigen_vec(J,q0):
         # Find eigen vectors
@@ -480,10 +480,10 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
              dp2_dt(float128(w), float128(u), float128(p_w), float128(p_u))]
         return f
 
-    def shoot(y1_0, y2_0, p1_0, p2_0, t, abserr, relerr, J):
+    def shoot(y1_0, y2_0, p1_0, p2_0, tshot, abserr, relerr, J):
         q0 = (y1_0, y2_0, p1_0, p2_0)
-        vect_J = lambda q, t: J(q)
-        qsol = odeint(vectorfiled, q0, t, atol=abserr, rtol=relerr, mxstep=1000000000, hmin=1e-30, Dfun=vect_J)
+        vect_J = lambda q, tshot: J(q)
+        qsol = odeint(vectorfiled, q0, tshot, atol=abserr, rtol=relerr, mxstep=1000000000, hmin=1e-30, Dfun=vect_J)
         return qsol
 
     # #Numerical calcuation of eq of motion
@@ -519,16 +519,16 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
         epsilon ** 2 + (1 / 4) * ((beta / gamma) ** 2) * (1 - epsilon ** 2) ** 2) + (1 / 2) * (beta / gamma) * (
                                           1 - epsilon ** 2)) / (1 - epsilon))
 
-    def one_shot(shot_angle,lin_weight,radius=r,final_time_path=t):
+    def one_shot(shot_angle,lin_weight,radius=r,final_time_path=t,one_shot_dt=dt):
         q0 = (y1_0 + radius * np.cos(shot_angle), y2_0, p1_0+radius * np.sin(shot_angle), p2_0)
         postive_eig_vec = postive_eigen_vec(J, q0)
-        y1_i, y2_i, p1_i, p2_i = q0[0] + lin_weight * float(postive_eig_vec[0][0]) * dt + (
-                    1 - lin_weight) * float(postive_eig_vec[1][0]) * dt \
-            , q0[1] + float(lin_weight * postive_eig_vec[0][1]) * dt + (1 - lin_weight) * float(
-            postive_eig_vec[1][1]) * dt \
-            , q0[2] + float(postive_eig_vec[0][2]) * dt + (1 - lin_weight) * float(postive_eig_vec[1][2]) * dt \
-            , q0[3] + lin_weight * float(postive_eig_vec[0][3]) * dt + (1 - lin_weight) * float(
-            postive_eig_vec[1][3]) * dt
+        y1_i, y2_i, p1_i, p2_i = q0[0] + lin_weight * float(postive_eig_vec[0][0]) * one_shot_dt + (
+                    1 - lin_weight) * float(postive_eig_vec[1][0]) * one_shot_dt \
+            , q0[1] + float(lin_weight * postive_eig_vec[0][1]) * one_shot_dt + (1 - lin_weight) * float(
+            postive_eig_vec[1][1]) * one_shot_dt \
+            , q0[2] + float(postive_eig_vec[0][2]) * one_shot_dt + (1 - lin_weight) * float(postive_eig_vec[1][2]) * one_shot_dt \
+            , q0[3] + lin_weight * float(postive_eig_vec[0][3]) * one_shot_dt + (1 - lin_weight) * float(
+            postive_eig_vec[1][3]) * one_shot_dt
         return shoot(y1_i, y2_i, p1_i, p2_i, final_time_path, abserr, relerr, J)
 
 
@@ -536,81 +536,215 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
         if path[:,2][np.absolute(path[:,2])>=10.0].size is not 0 or path[:,3][np.absolute(path[:,3])>=10.0].size is not 0:return True
         return False
 
+    def when_path_diverge(path):
+        p1_max_div = np.where(np.absolute(path[:, 2]) > 10.0)
+        p1_div = 0.0 if not len(p1_max_div[0]) else np.where(np.absolute(path[:, 2]) > 10.0)[0][0]
+        p2_max_div = np.where(np.absolute(path[:, 3]) > 10.0)
+        p2_div = 0.0 if not len(p2_max_div[0]) else np.where(np.absolute(path[:, 3]) > 10.0)[0][0]
+        if float(p2_div)==float(p1_div)==0.0:return 0.0
+        if p1_div is 0.0: return p2_div
+        if p2_div is 0.0: return p1_div
+        return min(p1_div,p2_div)
 
     def iterate_path(shot_angle,radius,tstop,range_weight,delta_t,stop_at_infection,points_to_check_convergnce,number_of_inspection_points):
-        path= one_shot(theta, (range_weight[0]+range_weight[1])/2,radius,t)
+        one_shot_dt = tstop / (number_of_inspection_points - 1)
+        path= one_shot(theta, (range_weight[0]+range_weight[1])/2,radius,t,one_shot_dt)
         while path[:,0][-1]+path[:,1][-1] > stop_at_infection:
             tstop=tstop+delta_t
+            one_shot_dt = tstop / (number_of_inspection_points - 1)
             time_vec=np.linspace(0.0,tstop,number_of_inspection_points)
-            new_range_weight = path_boundries(shot_angle,radius,time_vec,range_weight,points_to_check_convergnce,number_of_inspection_points)
+            new_range_weight = path_boundries(shot_angle,radius,time_vec,range_weight,points_to_check_convergnce,one_shot_dt)
             if new_range_weight is None:
                 tstop = tstop - delta_t
+                one_shot_dt = tstop / (number_of_inspection_points - 1)
                 path = one_shot(theta, (range_weight[0] + range_weight[1]) / 2, radius,
-                                np.linspace(0, tstop, number_of_inspection_points))
+                                np.linspace(0, tstop, number_of_inspection_points),one_shot_dt)
                 delta_t = delta_t / 2
             else:
                 range_weight = new_range_weight
-                path = one_shot(theta, (range_weight[0]+range_weight[1])/2,radius,np.linspace(0,tstop,number_of_inspection_points))
+                path = one_shot(theta, (range_weight[0]+range_weight[1])/2,radius,np.linspace(0,tstop,number_of_inspection_points),one_shot_dt)
         return path,range_weight,tstop
 
 
-    def path_boundries(shot_angle,radius,t0,range_weight,points_to_check_convergnce,number_of_weight_inspect):
+    def path_boundries(shot_angle,radius,t0,range_weight,points_to_check_convergnce,one_shot_dt):
         left,right = range_weight[0],range_weight[1]
-        path_left,path_right = one_shot(shot_angle, left, radius, t0),one_shot(shot_angle, right, radius, t0)
+        path_left,path_right = one_shot(shot_angle, left, radius, t0,one_shot_dt),one_shot(shot_angle, right, radius, t0,one_shot_dt)
         if path_diverge(path_left) is False and path_diverge(path_right) is False: return range_weight
         while range_weight is not None:
             path_points_to_check = np.linspace(range_weight[0], range_weight[1], points_to_check_convergnce)
-            path_left, path_right = one_shot(shot_angle, left, radius, t0), one_shot(shot_angle, right, radius, t0)
+            path_left, path_right = one_shot(shot_angle, left, radius, t0,one_shot_dt), one_shot(shot_angle, right, radius, t0,one_shot_dt)
             found_l,found_r=not path_diverge(path_left),not path_diverge(path_right)
             # found_l, found_r = False, False
             count = 1
             while found_l is False or found_r is False:
                 if found_l is False:
                     left=path_points_to_check[count]
-                    path = one_shot(shot_angle, left, radius, t0)
+                    path = one_shot(shot_angle, left, radius, t0,one_shot_dt)
                     if path_diverge(path) is not True:
                         found_l=True
                         range_weight[0]=left
                 if found_r is False:
                     right=path_points_to_check[-count]
-                    path = one_shot(shot_angle, right, radius, t0)
+                    path = one_shot(shot_angle, right, radius, t0,one_shot_dt)
                     if path_diverge(path) is not True:
                         found_r=True
                         range_weight[1]=right
                 if right<=left: break
                 count=count+1
             if found_r is True and found_l is True: return [left,right]
-            range_weight=best_diverge_path(shot_angle,radius,t0,range_weight,points_to_check_convergnce)
+            range_weight=best_diverge_path(shot_angle,radius,t0,range_weight,points_to_check_convergnce,one_shot_dt)
         return range_weight
 
 
-    def best_diverge_path(shot_angle,radius,t0,range_weight,points_to_check_convergnce):
-        path_points_to_check = np.linspace(range_weight[0], range_weight[1], points_to_check_convergnce)
-        time_diverge_org=[]
-        for lin_combo in range_weight:
-            path=one_shot(shot_angle,lin_combo,radius,t0)
-            p1_max_div=np.where(np.absolute(path[:, 2]) > 10.0)
-            p1_div= 0.0 if not len(p1_max_div[0]) else np.where(np.absolute(path[:, 2]) > 10.0)[0][0]
-            p2_max_div=np.where(np.absolute(path[:, 3]) > 10.0)
-            p2_div= 0.0 if not len(p2_max_div[0]) else np.where(np.absolute(path[:, 3]) > 10.0)[0][0]
-            time_diverge_org.append((lin_combo,max(p1_div,p2_div)))
-        if time_diverge_org[0][1]<time_diverge_org[1][1]:time_diverge_org=[time_diverge_org[1],time_diverge_org[0]]
-        time_when_diverge=[x for x in time_diverge_org]
-        for c in path_points_to_check[1:-1]:
-            path = one_shot(shot_angle, c, radius, t0)
-            p1_max_div=np.where(np.absolute(path[:, 2]) > 10.0)
-            p1_div= 0.0 if not len(p1_max_div[0]) else np.where(np.absolute(path[:, 2]) > 10.0)[0][0]
-            p2_max_div=np.where(np.absolute(path[:, 3]) > 10.0)
-            p2_div= 0.0 if not len(p2_max_div[0]) else np.where(np.absolute(path[:, 3]) > 10.0)[0][0]
-            current_divergnce_time =max(p1_div,p2_div)
-            if current_divergnce_time>time_when_diverge[0][1]:
-                time_when_diverge[1]=time_when_diverge[0]
-                time_when_diverge[0]=(c,time_when_diverge)
-            elif current_divergnce_time>time_when_diverge[1][1]:
-                time_when_diverge[1]=(c,current_divergnce_time)
-        if time_diverge_org is time_when_diverge:return None
-        if time_when_diverge[0][0]>time_when_diverge[1][0]:return (time_when_diverge[1][0],time_when_diverge[0][0])
-        return (time_when_diverge[1][1],time_when_diverge[0][1])
+
+    # def best_diverge_path(shot_angle,radius,t0,org_lin_combo,one_shot_dt):
+    #     dl=1e-7
+    #     lin_combo=org_lin_combo
+    #     path=one_shot(shot_angle,lin_combo,radius,t0,one_shot_dt)
+    #     while path_diverge(path) is True:
+    #         org_div_time=when_path_diverge(path)
+    #         lin_combo_step_up=lin_combo+dl
+    #         lin_combo_half_step_up=lin_combo+dl/2
+    #         lin_combo_step_down=lin_combo-dl
+    #         lin_combo_half_step_down=lin_combo-dl/2
+    #         path_up=one_shot(shot_angle,lin_combo_step_up,radius,t0,one_shot_dt)
+    #         path_half_up=one_shot(shot_angle,lin_combo_half_step_up,radius,t0,one_shot_dt)
+    #         path_down=one_shot(shot_angle,lin_combo_step_down,radius,t0,one_shot_dt)
+    #         path_half_down=one_shot(shot_angle,lin_combo_half_step_down,radius,t0,one_shot_dt)
+    #         time_div_up,time_div_half_up,time_div_down,time_div_half_down=when_path_diverge(path_up),when_path_diverge(path_half_up),when_path_diverge(path_down),when_path_diverge(path_half_down)
+    #         best_time_before_diverge=max(time_div_up,time_div_half_up,time_div_down,time_div_half_down,org_div_time)
+    #         if best_time_before_diverge is org_div_time:
+    #             dl=dl/2
+    #         elif best_time_before_diverge is time_div_half_up:
+    #             lin_combo=lin_combo+dl/2
+    #             dl=dl/2
+    #         elif best_time_before_diverge is time_div_down:
+    #             lin_combo= lin_combo-dl
+    #         elif best_time_before_diverge is time_div_half_down:
+    #             lin_combo=lin_combo-dl/2
+    #             dl=dl/2
+    #         elif best_time_before_diverge is time_div_up:
+    #             lin_combo=lin_combo+dl
+    #         path=one_shot(shot_angle,lin_combo,radius,t0,one_shot_dt)
+    #     return lin_combo
+
+
+    def best_diverge_path(shot_angle,radius,t0,org_lin_combo,one_shot_dt):
+        path=one_shot(shot_angle,org_lin_combo,radius,t0,one_shot_dt)
+        org_div_time = when_path_diverge(path)
+        going_up=path[:,0][int(org_div_time)-2]+path[:,1][int(org_div_time)-2]>=path[:,0][0]+path[:,0][0]
+        while going_up:
+            radius=radius*2
+            path=one_shot(shot_angle,org_lin_combo,radius,t0,one_shot_dt)
+            org_div_time = when_path_diverge(path)
+            going_up = path[:, 0][int(org_div_time) - 2] + path[:, 1][int(org_div_time) - 2] >= path[:, 0][0] + path[:, 0][0]
+        dl = 0.1
+        path=one_shot(shot_angle,org_lin_combo,radius,t0,one_shot_dt)
+        lin_combo=org_lin_combo
+        while path_diverge(path) is True:
+            org_div_time = when_path_diverge(path)
+            lin_combo_step_up=lin_combo+dl
+            lin_combo_step_down=lin_combo-dl
+            path_up=one_shot(shot_angle,lin_combo_step_up,radius,t0,one_shot_dt)
+            path_down=one_shot(shot_angle,lin_combo_step_down,radius,t0,one_shot_dt)
+            time_div_up,time_div_down=when_path_diverge(path_up),when_path_diverge(path_down)
+            if time_div_down == 0.0:
+                return lin_combo_step_down,radius
+            if time_div_up == 0.0:
+                return lin_combo_step_up,radius
+            best_time_before_diverge=max(time_div_up,time_div_down,org_div_time)
+            if best_time_before_diverge == org_div_time:
+                dl=dl/10
+            elif best_time_before_diverge is time_div_down:
+                lin_combo= lin_combo-dl
+            elif best_time_before_diverge is time_div_up:
+                lin_combo=lin_combo+dl if lin_combo<=1.0 else lin_combo
+            path = one_shot(shot_angle,lin_combo,radius,t0,one_shot_dt)
+
+            # if dl<1e-16 and (time_div_up==time_div_down==org_div_time):
+            #     return -1
+        return lin_combo,radius
+
+    def fine_tuning(shot_angle,radius,t0,org_lin_combo,one_shot_dt):
+        min_accurecy,dl=0.001,1e-4
+        path = one_shot(shot_angle, org_lin_combo, radius, t0, one_shot_dt)
+        pu_theory=p1_star_clancy-p2_star_clancy
+        distance_from_theory = lambda p:np.sqrt(((p[:,0][-1]-p[:,1][-1])/2)**2+(p1_star_clancy-p2_star_clancy-(p[:,2][-1]-p[:,3][-1]))**2)
+        # numerical_u,numerical_pu=(path[:,0][-1]-path[:,1][-1])/2,path[:,2][-1]-path[:,3][-1]
+        lin_combo = org_lin_combo
+        current_distance = distance_from_theory(path)
+        while current_distance>min_accurecy:
+            lin_combo_step_up = lin_combo + dl
+            lin_combo_step_down = lin_combo - dl
+            path_up = one_shot(shot_angle, lin_combo_step_up, radius, t0, one_shot_dt)
+            path_down = one_shot(shot_angle, lin_combo_step_down, radius, t0, one_shot_dt)
+            if not path_diverge(path_up) and distance_from_theory(path_up)<current_distance:
+                current_distance=distance_from_theory(path_up)
+                lin_combo=lin_combo+dl
+            elif not path_diverge(path_down) and distance_from_theory(path_down)<current_distance:
+                current_distance=distance_from_theory(path_down)
+                lin_combo=lin_combo-dl
+            elif dl<1e-16:
+                break
+            else:
+                dl=dl/10
+        return lin_combo
+
+    def guess_path(sampleingtime,shot_angle=theta,lin_combo=weight_of_eig_vec,one_shot_dt=dt,radius=r):
+        for s in sampleingtime:
+            lin_combo, radius = best_diverge_path(shot_angle, radius, np.linspace(0.0,s,sample_size), lin_combo, one_shot_dt)
+        lin_combo= fine_tuning(shot_angle, radius, np.linspace(0.0,sampleingtime[-1],sample_size), lin_combo, one_shot_dt)
+        plot_one_shot(shot_angle,lin_combo,radius,np.linspace(0.0,sampleingtime[-1]),one_shot_dt)
+        return lin_combo
+
+
+    def recusive_time_step(shot_angle,radius,t0,lin_combo,one_shot_dt,init_path_trunc_time):
+        path_trunc_time=init_path_trunc_time
+        move_forward_sim_time=init_path_trunc_time/2
+        time_vec = np.linspace(0.0, path_trunc_time, numpoints)
+        lin_combo,radius = best_diverge_path(shot_angle, radius, time_vec, lin_combo, one_shot_dt)
+        path=one_shot(shot_angle,lin_combo,radius,t0,one_shot_dt)
+        while path[:,0][-1]+path[:,1][-1]>0.10:
+            path_trunc_time = move_forward_sim_time + path_trunc_time
+            time_vec=np.linspace(0.0,path_trunc_time,numpoints)
+            lin_combo_new,radius=best_diverge_path(shot_angle,radius,time_vec,lin_combo,one_shot_dt)
+            path = one_shot(shot_angle, lin_combo_new, radius, t0, one_shot_dt)
+            if lin_combo_new==-1:
+                path_trunc_time = path_trunc_time-move_forward_sim_time-(3/2)*move_forward_sim_time
+            elif lin_combo!=lin_combo_new:
+                move_forward_sim_time=move_forward_sim_time/2
+                lin_combo=lin_combo_new
+            else:
+                lin_combo=lin_combo_new
+        path = plot_one_shot(theta, lin_combo, r, t, one_shot_dt)
+        print(lin_combo)
+        return path
+
+
+        # for lin_combo in range_weight:
+        #     path=one_shot(shot_angle,lin_combo,radius,t0,one_shot_dt)
+        #     p1_max_div=np.where(np.absolute(path[:, 2]) > 10.0)
+        #     p1_div= 0.0 if not len(p1_max_div[0]) else np.where(np.absolute(path[:, 2]) > 10.0)[0][0]
+        #     p2_max_div=np.where(np.absolute(path[:, 3]) > 10.0)
+        #     p2_div= 0.0 if not len(p2_max_div[0]) else np.where(np.absolute(path[:, 3]) > 10.0)[0][0]
+        #     time_diverge_org.append((lin_combo,max(p1_div,p2_div)))
+        # if time_diverge_org[0][1]<time_diverge_org[1][1]:time_diverge_org=[time_diverge_org[1],time_diverge_org[0]]
+        # time_when_diverge=[x for x in time_diverge_org]
+        # for c in path_points_to_check[1:-1]:
+        #     path = one_shot(shot_angle, c, radius, t0,one_shot_dt)
+        #     p1_max_div=np.where(np.absolute(path[:, 2]) > 10.0)
+        #     p1_div= 0.0 if not len(p1_max_div[0]) else np.where(np.absolute(path[:, 2]) > 10.0)[0][0]
+        #     p2_max_div=np.where(np.absolute(path[:, 3]) > 10.0)
+        #     p2_div= 0.0 if not len(p2_max_div[0]) else np.where(np.absolute(path[:, 3]) > 10.0)[0][0]
+        #     current_divergnce_time =max(p1_div,p2_div)
+        #     if current_divergnce_time>time_when_diverge[0][1]:
+        #         time_when_diverge[1]=time_when_diverge[0]
+        #         time_when_diverge[0]=(c,time_when_diverge)
+        #     elif current_divergnce_time>time_when_diverge[1][1]:
+        #         time_when_diverge[1]=(c,current_divergnce_time)
+        # if time_diverge_org is time_when_diverge:return None
+        # if time_when_diverge[0][0]>time_when_diverge[1][0]:return (time_when_diverge[1][0],time_when_diverge[0][0])
+        # return (time_when_diverge[1][1],time_when_diverge[0][1])
 
 
     def shot_dt_multi(range_lin_combo,range_angle,stoping_time):
@@ -678,8 +812,8 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
         plt.show()
 
 
-    def plot_one_shot():
-        path = one_shot(theta, weight_of_eig_vec)
+    def plot_one_shot(angle_to_shoot=theta,linear_combination=weight_of_eig_vec,radius=r,time_vec=t,one_shot_dt=dt):
+        path = one_shot(angle_to_shoot, linear_combination,radius,time_vec,one_shot_dt)
         plt.plot(path[:, 0] + path[:, 1], path[:, 2] + path[:, 3], linewidth=4,
                  linestyle='None', Marker='.', label='Numerical for epsilon=' + str(epsilon))
         plt.plot(path[:, 0] + path[:, 1],
@@ -687,11 +821,12 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
                  linewidth=4, linestyle='--', color='y', label='Theory')
         xlabel('y1+y2')
         ylabel('p1+p2')
-        title('For epsilon=0 theory vs numerical results, clancy different lambdas')
+        title('For eps='+str(epsilon)+' theory vs numerical results, clancy different lambdas')
         plt.legend()
         plt.scatter((path[:, 0][0] + path[:, 1][0], path[:, 0][-1] + path[:, 1][-1]),
                     (path[:, 2][0] + path[:, 3][0], path[:, 2][-1] + path[:, 3][-1]), c=('g', 'r'), s=(100, 100))
         plt.show()
+        return path
 
     def plot_all_var():
         path = one_shot(theta, weight_of_eig_vec)
@@ -777,9 +912,6 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
         plt.show()
 
 
-
-
-
     def plot_z():
         path = one_shot(theta, weight_of_eig_vec)
         z1=[(np.exp(-x)-1)/(1-epsilon) for x in path[:,2]]
@@ -847,24 +979,36 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta):
 
     # eps0()
     # multi_shot_lin_angle()
-    plot_one_shot()
+    # path=plot_one_shot(theta,weight_of_eig_vec,r,t,dt)
+    # temp_lin=best_diverge_path(theta, r, np.linspace(0.0,stoptime,numpoints), weight_of_eig_vec, dt)
+    # temp_best_div,r=best_diverge_path(theta, r, t, weight_of_eig_vec, dt)
+    # print(temp_best_div,' ', r)
+    # path = plot_one_shot(theta, temp_best_div, r, t, dt)
+    # print(when_path_diverge(path))
     # plot_all_var()
     # plot_z()
     # advance_one_dt_at_time(8.0)
     # temp_path,temp_range,temp_stoptime=iterate_path(theta,r,stoptime,[0.99996498,0.999965],0.1,0.013,10,numpoints)
     # print(temp_range,' , ',temp_stoptime)
+    # plot_one_shot(theta,temp_range[0],r,np.linspace(0.0,temp_stoptime,numpoints))
+    # plot_one_shot(0.00031416339744827493,0.9999649851242188,8.9873e-06,np.linspace(0.0,16.192,numpoints))
+    # print('This no love song')
+    # recusive_time_step(theta, r, t, weight_of_eig_vec, dt, 12.8)
+    # temp_fine_tuning = fine_tuning(theta, r, t, weight_of_eig_vec, dt)
+    # print(temp_fine_tuning)
+    guess_path([15.0,20.0],theta,weight_of_eig_vec,dt,r)
 
 
 if __name__=='__main__':
     #Network Parameters
-    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.1,'h'
+    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.7,'h'
     # lam, k_avg, epsilon, sim = 1.6, 50.0, [0.16,0.1,0.02],'h'
 
 
     # ODE parameters22
     abserr = 1.0e-20
     relerr = 1.0e-13
-    stoptime=15.792
+    stoptime=20.0
     # stoptime = [30.272,30.709824,30.171]
     numpoints = 10000
 
@@ -872,7 +1016,8 @@ if __name__=='__main__':
     # t = [stoptime * float(i) / (numpoints - 1) for i in range(numpoints)]
     t = np.linspace(0.0,stoptime,numpoints)
 
-    dt=stoptime/(numpoints-1)
+    # dt=stoptime/(numpoints-1)
+    dt=16.0/(numpoints-1)
     # t,dt=[],[]
     # for s in stoptime:
     #     t.append([s * float(i) / (numpoints - 1) for i in range(numpoints)])
@@ -880,7 +1025,7 @@ if __name__=='__main__':
 
     # Radius around eq point,Time of to advance the self vector
     # r=[0.019909484,0.03345353,0.163259745]
-    r=0.0000089873
+    r=0.00008973
     theta,space=(0,2*np.pi),10
     # theta=np.linspace(np.pi/1000,2*np.pi,10)
     beta,gamma=1.6,1.0
@@ -895,4 +1040,9 @@ if __name__=='__main__':
 
     theta_clancy=np.linspace(0,2*np.pi,2)
     multi_r=np.linspace(0.0001,0.01,2)
-    hetro_inf(beta, gamma, epsilon, abserr, relerr, t, r, dt, 0.99996499056, np.pi/4-0.785084)
+    hetro_inf(beta, gamma, epsilon, abserr, relerr, t, r, dt,0.99984552863101, np.pi/4-0.785084,numpoints)
+    # stoptime=15.792
+    # t = np.linspace(0.0,stoptime,numpoints)
+    # dt=stoptime/(numpoints-1)
+    # hetro_inf(beta, gamma, epsilon, abserr, relerr, t, r, dt, 0.9999649851242188, np.pi/4-0.785084)
+
