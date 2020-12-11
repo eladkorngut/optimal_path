@@ -12,6 +12,8 @@ from matplotlib.font_manager import FontProperties
 import csv
 import functools
 import numdifftools as ndft
+from cycler import cycler
+
 
 
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
@@ -477,7 +479,7 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
         f = [dy1_dt(float128(w), float128(u), float128(p_w), float128(p_u)),
              dy2_dt(float128(w), float128(u), float128(p_w), float128(p_u)),
              dp1_dt(float128(w), float128(u), float128(p_w), float128(p_u)),
-             dp2_dt(float128(w), float128(u), float128(p_w), float128(p_u))]
+             dp2_dt(float128(w), float128(u),cd one_shot() float128(p_w), float128(p_u))]
         return f
 
     def shoot(y1_0, y2_0, p1_0, p2_0, tshot, abserr, relerr, J):
@@ -694,8 +696,9 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
         for s in sampleingtime:
             lin_combo, radius = best_diverge_path(shot_angle, radius, np.linspace(0.0,s,sample_size), lin_combo, one_shot_dt)
         lin_combo= fine_tuning(shot_angle, radius, np.linspace(0.0,sampleingtime[-1],sample_size), lin_combo, one_shot_dt)
-        plot_one_shot(shot_angle,lin_combo,radius,np.linspace(0.0,sampleingtime[-1]),one_shot_dt)
-        return lin_combo
+        # plot_one_shot(shot_angle,lin_combo,radius,np.linspace(0.0,sampleingtime[-1],sample_size),one_shot_dt)
+        # plot_all_var(shot_angle,lin_combo,one_shot_dt,radius,np.linspace(0.0,sampleingtime[-1],sample_size))
+        return lin_combo,radius,one_shot(shot_angle, lin_combo,radius,np.linspace(0.0,sampleingtime[-1],sample_size),one_shot_dt)
 
 
     def recusive_time_step(shot_angle,radius,t0,lin_combo,one_shot_dt,init_path_trunc_time):
@@ -719,32 +722,6 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
         path = plot_one_shot(theta, lin_combo, r, t, one_shot_dt)
         print(lin_combo)
         return path
-
-
-        # for lin_combo in range_weight:
-        #     path=one_shot(shot_angle,lin_combo,radius,t0,one_shot_dt)
-        #     p1_max_div=np.where(np.absolute(path[:, 2]) > 10.0)
-        #     p1_div= 0.0 if not len(p1_max_div[0]) else np.where(np.absolute(path[:, 2]) > 10.0)[0][0]
-        #     p2_max_div=np.where(np.absolute(path[:, 3]) > 10.0)
-        #     p2_div= 0.0 if not len(p2_max_div[0]) else np.where(np.absolute(path[:, 3]) > 10.0)[0][0]
-        #     time_diverge_org.append((lin_combo,max(p1_div,p2_div)))
-        # if time_diverge_org[0][1]<time_diverge_org[1][1]:time_diverge_org=[time_diverge_org[1],time_diverge_org[0]]
-        # time_when_diverge=[x for x in time_diverge_org]
-        # for c in path_points_to_check[1:-1]:
-        #     path = one_shot(shot_angle, c, radius, t0,one_shot_dt)
-        #     p1_max_div=np.where(np.absolute(path[:, 2]) > 10.0)
-        #     p1_div= 0.0 if not len(p1_max_div[0]) else np.where(np.absolute(path[:, 2]) > 10.0)[0][0]
-        #     p2_max_div=np.where(np.absolute(path[:, 3]) > 10.0)
-        #     p2_div= 0.0 if not len(p2_max_div[0]) else np.where(np.absolute(path[:, 3]) > 10.0)[0][0]
-        #     current_divergnce_time =max(p1_div,p2_div)
-        #     if current_divergnce_time>time_when_diverge[0][1]:
-        #         time_when_diverge[1]=time_when_diverge[0]
-        #         time_when_diverge[0]=(c,time_when_diverge)
-        #     elif current_divergnce_time>time_when_diverge[1][1]:
-        #         time_when_diverge[1]=(c,current_divergnce_time)
-        # if time_diverge_org is time_when_diverge:return None
-        # if time_when_diverge[0][0]>time_when_diverge[1][0]:return (time_when_diverge[1][0],time_when_diverge[0][0])
-        # return (time_when_diverge[1][1],time_when_diverge[0][1])
 
 
     def shot_dt_multi(range_lin_combo,range_angle,stoping_time):
@@ -828,8 +805,8 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
         plt.show()
         return path
 
-    def plot_all_var():
-        path = one_shot(theta, weight_of_eig_vec)
+    def plot_all_var(shot_angle=theta,lin_combo=weight_of_eig_vec,one_shot_dt=dt,radius=r,final_time_path=t):
+        path = one_shot(shot_angle, lin_combo,radius,final_time_path,one_shot_dt)
         theory_path_theta1 = np.array([-np.log(1+(1-epsilon)*z(x1,x2)) for x1,x2 in zip(path[:,0],path[:,1])])
         theory_path_theta2 = np.array([-np.log(1+(1+epsilon)*z(x1,x2)) for x1,x2 in zip(path[:,0],path[:,1])])
         w_for_path,u_for_path=(path[:,0]+path[:,1])/2,(path[:,0]-path[:,1])/2
@@ -996,19 +973,21 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
     # recusive_time_step(theta, r, t, weight_of_eig_vec, dt, 12.8)
     # temp_fine_tuning = fine_tuning(theta, r, t, weight_of_eig_vec, dt)
     # print(temp_fine_tuning)
-    guess_path([15.0,20.0],theta,weight_of_eig_vec,dt,r)
+    temp_lin_guess,temp_radius_guess,temp_guess_path=guess_path([7,10],theta,weight_of_eig_vec,dt,r)
+    # print(temp_lin_guess,' ',temp_radius_guess)
+    return temp_guess_path
 
 
 if __name__=='__main__':
     #Network Parameters
-    lam, k_avg, epsilon, sim = 1.6, 50.0, 0.7,'h'
+    lam, k_avg, epsilon, sim = 2, 50.0, 0.02,'h'
     # lam, k_avg, epsilon, sim = 1.6, 50.0, [0.16,0.1,0.02],'h'
 
 
     # ODE parameters22
     abserr = 1.0e-20
     relerr = 1.0e-13
-    stoptime=20.0
+    stoptime=16.0
     # stoptime = [30.272,30.709824,30.171]
     numpoints = 10000
 
@@ -1025,10 +1004,10 @@ if __name__=='__main__':
 
     # Radius around eq point,Time of to advance the self vector
     # r=[0.019909484,0.03345353,0.163259745]
-    r=0.00008973
+    r=1e-6
     theta,space=(0,2*np.pi),10
     # theta=np.linspace(np.pi/1000,2*np.pi,10)
-    beta,gamma=1.6,1.0
+    beta,gamma=lam,1.0
 
     # Linear combination of eigen vector vlaues for loop
     weight_of_eig_vec=np.linspace(0.0,1.0,2)
@@ -1040,7 +1019,25 @@ if __name__=='__main__':
 
     theta_clancy=np.linspace(0,2*np.pi,2)
     multi_r=np.linspace(0.0001,0.01,2)
-    hetro_inf(beta, gamma, epsilon, abserr, relerr, t, r, dt,0.99984552863101, np.pi/4-0.785084,numpoints)
+    guessed_paths=[]
+    list_of_epsilons=[0.02,0.04,0.06,0.08,0.1,0.12,0.14,0.16]
+    for eps in list_of_epsilons:
+        guessed_paths.append(hetro_inf(beta, gamma, eps, abserr, relerr, t, r, dt,0.9999918386580096, np.pi/4-0.785084,numpoints))
+    plt.figure()
+    for p,eps in zip(guessed_paths,list_of_epsilons):
+        w=(p[:,0]+p[:,1])/2
+        pw=p[:,2]+p[:,3]
+        linestyle_cycler = cycler('linestyle', ['-', '--', ':', '-.'])
+        plt.rc('axes', prop_cycle=(cycler('color', ['r', 'g', 'b', 'y']) +
+                                   cycler('linestyle', ['-', '--', ':', '-.'])))
+        pw0=[2 * np.log(gamma / (beta * (1 - (i + j)))) for i, j in zip(p[:, 0], p[:, 1])]
+        plt.plot(w,(pw-pw0),linewidth=4,label='eps='+str(eps))
+    plt.xlabel('w')
+    plt.ylabel('(pw-pw0)/eps^2')
+    plt.title('(pw-pw0)\eps^2 vs w different epsilons')
+    plt.legend()
+    plt.savefig('pw_v_w_different_eps_normalized_lam'+str(lam)+'.png',dpi=500)
+    plt.show()
     # stoptime=15.792
     # t = np.linspace(0.0,stoptime,numpoints)
     # dt=stoptime/(numpoints-1)
