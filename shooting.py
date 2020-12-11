@@ -479,7 +479,7 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
         f = [dy1_dt(float128(w), float128(u), float128(p_w), float128(p_u)),
              dy2_dt(float128(w), float128(u), float128(p_w), float128(p_u)),
              dp1_dt(float128(w), float128(u), float128(p_w), float128(p_u)),
-             dp2_dt(float128(w), float128(u),cd one_shot() float128(p_w), float128(p_u))]
+             dp2_dt(float128(w), float128(u), float128(p_w), float128(p_u))]
         return f
 
     def shoot(y1_0, y2_0, p1_0, p2_0, tshot, abserr, relerr, J):
