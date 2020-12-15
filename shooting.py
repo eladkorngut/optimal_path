@@ -481,8 +481,36 @@ def vectorfiled(q, t,dy1_dt,dy2_dt,dp1_dt,dp2_dt):
 def shoot(y1_0, y2_0, p1_0, p2_0, tshot, abserr, relerr, J,dq_dt):
     q0 = (y1_0, y2_0, p1_0, p2_0)
     vect_J = lambda q, tshot: J(q0)
-    qsol = odeint(dq_dt_lamonly, q0, tshot,atol=abserr, rtol=relerr, mxstep=1000000000, hmin=1e-30, Dfun=vect_J)
+    qsol = odeint(dq_dt, q0, tshot,atol=abserr, rtol=relerr, mxstep=1000000000, hmin=1e-30, Dfun=vect_J)
     return qsol
+
+
+def eq_points_inf_only(epsilon,beta,gamma):
+    if type(epsilon) is float:
+        return (1/2)*(1-gamma/beta), (1/2)*(1-gamma/beta), 0, 0,  -np.log((epsilon + np.sqrt(
+            epsilon ** 2 + (1 / 4) * ((beta / gamma) ** 2) * (1 - epsilon ** 2) ** 2) + (1 / 2) * (beta / gamma) * (
+                                              1 - epsilon ** 2)) / (1 + epsilon)), -np.log((-epsilon + np.sqrt(
+            epsilon ** 2 + (1 / 4) * ((beta / gamma) ** 2) * (1 - epsilon ** 2) ** 2) + (1 / 2) * (beta / gamma) * (
+                                              1 - epsilon ** 2)) / (1 - epsilon))
+    epsilon_lam,epsilon_mu=epsilon[0],epsilon[1]
+    d=(-4*beta+2*gamma-2*gamma*epsilon_mu**2+np.sqrt(-4*(2*beta-2*gamma-2*gamma*epsilon_lam*epsilon_mu)*(2*beta-2*beta*epsilon_mu**2)+(4*beta-2*gamma+2*gamma*epsilon_mu**2)**2))/(2*(2*beta-2*beta*epsilon_mu**2))
+    y1_0=(1-epsilon_mu)/(2*(1+(1-epsilon_mu)*d))
+    y2_0=(1+epsilon_mu)/(2*(1+(1+epsilon_mu)*d))
+    p1_0,p2_0=0,0
+    p1_f=-np.log(1+(1-epsilon_mu)*d)
+    p2_f=-np.log(1+(1+epsilon_mu)*d)
+    return y1_0,y2_0,p1_0,p2_0,p1_f,p2_f
+
+
+# def eq_point_inf_sus(epsilon,beta,gamma):
+#     epsilon_lam,epsilon_mu=epsilon[0],epsilon[1]
+#     d=(-4*beta+2*gamma-2*gamma*epsilon_mu**2+np.sqrt(-4*(2*beta-2*gamma-2*gamma*epsilon_lam*epsilon_mu)*(2*beta-2*beta*epsilon_mu**2)+(4*beta-2*gamma+2*gamma*epsilon_mu**2)**2))/(2*(2*beta-2*beta*epsilon_mu**2))
+#     y1_0=(1-epsilon_mu)/(2*(1+(1-epsilon_mu)*d))
+#     y2_0=(1+epsilon_mu)/(2*(1+(1+epsilon_mu)*d))
+#     p1_0,p2_0=0,0
+#     p1_f=-np.log(1+(1-epsilon_mu)*d)
+#     p2_f=-np.log(1+(1+epsilon_mu)*d)
+#     return y1_0,y2_0,p1_0,p2_0,p1_f,p2_f
 
 
 def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,sample_size,shot_dq_dt):
@@ -491,6 +519,7 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
     # H = lambda q: beta * ((q[0] + q[1]) + epsilon * (q[0] - q[1])) * (
     #             (1 / 2 - q[0]) * (np.exp(q[2]) - 1) + (1 / 2 - q[1]) * (np.exp(q[3]) - 1)) + gamma * (
     #                           q[0] * (np.exp(-q[2]) - 1) + q[1] * (np.exp(-q[3]) - 1))
+
     # Jacobian_H = ndft.Jacobian(H)
     # dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
 
@@ -500,7 +529,7 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
     #      dp2_dt(q[0], q[1], q[2], q[3])])
     # J = ndft.Jacobian(dq_dt)
 
-    J =lambda q,t: ndft.Jacobian(shot_dq_dt(q,t))
+    J=ndft.Jacobian(shot_dq_dt)
 
     # Equations of motion
 
@@ -510,16 +539,18 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
     # z_w_u_space=lambda w,u: (2*gamma + beta*(-1 + 2*w + epsilon**2 - (2*w*epsilon**2)*np.sqrt(4*(gamma**2)*(epsilon**2) + 8*u*beta*gamma*epsilon*(-1 + epsilon**2) + ((1 - 2*w)**2)*(beta**2)*(-1 + epsilon**2)**2)))/(2*gamma*(-1 + epsilon**2))
     # z_w_u_space = lambda w,u: -((-2*gamma + (-1 + w)*beta*(-1 + epsilon**2) + np.sqrt(4*gamma**2*epsilon**2 - 4*u*beta*gamma*epsilon*(-1 + epsilon**2) + (-1 + w)**2*beta**2*(-1 + epsilon**2)**2))/(2*gamma*(-1 + epsilon**2)))
     z_w_u_space = lambda w,u: -((-2*gamma + (-1 + 2*w)*beta*(-1 + epsilon**2) + np.sqrt(4*gamma**2*epsilon**2 - 8*u*beta*gamma*epsilon*(-1 + epsilon**2) + (1 - 2*w)**2*beta**2*(-1 + epsilon**2)**2))/(2*gamma*(-1 + epsilon**2)))
-    y1_0, y2_0, p1_0, p2_0 = (1/2)*(1-gamma/beta), (1/2)*(1-gamma/beta), 0, 0
+    # y1_0, y2_0, p1_0, p2_0 = (1/2)*(1-gamma/beta), (1/2)*(1-gamma/beta), 0, 0
 
     # p1_star_eq_motion=np.log((-2*gamma*epsilon+beta*(-1+epsilon**2)+np.sqrt(4*(gamma**2)*(epsilon**2)+(beta**2)*(-1+epsilon**2)**2))/(2*beta*epsilon*(-1+epsilon)))
     # p2_star_eq_motion=np.log((2*gamma*epsilon+beta*(-1+epsilon**2)+np.sqrt(4*(gamma**2)*(epsilon**2)+(beta**2)*(-1+epsilon**2)**2))/(2*beta*epsilon*(1+epsilon)))
-    p1_star_clancy = -np.log((epsilon + np.sqrt(
-        epsilon ** 2 + (1 / 4) * ((beta / gamma) ** 2) * (1 - epsilon ** 2) ** 2) + (1 / 2) * (beta / gamma) * (
-                                          1 - epsilon ** 2)) / (1 + epsilon))
-    p2_star_clancy = -np.log((-epsilon + np.sqrt(
-        epsilon ** 2 + (1 / 4) * ((beta / gamma) ** 2) * (1 - epsilon ** 2) ** 2) + (1 / 2) * (beta / gamma) * (
-                                          1 - epsilon ** 2)) / (1 - epsilon))
+    # p1_star_clancy = -np.log((epsilon + np.sqrt(
+    #     epsilon ** 2 + (1 / 4) * ((beta / gamma) ** 2) * (1 - epsilon ** 2) ** 2) + (1 / 2) * (beta / gamma) * (
+    #                                       1 - epsilon ** 2)) / (1 + epsilon))
+    # p2_star_clancy = -np.log((-epsilon + np.sqrt(
+    #     epsilon ** 2 + (1 / 4) * ((beta / gamma) ** 2) * (1 - epsilon ** 2) ** 2) + (1 / 2) * (beta / gamma) * (
+    #                                       1 - epsilon ** 2)) / (1 - epsilon))
+
+    y1_0, y2_0, p1_0, p2_0,p1_star_clancy,p2_star_clancy=eq_points_inf_only(epsilon,beta,gamma)
 
     def one_shot(shot_angle,lin_weight,radius=r,final_time_path=t,one_shot_dt=dt):
         q0 = (y1_0 + radius * np.cos(shot_angle), y2_0, p1_0+radius * np.sin(shot_angle), p2_0)
@@ -925,9 +956,9 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
     # multi_shot_lin_angle()
     # path=plot_one_shot(theta,weight_of_eig_vec,r,t,dt)
     # temp_lin=best_diverge_path(theta, r, np.linspace(0.0,stoptime,numpoints), weight_of_eig_vec, dt)
-    # temp_best_div,r=best_diverge_path(theta, r, t, weight_of_eig_vec, dt)
-    # print(temp_best_div,' ', r)
-    # path = plot_one_shot(theta, temp_best_div, r, t, dt)
+    temp_best_div,r=best_diverge_path(theta, r, t, weight_of_eig_vec, dt)
+    print(temp_best_div,' ', r)
+    path = plot_one_shot(theta, temp_best_div, r, t, dt)
     # print(when_path_diverge(path))
     # plot_all_var()
     # plot_z()
@@ -940,9 +971,9 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
     # recusive_time_step(theta, r, t, weight_of_eig_vec, dt, 12.8)
     # temp_fine_tuning = fine_tuning(theta, r, t, weight_of_eig_vec, dt)
     # print(temp_fine_tuning)
-    temp_lin_guess,temp_radius_guess,temp_guess_path=guess_path([7,10],theta,weight_of_eig_vec,dt,r)
+    # temp_lin_guess,temp_radius_guess,temp_guess_path=guess_path([7,10],theta,weight_of_eig_vec,dt,r)
     # print(temp_lin_guess,' ',temp_radius_guess)
-    return temp_guess_path
+    # return temp_guess_path
 
 
 if __name__=='__main__':
@@ -988,20 +1019,37 @@ if __name__=='__main__':
     multi_r=np.linspace(0.0001,0.01,2)
     guessed_paths=[]
     list_of_epsilons=[0.02,0.04,0.06,0.08,0.1,0.12,0.14,0.16]
-    for eps in list_of_epsilons:
-        lamonly_dy1_dt = lambda y1, y2, p1, p2: -y1 * gamma * np.exp(-p1) + (1 / 2 - y1) * beta * (
-                    y1 + y2 + (-y1 + y2) * eps) * np.exp(p1)
-        lamonly_dy2_dt = lambda y1, y2, p1, p2: (-y2) * gamma * np.exp(-p2) + (1 / 2 - y2) * beta * (
-                    y1 + y2 + (-y1 + y2) * eps) * np.exp(p2)
-        lamonly_dp1_dt = lambda y1, y2, p1, p2: -(
-                gamma * (-1 + np.exp(-p1)) + beta * (y1 + y2 + (-y1 + y2) * eps) * (1 - np.exp(p1)) + beta * (
-                1 - eps) * ((1 / 2 - y1) * (-1 + np.exp(p1)) + (1 / 2 - y2) * (-1 + np.exp(p2))))
-        lamonly_dp2_dt = lambda y1, y2, p1, p2: -(gamma * (-1 + np.exp(-p2)) + beta * (1 + eps) * (
-                (1 / 2 - y1) * (-1 + np.exp(p1)) + (1 / 2 - y2) * (-1 + np.exp(p2))) + beta * (
-                                                      y1 + y2 + (-y1 + y2) * eps) * (1 - np.exp(p2)))
-        dq_dt_lamonly=lambda q,t:np.array([lamonly_dy1_dt(q[0],q[1],q[2],q[3]),lamonly_dy2_dt(q[0],q[1],q[2],q[3]),lamonly_dp1_dt(q[0],q[1],q[2],q[3]),lamonly_dp2_dt(q[0],q[1],q[2],q[3])])
-        guessed_paths.append(hetro_inf(beta, gamma, eps, abserr, relerr, t, r, dt,0.9999918386580096, np.pi/4-0.785084,numpoints,dq_dt_lamonly))
-    plt.figure()
+    # for eps in list_of_epsilons:
+    #     lamonly_dy1_dt = lambda y1, y2, p1, p2: -y1 * gamma * np.exp(-p1) + (1 / 2 - y1) * beta * (
+    #                 y1 + y2 + (-y1 + y2) * eps) * np.exp(p1)
+    #     lamonly_dy2_dt = lambda y1, y2, p1, p2: (-y2) * gamma * np.exp(-p2) + (1 / 2 - y2) * beta * (
+    #                 y1 + y2 + (-y1 + y2) * eps) * np.exp(p2)
+    #     lamonly_dp1_dt = lambda y1, y2, p1, p2: -(
+    #             gamma * (-1 + np.exp(-p1)) + beta * (y1 + y2 + (-y1 + y2) * eps) * (1 - np.exp(p1)) + beta * (
+    #             1 - eps) * ((1 / 2 - y1) * (-1 + np.exp(p1)) + (1 / 2 - y2) * (-1 + np.exp(p2))))
+    #     lamonly_dp2_dt = lambda y1, y2, p1, p2: -(gamma * (-1 + np.exp(-p2)) + beta * (1 + eps) * (
+    #             (1 / 2 - y1) * (-1 + np.exp(p1)) + (1 / 2 - y2) * (-1 + np.exp(p2))) + beta * (
+    #                                                   y1 + y2 + (-y1 + y2) * eps) * (1 - np.exp(p2)))
+    #     dq_dt_lamonly=lambda q,t=None:np.array([lamonly_dy1_dt(q[0],q[1],q[2],q[3]),lamonly_dy2_dt(q[0],q[1],q[2],q[3]),lamonly_dp1_dt(q[0],q[1],q[2],q[3]),lamonly_dp2_dt(q[0],q[1],q[2],q[3])])
+    #     # def dq_dt_lamonly(q,t):
+    #     #     return np.array([lamonly_dy1_dt(q[0],q[1],q[2],q[3]),lamonly_dy2_dt(q[0],q[1],q[2],q[3]),lamonly_dp1_dt(q[0],q[1],q[2],q[3]),lamonly_dp2_dt(q[0],q[1],q[2],q[3])])
+    #     guessed_paths.append(hetro_inf(beta, gamma, eps, abserr, relerr, t, r, dt,0.9999918386580096, np.pi/4-0.785084,numpoints,dq_dt_lamonly))
+    # plt.figure()
+
+    epsilon_mu,epsilon_lam=0.1,0.1
+    dy1_dt_sus_inf=lambda q: beta*((1-epsilon_lam)*q[0]+(1+epsilon_lam)*q[1])*(1-epsilon_mu)*(1/2-q[0])*np.exp(q[2])-gamma*q[0]*np.exp(-q[2])
+    dy2_dt_sus_inf=lambda q: beta*((1-epsilon_lam)*q[0]+(1+epsilon_lam)*q[1])*(1+epsilon_mu)*(1/2-q[1])*np.exp(q[3])-gamma*q[1]*np.exp(-q[3])
+    dtheta1_dt_sus_inf = lambda q:-beta*(1-epsilon_lam)*((1-epsilon_mu)*(1/2-q[0])*(np.exp(q[2])-1)+(1+epsilon_mu)*(1/2-q[1])*(np.exp(q[3])-1))+beta*((1-epsilon_lam)*q[0]+(1+epsilon_lam)*q[1])*(1-epsilon_mu)*(np.exp(q[2])-1)-gamma*(np.exp(-q[2])-1)
+    dtheta2_dt_sus_inf = lambda q:-beta*(1+epsilon_lam)*((1-epsilon_mu)*(1/2-q[0])*(np.exp(q[2])-1)+(1+epsilon_mu)*(1/2-q[1])*(np.exp(q[3])-1))+beta*((1-epsilon_lam)*q[0]+(1+epsilon_lam)*q[1])*(1+epsilon_mu)*(np.exp(q[3])-1)-gamma*(np.exp(-q[3])-1)
+    dq_dt_sus_inf = lambda q,t=None:np.array([dy1_dt_sus_inf(q),dy2_dt_sus_inf(q),dtheta1_dt_sus_inf(q),dtheta2_dt_sus_inf(q)])
+
+    H = lambda q: beta*((1-epsilon_lam)*q[0]+(1+epsilon_lam)*q[1])*((1-epsilon_mu)*(1/2-q[0])*(np.exp(q[2])-1)+(1+epsilon_mu)*(1/2-q[1])*(np.exp(q[3])-1))+gamma*((np.exp(-q[2])-1)*q[0]+(np.exp(-q[3])-1)*q[1])
+
+    Jacobian_H = ndft.Jacobian(H)
+    dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
+    temp_analytical=dq_dt_numerical((0.1,0.2,0.3,0.4))
+    temp_numerical=dq_dt_sus_inf((0.1,0.2,0.3,0.4))
+    print('this no love song')
 
     for p,eps in zip(guessed_paths,list_of_epsilons):
         w=(p[:,0]+p[:,1])/2
@@ -1010,7 +1058,7 @@ if __name__=='__main__':
         plt.rc('axes', prop_cycle=(cycler('color', ['r', 'g', 'b', 'y']) +
                                    cycler('linestyle', ['-', '--', ':', '-.'])))
         pw0=[2 * np.log(gamma / (beta * (1 - (i + j)))) for i, j in zip(p[:, 0], p[:, 1])]
-        plt.plot(w,(pw-pw0),linewidth=4,label='eps='+str(eps))
+        plt.plot(w,(pw-pw0)/eps**2,linewidth=4,label='eps='+str(eps))
     plt.xlabel('w')
     plt.ylabel('(pw-pw0)/eps^2')
     plt.title('(pw-pw0)/eps^2 vs w different epsilons')
