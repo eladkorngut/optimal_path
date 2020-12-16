@@ -493,12 +493,12 @@ def eq_points_inf_only(epsilon,beta,gamma):
             epsilon ** 2 + (1 / 4) * ((beta / gamma) ** 2) * (1 - epsilon ** 2) ** 2) + (1 / 2) * (beta / gamma) * (
                                               1 - epsilon ** 2)) / (1 - epsilon))
     epsilon_lam,epsilon_mu=epsilon[0],epsilon[1]
-    d=(-4*beta+2*gamma-2*gamma*epsilon_mu**2+np.sqrt(-4*(2*beta-2*gamma-2*gamma*epsilon_lam*epsilon_mu)*(2*beta-2*beta*epsilon_mu**2)+(4*beta-2*gamma+2*gamma*epsilon_mu**2)**2))/(2*(2*beta-2*beta*epsilon_mu**2))
-    y1_0=(1-epsilon_mu)/(2*(1+(1-epsilon_mu)*d))
-    y2_0=(1+epsilon_mu)/(2*(1+(1+epsilon_mu)*d))
+    d=-(beta-2*gamma-beta*epsilon_mu**2+np.sqrt(beta**2-2*(beta**2-2*gamma**2)*epsilon_mu**2+(beta**2)*(epsilon_mu**4)-4*beta*gamma*epsilon_lam*epsilon_mu*(-1+epsilon_mu**2)))/(2*gamma*(-1+epsilon_mu**2))
+    y1_0=((1-epsilon_mu)*d)/(2*(1+(1-epsilon_mu)*d))
+    y2_0=((1+epsilon_mu)*d)/(2*(1+(1+epsilon_mu)*d))
     p1_0,p2_0=0,0
-    p1_f=-np.log(1+(1-epsilon_mu)*d)
-    p2_f=-np.log(1+(1+epsilon_mu)*d)
+    p1_f=-np.log(1+(1-epsilon_lam)*d)
+    p2_f=-np.log(1+(1+epsilon_lam)*d)
     return y1_0,y2_0,p1_0,p2_0,p1_f,p2_f
 
 
@@ -955,7 +955,7 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
     # eps0()
     # multi_shot_lin_angle()
     # path=plot_one_shot(theta,weight_of_eig_vec,r,t,dt)
-    # temp_lin=best_diverge_path(theta, r, np.linspace(0.0,stoptime,numpoints), weight_of_eig_vec, dt)
+    temp_lin=best_diverge_path(theta, r, np.linspace(0.0,stoptime,numpoints), weight_of_eig_vec, dt)
     temp_best_div,r=best_diverge_path(theta, r, t, weight_of_eig_vec, dt)
     print(temp_best_div,' ', r)
     path = plot_one_shot(theta, temp_best_div, r, t, dt)
@@ -969,7 +969,7 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
     # plot_one_shot(0.00031416339744827493,0.9999649851242188,8.9873e-06,np.linspace(0.0,16.192,numpoints))
     # print('This no love song')
     # recusive_time_step(theta, r, t, weight_of_eig_vec, dt, 12.8)
-    # temp_fine_tuning = fine_tuning(theta, r, t, weight_of_eig_vec, dt)
+    temp_fine_tuning = fine_tuning(theta, r, t, weight_of_eig_vec, dt)
     # print(temp_fine_tuning)
     # temp_lin_guess,temp_radius_guess,temp_guess_path=guess_path([7,10],theta,weight_of_eig_vec,dt,r)
     # print(temp_lin_guess,' ',temp_radius_guess)
@@ -978,14 +978,14 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
 
 if __name__=='__main__':
     #Network Parameters
-    lam, k_avg, epsilon, sim = 2, 50.0, 0.02,'h'
+    lam, k_avg, epsilon, sim = 2.0, 50.0, 0.02,'h'
     # lam, k_avg, epsilon, sim = 1.6, 50.0, [0.16,0.1,0.02],'h'
 
 
     # ODE parameters22
     abserr = 1.0e-20
     relerr = 1.0e-13
-    stoptime=16.0
+    stoptime=11.5
     # stoptime = [30.272,30.709824,30.171]
     numpoints = 10000
 
@@ -1002,7 +1002,7 @@ if __name__=='__main__':
 
     # Radius around eq point,Time of to advance the self vector
     # r=[0.019909484,0.03345353,0.163259745]
-    r=1e-6
+    r=2e-8
     theta,space=(0,2*np.pi),10
     # theta=np.linspace(np.pi/1000,2*np.pi,10)
     beta,gamma=lam,1.0
@@ -1036,35 +1036,37 @@ if __name__=='__main__':
     #     guessed_paths.append(hetro_inf(beta, gamma, eps, abserr, relerr, t, r, dt,0.9999918386580096, np.pi/4-0.785084,numpoints,dq_dt_lamonly))
     # plt.figure()
 
-    epsilon_mu,epsilon_lam=0.1,0.1
+    epsilon_lam,epsilon_mu=0.5,0.1
     dy1_dt_sus_inf=lambda q: beta*((1-epsilon_lam)*q[0]+(1+epsilon_lam)*q[1])*(1-epsilon_mu)*(1/2-q[0])*np.exp(q[2])-gamma*q[0]*np.exp(-q[2])
     dy2_dt_sus_inf=lambda q: beta*((1-epsilon_lam)*q[0]+(1+epsilon_lam)*q[1])*(1+epsilon_mu)*(1/2-q[1])*np.exp(q[3])-gamma*q[1]*np.exp(-q[3])
     dtheta1_dt_sus_inf = lambda q:-beta*(1-epsilon_lam)*((1-epsilon_mu)*(1/2-q[0])*(np.exp(q[2])-1)+(1+epsilon_mu)*(1/2-q[1])*(np.exp(q[3])-1))+beta*((1-epsilon_lam)*q[0]+(1+epsilon_lam)*q[1])*(1-epsilon_mu)*(np.exp(q[2])-1)-gamma*(np.exp(-q[2])-1)
     dtheta2_dt_sus_inf = lambda q:-beta*(1+epsilon_lam)*((1-epsilon_mu)*(1/2-q[0])*(np.exp(q[2])-1)+(1+epsilon_mu)*(1/2-q[1])*(np.exp(q[3])-1))+beta*((1-epsilon_lam)*q[0]+(1+epsilon_lam)*q[1])*(1+epsilon_mu)*(np.exp(q[3])-1)-gamma*(np.exp(-q[3])-1)
     dq_dt_sus_inf = lambda q,t=None:np.array([dy1_dt_sus_inf(q),dy2_dt_sus_inf(q),dtheta1_dt_sus_inf(q),dtheta2_dt_sus_inf(q)])
 
-    H = lambda q: beta*((1-epsilon_lam)*q[0]+(1+epsilon_lam)*q[1])*((1-epsilon_mu)*(1/2-q[0])*(np.exp(q[2])-1)+(1+epsilon_mu)*(1/2-q[1])*(np.exp(q[3])-1))+gamma*((np.exp(-q[2])-1)*q[0]+(np.exp(-q[3])-1)*q[1])
+    # H = lambda q: beta*((1-epsilon_lam)*q[0]+(1+epsilon_lam)*q[1])*((1-epsilon_mu)*(1/2-q[0])*(np.exp(q[2])-1)+(1+epsilon_mu)*(1/2-q[1])*(np.exp(q[3])-1))+gamma*((np.exp(-q[2])-1)*q[0]+(np.exp(-q[3])-1)*q[1])
+    #
+    # Jacobian_H = ndft.Jacobian(H)
+    # dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
+    # temp_analytical=dq_dt_numerical((0.1,0.2,0.3,0.4))
+    # temp_numerical=dq_dt_sus_inf((0.1,0.2,0.3,0.4))
 
-    Jacobian_H = ndft.Jacobian(H)
-    dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
-    temp_analytical=dq_dt_numerical((0.1,0.2,0.3,0.4))
-    temp_numerical=dq_dt_sus_inf((0.1,0.2,0.3,0.4))
-    print('this no love song')
+    hetro_inf(beta, gamma, (epsilon_lam,epsilon_mu), abserr, relerr, t, r, dt, 1.0010274427730188, np.pi / 4 - 0.785084, numpoints,
+              dq_dt_sus_inf)
 
-    for p,eps in zip(guessed_paths,list_of_epsilons):
-        w=(p[:,0]+p[:,1])/2
-        pw=p[:,2]+p[:,3]
-        linestyle_cycler = cycler('linestyle', ['-', '--', ':', '-.'])
-        plt.rc('axes', prop_cycle=(cycler('color', ['r', 'g', 'b', 'y']) +
-                                   cycler('linestyle', ['-', '--', ':', '-.'])))
-        pw0=[2 * np.log(gamma / (beta * (1 - (i + j)))) for i, j in zip(p[:, 0], p[:, 1])]
-        plt.plot(w,(pw-pw0)/eps**2,linewidth=4,label='eps='+str(eps))
-    plt.xlabel('w')
-    plt.ylabel('(pw-pw0)/eps^2')
-    plt.title('(pw-pw0)/eps^2 vs w different epsilons')
-    plt.legend()
-    plt.savefig('pw_v_w_different_eps_normalized_lam'+str(lam)+'.png',dpi=500)
-    plt.show()
+    # for p,eps in zip(guessed_paths,list_of_epsilons):
+    #     w=(p[:,0]+p[:,1])/2
+    #     pw=p[:,2]+p[:,3]
+    #     linestyle_cycler = cycler('linestyle', ['-', '--', ':', '-.'])
+    #     plt.rc('axes', prop_cycle=(cycler('color', ['r', 'g', 'b', 'y']) +
+    #                                cycler('linestyle', ['-', '--', ':', '-.'])))
+    #     pw0=[2 * np.log(gamma / (beta * (1 - (i + j)))) for i, j in zip(p[:, 0], p[:, 1])]
+    #     plt.plot(w,(pw-pw0)/eps**2,linewidth=4,label='eps='+str(eps))
+    # plt.xlabel('w')
+    # plt.ylabel('(pw-pw0)/eps^2')
+    # plt.title('(pw-pw0)/eps^2 vs w different epsilons')
+    # plt.legend()
+    # plt.savefig('pw_v_w_different_eps_normalized_lam'+str(lam)+'.png',dpi=500)
+    # plt.show()
     # stoptime=15.792
     # t = np.linspace(0.0,stoptime,numpoints)
     # dt=stoptime/(numpoints-1)
