@@ -911,13 +911,15 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
         epsilon_theory=epsilon if type(epsilon) is float else epsilon[0]
         z1=[(np.exp(-x)-1)/(1-epsilon_theory) for x in path[:,2]]
         z2=[(np.exp(-x)-1)/(1+epsilon_theory) for x in path[:,3]]
+        # z_theory = [z(y1,y2) for y1,y2 in zip(path[:,0],path[:,1])]
         plt.plot(t,z1,linewidth=4,label='z for the 1-epsilon population')
         plt.plot(t,z2,linewidth=4,label='z for the 1+epsilon population',linestyle='--')
+        # plt.plot(t,z_theory,linewidth=4,linestyle=':')
         plt.scatter((t[0], t[-1]),
                     (z1[0], z2[-1]), c=('g', 'r'), s=(100, 100))
         xlabel('Time')
         ylabel('z')
-        title('z=(exp(-p)-1)\(1-epsilon),(exp(-p)-1)\(1+epsilon), lam=1.6 eps=0.5')
+        title('z vs Time for lambda='+str(lam)+' epsilon='+str(epsilon))
         plt.legend()
         plt.savefig('z_v_time' + '.png', dpi=500)
         plt.show()
@@ -925,7 +927,7 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
         plt.plot(path[:,1],z2,linewidth=4,label='z for the 1+epsilon population',linestyle='--')
         xlabel('y')
         ylabel('z')
-        title('The z=(exp(-p)-1)\(1-epsilon),(exp(-p)-1)\(1+epsilon), lam=1.6 eps=0.5')
+        title('The z=(exp(-p)-1)\(1-epsilon),(exp(-p)-1)\(1+epsilon)    ')
         plt.legend()
         plt.scatter((path[:,0][0], path[:,1][-1]),
                     (z1[0], z2[-1]), c=('g', 'r'), s=(100, 100))
@@ -937,10 +939,35 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
                     (z1[0], z2[-1]), c=('g', 'r'), s=(100, 100))
         xlabel('p')
         ylabel('z')
-        title('z=(exp(-p)-1)\(1-epsilon),(exp(-p)-1)\(1+epsilon), lam=1.6 eps=0.5')
+        title('z=(exp(-p)-1)\(1-epsilon),(exp(-p)-1)\(1+epsilon)')
         plt.legend()
         plt.savefig('z_v_p' + '.png', dpi=500)
         plt.show()
+
+        w_for_path,u_for_path=(path[:,0]+path[:,1])/2,(path[:,0]-path[:,1])/2
+        z_w_path=[z_w_u_space(w,u) for w,u in zip(w_for_path,u_for_path)]
+        plt.plot(w_for_path,z_w_path,linewidth=4,label='epsilon='+str(epsilon))
+        plt.scatter((w_for_path[0], w_for_path[-1]),
+                    (z_w_path[0], z_w_path[-1]), c=('g', 'r'), s=(100, 100))
+        title('z(w,u) vs w for lambda='+str(lam)+' epsilon='+str(epsilon))
+        xlabel('w')
+        ylabel('z')
+        plt.legend()
+        plt.savefig('z_vs_w' + '.png', dpi=500)
+        plt.show()
+
+        plt.plot(u_for_path,z_w_path,linewidth=4,label='epsilon='+str(epsilon))
+        plt.scatter((u_for_path[0], u_for_path[-1]),
+                    (z_w_path[0], z_w_path[-1]), c=('g', 'r'), s=(100, 100))
+        title('z(w,u) vs u for lambda='+str(lam)+' epsilon='+str(epsilon))
+        xlabel('u')
+        ylabel('z')
+        # title('z=(exp(-p)-1)\(1-epsilon),(exp(-p)-1)\(1+epsilon), lam=1.6 eps=0.5')
+        plt.legend()
+        plt.savefig('z_vs_u' + '.png', dpi=500)
+        plt.show()
+
+
 
 
     def multi_shot_lin_angle():
@@ -998,14 +1025,14 @@ def hetro_inf(beta ,gamma,epsilon,abserr,relerr,t,r,dt,weight_of_eig_vec,theta,s
 
 if __name__=='__main__':
     #Network Parameters
-    lam, k_avg, epsilon, sim = 2.0, 50.0, 0.02,'h'
+    lam, k_avg, epsilon, sim = 2.0, 50.0, 0.0,'h'
     # lam, k_avg, epsilon, sim = 1.6, 50.0, [0.16,0.1,0.02],'h'
 
 
     # ODE parameters22
     abserr = 1.0e-20
     relerr = 1.0e-13
-    stoptime=9.5
+    stoptime=15.0
     # stoptime = [30.272,30.709824,30.171]
     numpoints = 10000
 
@@ -1022,7 +1049,7 @@ if __name__=='__main__':
 
     # Radius around eq point,Time of to advance the self vector
     # r=[0.019909484,0.03345353,0.163259745]
-    r=4e-8
+    r=3.2e-7
     theta,space=(0,2*np.pi),10
     # theta=np.linspace(np.pi/1000,2*np.pi,10)
     beta,gamma=lam,1.0
@@ -1056,7 +1083,7 @@ if __name__=='__main__':
     #     guessed_paths.append(hetro_inf(beta, gamma, eps, abserr, relerr, t, r, dt,0.9999918386580096, np.pi/4-0.785084,numpoints,dq_dt_lamonly))
     # plt.figure()
 
-    epsilon_lam,epsilon_mu=0.5,0.5
+    epsilon_lam,epsilon_mu=0.5,0.0
     dy1_dt_sus_inf=lambda q: beta*((1-epsilon_lam)*q[0]+(1+epsilon_lam)*q[1])*(1-epsilon_mu)*(1/2-q[0])*np.exp(q[2])-gamma*q[0]*np.exp(-q[2])
     dy2_dt_sus_inf=lambda q: beta*((1-epsilon_lam)*q[0]+(1+epsilon_lam)*q[1])*(1+epsilon_mu)*(1/2-q[1])*np.exp(q[3])-gamma*q[1]*np.exp(-q[3])
     dtheta1_dt_sus_inf = lambda q:-beta*(1-epsilon_lam)*((1-epsilon_mu)*(1/2-q[0])*(np.exp(q[2])-1)+(1+epsilon_mu)*(1/2-q[1])*(np.exp(q[3])-1))+beta*((1-epsilon_lam)*q[0]+(1+epsilon_lam)*q[1])*(1-epsilon_mu)*(np.exp(q[2])-1)-gamma*(np.exp(-q[2])-1)
@@ -1070,7 +1097,7 @@ if __name__=='__main__':
     # temp_analytical=dq_dt_numerical((0.1,0.2,0.3,0.4))
     # temp_numerical=dq_dt_sus_inf((0.1,0.2,0.3,0.4))
 
-    hetro_inf(beta, gamma, (epsilon_lam,epsilon_mu), abserr, relerr, t, r, dt, 1.0148169762132846, np.pi / 4 - 0.785084, numpoints,
+    hetro_inf(beta, gamma, (epsilon_lam,epsilon_mu), abserr, relerr, t, r, dt, 0.9998789069119763, np.pi / 4 - 0.785084, numpoints,
               dq_dt_sus_inf)
 
     # for p,eps in zip(guessed_paths,list_of_epsilons):
