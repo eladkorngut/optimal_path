@@ -347,6 +347,7 @@ def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_r
                                 for w in w_for_path]
         pw_linear_aprox=-2*np.log(lam - 2*w_for_path*lam) + ((-1 + lam - 2*w_for_path*lam)*np.log((2*lam)/(lam - epsilon_lam**2*lam + np.sqrt(4*epsilon_lam**2 + (-1 + epsilon_lam**2)**2*lam**2))))/(-1 + lam)
         pw_linear_aprox_correction=(-((1+lam)*(1+(-1+2*w_for_path)*lam))/lam**2)*epsilon_lam**2
+        pw_linear_aprox_big=(1+w_for_path*(-2+4/(1-2*w_for_path)-2/lam)-1/lam**2)*epsilon_lam**2
         plt.plot(w_for_path, pw_theory_correction, linewidth=4.0, linestyle='--',label='Theory O(eps^2) eps='+str(epsilon_lam))
         plt.plot(w_for_path, pw_linear_aprox_correction, linewidth=4.0, linestyle=':',label='Linear aprox eps='+str(epsilon_lam))
     xlabel('w')
@@ -410,8 +411,6 @@ def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_r
     plt.savefig('pw_v_w_u_3d'+'.png',dpi=500)
     plt.show()
 
-
-
     for path, epsilon in zip(guessed_paths, list_of_epsilons):
         epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
         pw0 = [2 * np.log(gamma / (beta * (1 - (i + j)))) for i, j in zip(path[:, 0], path[:, 1])]
@@ -432,8 +431,6 @@ def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_r
     plt.show()
 
 
-
-
     for path, epsilon in zip(guessed_paths, list_of_epsilons):
         epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
         pw0 = [2 * np.log(gamma / (beta * (1 - (i + j)))) for i, j in zip(path[:, 0], path[:, 1])]
@@ -451,6 +448,114 @@ def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_r
     plt.legend()
     plt.savefig('pw_v_u_norm_miki'+'.png',dpi=500)
     plt.show()
+
+    for path, epsilon in zip(guessed_paths, list_of_epsilons):
+        epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+        pw0 = [2 * np.log(gamma / (beta * (1 - (i + j)))) for i, j in zip(path[:, 0], path[:, 1])]
+        alpha = epsilon_mu / epsilon_lam
+        y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt, J = eq_hamilton_J(case_to_run, beta,
+                                                                                              epsilon, tf, gamma)
+        q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
+        wi = (1 / 2) * x0 + (1 / 2) * alpha * (1 / lam ** 2) * (1 - alpha * lam * x0) * epsilon_lam ** 2
+        wf = 0
+        pwi = 2 * np.log(lam * (1 - 2 * wi))
+        pwf = (1 - 2 * alpha / lam - 1 / lam ** 2)
+        w_for_path, u_for_path = (path[:, 0] + path[:, 1]) / 2, (path[:, 0] - path[:, 1]) / 2
+        plt.plot(w_for_path, (path[:, 2] + path[:, 3] - pw0)/epsilon_lam**2, linewidth=4,
+                 linestyle='None', Marker='.', label='w vs pw for epsilon=' + str(epsilon))
+        plt.scatter((wi, wf),
+                    (pwi, pwf), c=('g', 'r'), s=(100, 100))
+        # pu_theory = 2 * x0 * epsilon_lam + (4 / alpha) * lam * u_for_path
+        # plt.plot(u_for_path,pu_theory,linestyle='--',linewidth=4)
+        # pw_theory_correction = [((4 * w * alpha * lam * (1 + alpha - alpha * lam) / ((-1 + 2 * w) * (-1 + lam)) + (
+        #             1 - 2 * w * lam / (-1 + lam)) * (-1 - 2 * alpha * lam + lam ** 2)) / (lam ** 2)) * epsilon_lam ** 2
+        #                         for w in w_for_path]
+        pw_linear_aprox=-2*np.log(lam - 2*w_for_path*lam) + ((-1 + lam - 2*w_for_path*lam)*np.log((2*lam)/(lam - epsilon_lam**2*lam + np.sqrt(4*epsilon_lam**2 + (-1 + epsilon_lam**2)**2*lam**2))))/(-1 + lam)
+    w_big=w_for_path/(1+epsilon_lam**2)
+    pw_theory_correction = [((4 * w * alpha * lam * (1 + alpha - alpha * lam) / ((-1 + 2 * w) * (-1 + lam)) + (
+            1 - 2 * w * lam / (-1 + lam)) * (-1 - 2 * alpha * lam + lam ** 2)) / (lam ** 2))
+                            for w in w_for_path]
+
+    pw_linear_aprox_correction=(-((1+lam)*(1+(-1+2*w_for_path)*lam))/lam**2)
+    pw_linear_aprox_big=(1+w_for_path*(-2+4/(1-2*w_for_path)-2/lam)-1/lam**2)
+    plt.plot(w_for_path, pw_theory_correction, linewidth=4.0, linestyle='--',label='Theory O(eps^2)')
+    plt.plot(w_for_path, pw_linear_aprox_correction, linewidth=4.0, linestyle=':',label='Linear aprox')
+    xlabel('w')
+    ylabel('(pw-pw0)/eps^2')
+    title('(pw-pw0)/eps^2 vs w Lambda=' + str(beta))
+    plt.legend()
+    plt.savefig('pw_vs_w_norm' + '.png', dpi=500)
+    plt.show()
+
+    for path, epsilon in zip(guessed_paths, list_of_epsilons):
+        epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+        alpha = epsilon_mu / epsilon_lam
+        y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt, J = eq_hamilton_J(case_to_run, beta,
+                                                                                              epsilon, tf, gamma)
+        q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
+        w_for_path, u_for_path = (path[:, 0] + path[:, 1]) / 2, (path[:, 0] - path[:, 1]) / 2
+        plt.plot(u_for_path / (epsilon_lam * alpha), ((path[:, 2] - path[:, 3] - 2 * x0 * epsilon_lam) / epsilon_lam),
+                 linewidth=4, linestyle='None', Marker='.', label='u vs pu for epsilon=' + str(epsilon))
+        # plt.scatter(((q_star[0] - q_star[1]) / 2, 0),
+        #             (0, q_star[2] - q_star[3]), c=('g', 'r'), s=(100, 100))
+        pu_theory_clancy = np.array(
+                [-np.log(1 + (1 - epsilon_lam) * z_w_u_space(w, u, epsilon_lam, beta, gamma)) + np.log(
+                    1 + (1 + epsilon_lam) * z_w_u_space(w, u, epsilon_lam, beta, gamma)) for w, u in
+                 zip(w_for_path, u_for_path)])
+        plt.plot(u_for_path / (epsilon_lam * alpha), (pu_theory_clancy-2*x0*epsilon_lam)/epsilon_lam, linestyle='--', linewidth=4, label='Theory clancy')
+    xlabel('u/(alpha*eps)')
+    ylabel('pu/eps-2x0')
+    title('pu/eps-2x0 vs u/(eps*alpha) for Lambda=' + str(beta))
+    u_theory = np.linspace(-x0 / (2 * lam), 0, 100)
+    pu_theory = 4 * lam * u_theory
+    plt.plot(u_theory, pu_theory, linestyle=':', linewidth=4, label='Theory approx O(eps^2)')
+    plt.legend()
+    plt.savefig('pu_vs_u_norm' + '.png', dpi=500)
+    plt.show()
+
+    for path, epsilon in zip(guessed_paths, list_of_epsilons):
+        epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+        w_for_path, u_for_path = (path[:, 0] + path[:, 1]) / 2, (path[:, 0] - path[:, 1]) / 2
+        wbig,ubig=w_for_path/(1+epsilon_lam**2),u_for_path/epsilon_lam
+        plt.plot(w_for_path, ubig,
+                 linewidth=4, linestyle='None', Marker='.', label='U vs W for epsilon=' + str(epsilon))
+    wi,wf = (1 / 2) * x0, 0
+    w_for_u=np.linspace(wi,wf,100)/(1+epsilon_lam**2)
+    u_v_w_theory=[x*( (1+(-1+2*x)*lam) *(-2-lam+2*x*(1+lam)) )/(2*lam) for x in w_for_u]
+    u_v_w_with_miki=w_for_path*(-0.5 + 1/lam - (5*lam)/2) + w_for_path**2*(2 - 1/lam + 4*lam) + (-1 + lam**2)/(2.*lam)
+    plt.plot(np.linspace(wi,wf,100),u_v_w_theory,linewidth=4,linestyle='--',label='Theory')
+    # plt.plot(w_for_path,u_v_w_with_miki,linewidth=4,linestyle='--',label='Theory')
+    xlabel('w')
+    ylabel('u/eps')
+    title('U vs W for Lambda=' + str(beta))
+    plt.legend()
+    plt.savefig('u_v_w' + '.png', dpi=500)
+    plt.show()
+
+
+    for path, epsilon in zip(guessed_paths, list_of_epsilons):
+        epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+        y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt, J = eq_hamilton_J(case_to_run, beta,
+                                                                                              epsilon, tf, gamma)
+        q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
+        w_for_path, u_for_path = (path[:, 0] + path[:, 1]) / 2, (path[:, 0] - path[:, 1]) / 2
+        pu_for_path=path[:,2]-path[:,3]
+        integral_numerical=simps(pu_for_path/epsilon_lam, u_for_path/epsilon_lam)
+        plt.plot(pu_for_path/epsilon_lam, u_for_path/epsilon_lam,
+                 linewidth=4, linestyle='None', Marker='.', label='u v pu eps=' + str(epsilon)+' I='+str(round(integral_numerical,4)))
+        # pu_theory_w=-((epsilon_lam*(2 - 2*lam + 2*w_for_path*(1 + (-1 + 2*w_for_path)*lam)*(-2 - lam +2*w_for_path*(1 + lam))))/(lam -w_for_path*(1 +(-1 + 2*w_for_path)*lam)*(-2 - lam +2*w_for_path*(1 + lam))))
+        u_function_pu=-(pu_for_path*(-2*epsilon_lam*(-1 + lam) +pu_for_path*lam)*(pu_for_path*lam-2*epsilon_lam*(1 + 2*lam)))/(4*(pu_for_path - 2*epsilon_lam)**3*lam**3)
+        # u_function_pu_o2=-1/(4*lam)+((1+lam+lam**2)/(pu_for_path**2*lam**3))*epsilon_lam**2
+    integral_result_theory=epsilon_lam*(((lam-1)**3)/(4*lam**3))
+    integral_result_norm_theory=((lam-1)**3)/(4*lam**3)
+    plt.plot(pu_for_path/epsilon_lam, u_function_pu, linestyle='--', linewidth=4, label='Theory, I='+str(round(integral_result_norm_theory,4)))
+    xlabel('pu/eps')
+    ylabel('u/eps')
+    title('pu/eps vs u/eps for Lambda=' + str(beta))
+    plt.legend()
+    plt.savefig('u_v_pu_norm' + '.png', dpi=500)
+    plt.show()
+
 
 
 
@@ -708,6 +813,10 @@ def plot_all_var(shot_angle,lin_combo,one_shot_dt,radius,final_time_path,q_star,
     plt.legend()
     plt.savefig('pw_vs_w' + '.png', dpi=500)
     plt.show()
+
+
+
+
 
 
 
