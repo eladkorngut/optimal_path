@@ -487,13 +487,16 @@ def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_r
     plt.plot(np.array(list_of_epsilons)[:,0]**2,A_numerical,linewidth=4,linestyle='None', Marker='o', label='Numerical',markersize=10)
     plt.plot(np.array(list_of_epsilons)[:,0]**2,A_exact_theory,linewidth=4,linestyle='None', Marker='^', label='Clancy',markersize=10)
     plt.plot(np.array(list_of_epsilons)[:,0]**2,A_exact_theory,linewidth=4,linestyle='None', Marker='X', label='Miki',markersize=10)
+    plt.plot(np.array(list_of_epsilons)[:,0]**2,-(lam-1)**2/(2*lam**2)*np.array(list_of_epsilons)[:,0]**2,linewidth=4,linestyle='--',label='-(lam-1)^/(2*lam^2)*eps^2')
     plt.xlabel('epsilon^2')
     plt.ylabel('S1')
-    plt.title('Action vs epsilon')
+    plt.title('S1 vs epsilon^2 lam='+str(lam))
     plt.legend()
     plt.tight_layout()
     savefig('A_v_eps' + '.png', dpi=500)
     plt.show()
+
+
 
 
 def plot_one_shot(angle_to_shoot,linear_combination,radius,time_vec,one_shot_dt,q_star,J,shot_dq_dt):
@@ -809,7 +812,7 @@ if __name__=='__main__':
     beta, gamma = 1.5, 1.0
     abserr,relerr = 1.0e-20,1.0e-13
     # list_of_epsilons=[(0.1,0.1),(0.1,0.12),(0.1,0.14),(0.1,0.16),(0.1,0.18),(0.1,0.2)]
-    list_of_epsilons=[(0.1,0.0),(0.14,0.0)]
+    list_of_epsilons=[(0.02,0.0),(0.04,0.0),(0.06,0.0),(0.08,0.0),(0.1,0.0),(0.12,0.0),(0.14,0.0),(0.16,0.0),(0.18,0.0),(0.2,0.0)]
     sim='bc'
 
     # A way to confirm the hamiltion's numericaly
@@ -828,11 +831,13 @@ if __name__=='__main__':
 
     # Radius around eq point,Time of to advance the self vector
     # r002=2e-07
-    r=4e-7
+    # r001=4e-7
+    r=2e-07
 
     epsilon=(0.1,0.0)
     #lin002=0.9999930516412242
-    int_lin_combo=0.9999658209936237
+    #int_lin_combo001=0.9999658209936237
+    int_lin_combo=0.9999930516412242
     y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
     q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
     # man_div_path_and_fine_tuning(np.pi/4-0.785084,r,t,0.9999658209936237,dt,q_star,J,dq_dt_sus_inf)
