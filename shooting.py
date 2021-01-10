@@ -375,21 +375,47 @@ def guess_path(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,org_radius,
     # plot_all_var(shot_angle,lin_combo,one_shot_dt,radius,np.linspace(0.0,sampleingtime[-1],sample_size))
     return lin_combo,radius, one_shot(shot_angle, lin_combo,q_star,radius,np.linspace(0.0,sampleingtime[-1],sample_size),one_shot_dt,J,shot_dq_dt)
 
+def guess_path_lam(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,org_radius,sample_size,J,shot_dq_dt,beta):
+    radius=org_radius
+    for s in sampleingtime:
+        lin_combo, radius = best_diverge_path(shot_angle, radius,lin_combo,one_shot_dt,q_star,np.linspace(0.0,s,sample_size),J,shot_dq_dt)
+        lin_combo = fine_tuning(shot_angle, lin_combo, q_star, radius, np.linspace(0.0, s, sample_size),
+                                one_shot_dt, J, shot_dq_dt)
+        path=one_shot(shot_angle, lin_combo,q_star,radius,np.linspace(0.0,s,sample_size),one_shot_dt,J,shot_dq_dt)
+        if path[:,0][-1]+path[:,1][-1]<1e-3:break
+    # lin_combo, radius = best_diverge_path(shot_angle, org_radius, lin_combo, one_shot_dt, q_star,np.linspace(0.0, sampleingtime[-1], sample_size), J, shot_dq_dt)
+    # lin_combo= fine_tuning(shot_angle, lin_combo,q_star,radius, np.linspace(0.0,sampleingtime[-1],sample_size), one_shot_dt,J,shot_dq_dt)
+    # plot_one_shot(shot_angle,lin_combo,radius,np.linspace(0.0,sampleingtime[-1],sample_size),one_shot_dt)
+    # plot_all_var(shot_angle,lin_combo,one_shot_dt,radius,np.linspace(0.0,sampleingtime[-1],sample_size))
+    return lin_combo,radius, one_shot(shot_angle, lin_combo,q_star,radius,np.linspace(0.0,s,sample_size),one_shot_dt,J,shot_dq_dt)
+
 
 def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,one_shot_dt,radius,lin_combo=1.00008204478397):
     guessed_paths=[]
-    for eps in list_of_epsilons:
-        sampleingtime=[7.0,9.0,10.0,10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,14.5,15.0,15.5,16.0,16.5,17.0,17.5,18.0,18.5,19.5,20.0]
-        y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,eps,t,gamma)
-        q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
-        lin_combo,temp_radius,path=guess_path(sampleingtime,np.pi/4-0.785084,lin_combo,q_star,one_shot_dt,radius,numpoints,J,shot_dq_dt)
-        guessed_paths.append(path)
+    if type(beta) is list:
+        for l in beta:
+            sampleingtime = [6.0,7.0, 9.0, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 15.5, 16.0,
+                             16.5, 17.0, 17.5, 18.0, 18.5, 19.5, 20.0]
+            y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt, J = eq_hamilton_J(case_to_run, l,
+                                                                                                  list_of_epsilons, t, gamma)
+            q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
+            lin_combo, temp_radius, path = guess_path_lam(sampleingtime, np.pi / 4 - 0.785084, lin_combo, q_star,
+                                                      one_shot_dt, radius, numpoints, J, shot_dq_dt,l)
+            guessed_paths.append(path)
+    else:
+        for eps in list_of_epsilons:
+            sampleingtime=[7.0,9.0,10.0,10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,14.5,15.0,15.5,16.0,16.5,17.0,17.5,18.0,18.5,19.5,20.0]
+            y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,eps,t,gamma)
+            q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
+            lin_combo,temp_radius,path=guess_path(sampleingtime,np.pi/4-0.785084,lin_combo,q_star,one_shot_dt,radius,numpoints,J,shot_dq_dt)
+            guessed_paths.append(path)
     plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_run,np.linspace(0,sampleingtime[-1],numpoints))
     return guessed_paths
 
 def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_run,tf):
-    lam=beta/gamma
-    x0=(lam - 1) / lam
+    if type(beta) is not list:
+        lam=beta/gamma
+        x0=(lam - 1) / lam
 #     generic_plot(guessed_paths,list_of_epsilons,lambda p,eps,alph:(p[:, 0] - p[:, 1]) / 2,lambda p,eps,x:p[:, 2] - p[:, 3]
 #                  ,'zw','u','pu',x0,lam,'p_u vs u','pu_vs_u',case_to_run,tf)
 #     generic_plot(guessed_paths,list_of_epsilons,lambda p,eps,alph:((p[:, 0] - p[:, 1]) / 2)/(eps*alph),lambda p,eps,x:(p[:, 2] - p[:, 3]-2*x*eps)/eps
@@ -424,82 +450,151 @@ def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_r
 #     generic_plot(guessed_paths,list_of_epsilons,lambda p,eps,alph:(p[:, 2] - p[:, 3])/eps,
 #     lambda p,eps,x:((p[:, 0] - p[:, 1] )/2)/eps,
 #     'puiu','pu','u/eps',x0,lam,'pu/eps vs u/eps','u_v_pu_norm',case_to_run,tf,lambda p,eps: ' I='+str(round(simps((p[:, 2] - p[:, 3])/eps, ((p[:, 0] - p[:, 1] )/2)/eps),4)))
+    if type(beta) is not list:
+        A_aprox_theory,A_exact_theory,A_numerical=[],[],[]
+        s0=1/lam+np.log(lam)-1
+        for path, epsilon in zip(guessed_paths, list_of_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy,\
+            dq_dt_sus_inf, J = eq_hamilton_J(case_to_run, beta, epsilon, tf,gamma)
+            q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
 
-    A_aprox_theory,A_exact_theory,A_numerical=[],[],[]
-    s0=1/lam+np.log(lam)-1
-    for path, epsilon in zip(guessed_paths, list_of_epsilons):
-        epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
-        y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy,\
-        dq_dt_sus_inf, J = eq_hamilton_J(case_to_run, beta, epsilon, tf,gamma)
-        q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
-        q_star_u_w=[(y1_0+y2_0)/2,(y1_0-y2_0)/2,p1_star_clancy+p2_star_clancy,p1_star_clancy-p2_star_clancy]
-        path_new=np.vstack((path,np.array([0,0,p2_star_clancy,p2_star_clancy])))
+            y1_for_linear=np.linspace(path[:,0][-1],0,1000)
+            py1_linear=p1_star_clancy-((p1_star_clancy-path[:,2][-1])/path[:,0][-1])*y1_for_linear
+            y2_for_linear=np.linspace(path[:,1][-1],0,1000)
+            py2_linear=p2_star_clancy-((p2_star_clancy-path[:,3][-1])/path[:,1][-1])*y2_for_linear
+            addition_to_path = np.stack((y1_for_linear,y2_for_linear,py1_linear,py2_linear),axis=1)
 
-        y1_for_linear=np.linspace(path[:,0][-1],0,1000)
-        py1_linear=p1_star_clancy-((p1_star_clancy-path[:,2][-1])/path[:,0][-1])*y1_for_linear
-        y2_for_linear=np.linspace(path[:,1][-1],0,1000)
-        py2_linear=p2_star_clancy-((p2_star_clancy-path[:,3][-1])/path[:,1][-1])*y2_for_linear
-        addition_to_path = np.stack((y1_for_linear,y2_for_linear,py1_linear,py2_linear),axis=1)
+            I_addition_to_path=simps(py1_linear,y1_for_linear)+simps(py2_linear,y2_for_linear)
 
-        I_addition_to_path=simps(py1_linear,y1_for_linear)+simps(py2_linear,y2_for_linear)
+            path_addition=np.vstack((path,addition_to_path))
 
-        path_addition=np.vstack((path,addition_to_path))
+            f_of_d = (1 / 2) * (beta / gamma) * (1 - epsilon_lam ** 2)
+            D = (-1 + f_of_d + np.sqrt(epsilon_lam ** 2 + f_of_d ** 2)) / (1 - epsilon_lam ** 2)
+            I_pu_aprox=(((lam - 1) ** 3) / (4 * lam ** 3))*epsilon_lam**2
+            I_pw_aprox=-((lam+1)*(lam-1)**2/(4*lam**3))*epsilon_lam**2
+            A_aprox_theory.append(-I_pu_aprox+I_pw_aprox)
+            A_exact_theory_full=-(1 / 2) * (q_star[2] + q_star[3]) - (gamma / beta) * D
+            A_exact_theory.append(A_exact_theory_full-s0)
 
-        f_of_d = (1 / 2) * (beta / gamma) * (1 - epsilon_lam ** 2)
-        D = (-1 + f_of_d + np.sqrt(epsilon_lam ** 2 + f_of_d ** 2)) / (1 - epsilon_lam ** 2)
-        I_pu_aprox=(((lam - 1) ** 3) / (4 * lam ** 3))*epsilon_lam**2
-        I_pw_aprox=-((lam+1)*(lam-1)**2/(4*lam**3))*epsilon_lam**2
-        A_aprox_theory.append(-I_pu_aprox+I_pw_aprox)
-        A_exact_theory_full=-(1 / 2) * (q_star[2] + q_star[3]) - (gamma / beta) * D
-        A_exact_theory.append(A_exact_theory_full-s0)
+            # pudu=simps((path_new[:, 2] - path_new[:, 3]), ((path_new[:, 0] - path_new[:, 1] )/2))
+            # pwdw=simps((path_new[:, 2] + path_new[:, 3]), ((path_new[:, 0] + path_new[:, 1] )/2))
+            # pwdwcor=pwdw-s0
+            # A_numerical.append(pwdwcor+pudu)
 
-        # pudu=simps((path_new[:, 2] - path_new[:, 3]), ((path_new[:, 0] - path_new[:, 1] )/2))
-        # pwdw=simps((path_new[:, 2] + path_new[:, 3]), ((path_new[:, 0] + path_new[:, 1] )/2))
-        # pwdwcor=pwdw-s0
-        # A_numerical.append(pwdwcor+pudu)
-
-        # pudu_org=simps((path[:, 2] - path[:, 3]), ((path[:, 0] - path[:, 1] )/2))
-        # pwdw_org=simps((path[:, 2] + path[:, 3]), ((path[:, 0] + path[:, 1] )/2))
-        # pwdwcor_org=pwdw-s0
-        # A_numerical_org=pwdwcor_org+pudu_org
+            # pudu_org=simps((path[:, 2] - path[:, 3]), ((path[:, 0] - path[:, 1] )/2))
+            # pwdw_org=simps((path[:, 2] + path[:, 3]), ((path[:, 0] + path[:, 1] )/2))
+            # pwdwcor_org=pwdw-s0
+            # A_numerical_org=pwdwcor_org+pudu_org
 
 
-        # pudu_add=simps((path_addition[:, 2] - path_addition[:, 3]), ((path_addition[:, 0] - path_addition[:, 1] )/2))
-        # pwdw_add=simps((path_addition[:, 2] + path_addition[:, 3]), ((path_addition[:, 0] + path_addition[:, 1] )/2))
-        # py1_add=simps(path_addition[:, 2], path_addition[:, 0])
-        # py2_add=simps((path_addition[:, 3], path_addition[:, 1]))
+            # pudu_add=simps((path_addition[:, 2] - path_addition[:, 3]), ((path_addition[:, 0] - path_addition[:, 1] )/2))
+            # pwdw_add=simps((path_addition[:, 2] + path_addition[:, 3]), ((path_addition[:, 0] + path_addition[:, 1] )/2))
+            # py1_add=simps(path_addition[:, 2], path_addition[:, 0])
+            # py2_add=simps((path_addition[:, 3], path_addition[:, 1]))
 
 
-        # pwdwcor_add=pwdw-s0
-        # A_numerical_add=pwdwcor_add+pudu_add
+            # pwdwcor_add=pwdw-s0
+            # A_numerical_add=pwdwcor_add+pudu_add
 
-        # generic_plot(guessed_paths,list_of_epsilons,lambda p,eps,alph:(p[:, 0] - p[:, 1]) / 2,lambda p,eps,x:p[:, 2] - p[:, 3]
-        #              ,'zw','u','pu',x0,lam,'p_u vs u','pu_vs_u',case_to_run,tf)
+            # generic_plot(guessed_paths,list_of_epsilons,lambda p,eps,alph:(p[:, 0] - p[:, 1]) / 2,lambda p,eps,x:p[:, 2] - p[:, 3]
+            #              ,'zw','u','pu',x0,lam,'p_u vs u','pu_vs_u',case_to_run,tf)
 
-        guessed_paths=[path_addition]
-        # generic_plot(guessed_paths,list_of_epsilons,lambda p,eps,alph:(p[:, 0] - p[:, 1]) / 2,lambda p,eps,x:p[:, 2] - p[:, 3]
-        #              ,'zw','u','pu',x0,lam,'p_u vs u','pu_vs_u_after',case_to_run,tf)
+            guessed_paths=[path_addition]
+            # generic_plot(guessed_paths,list_of_epsilons,lambda p,eps,alph:(p[:, 0] - p[:, 1]) / 2,lambda p,eps,x:p[:, 2] - p[:, 3]
+            #              ,'zw','u','pu',x0,lam,'p_u vs u','pu_vs_u_after',case_to_run,tf)
 
-        A_integration_y = simps(path[:, 2], path[:, 0]) + simps(path[:, 3], path[:, 1])-s0+I_addition_to_path
-        A_numerical.append(A_integration_y)
-    # fig = plt.figure()
-    # ax = fig.add_subplot(1, 1, 1)
-    plt.plot(np.array(list_of_epsilons)[:,0]**2,A_numerical,linewidth=4,linestyle='None', Marker='o', label='Numerical',markersize=10)
-    plt.plot(np.array(list_of_epsilons)[:,0]**2,A_exact_theory,linewidth=4,linestyle='None', Marker='^', label='Clancy',markersize=10)
-    plt.plot(np.array(list_of_epsilons)[:,0]**2,A_exact_theory,linewidth=4,linestyle='None', Marker='X', label='Miki',markersize=10)
-    plt.plot(np.array(list_of_epsilons)[:,0]**2,-(lam-1)**2/(2*lam**2)*np.array(list_of_epsilons)[:,0]**2,linewidth=4,linestyle='--',label='-(lam-1)^/(2*lam^2)*eps^2')
-    plt.xlabel('epsilon^2')
-    plt.ylabel('S1')
-    plt.title('S1 vs epsilon^2 lam='+str(lam))
-    plt.legend()
-    plt.tight_layout()
-    savefig('A_v_eps' + '.png', dpi=500)
-    plt.show()
+            A_integration_y = simps(path[:, 2], path[:, 0]) + simps(path[:, 3], path[:, 1])-s0+I_addition_to_path
+            A_numerical.append(A_integration_y)
+        # fig = plt.figure()
+        # ax = fig.add_subplot(1, 1, 1)
+        plt.plot(np.array(list_of_epsilons)[:,0]**2,A_numerical,linewidth=4,linestyle='None', Marker='o', label='Numerical',markersize=10)
+        plt.plot(np.array(list_of_epsilons)[:,0]**2,A_exact_theory,linewidth=4,linestyle='None', Marker='^', label='Clancy',markersize=10)
+        plt.plot(np.array(list_of_epsilons)[:,0]**2,A_exact_theory,linewidth=4,linestyle='None', Marker='X', label='Miki',markersize=10)
+        plt.plot(np.array(list_of_epsilons)[:,0]**2,-(lam-1)**2/(2*lam**2)*np.array(list_of_epsilons)[:,0]**2,linewidth=4,linestyle='--',label='-(lam-1)^2/(2*lam^2)*eps^2')
+        plt.xlabel('epsilon^2')
+        plt.ylabel('S1')
+        plt.title('S1 vs epsilon^2 lam='+str(lam))
+        plt.legend()
+        plt.tight_layout()
+        savefig('A_v_eps' + '.png', dpi=500)
+        plt.show()
+
+    if type(beta) is list:
+        A_aprox_theory, A_exact_theory, A_numerical = [], [], []
+        for path, lam in zip(guessed_paths, beta):
+            s0 = 1 / lam + np.log(lam) - 1
+            x0 = (lam - 1) / lam
+            y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, \
+            dq_dt_sus_inf, J = eq_hamilton_J(case_to_run, lam, list_of_epsilons, tf, gamma)
+            q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
+
+            y1_for_linear = np.linspace(path[:, 0][-1], 0, 1000)
+            py1_linear = p1_star_clancy - ((p1_star_clancy - path[:, 2][-1]) / path[:, 0][-1]) * y1_for_linear
+            y2_for_linear = np.linspace(path[:, 1][-1], 0, 1000)
+            py2_linear = p2_star_clancy - ((p2_star_clancy - path[:, 3][-1]) / path[:, 1][-1]) * y2_for_linear
+            addition_to_path = np.stack((y1_for_linear, y2_for_linear, py1_linear, py2_linear), axis=1)
+
+            I_addition_to_path = simps(py1_linear, y1_for_linear) + simps(py2_linear, y2_for_linear)
+
+            path_addition = np.vstack((path, addition_to_path))
+
+            f_of_d = (1 / 2) * (lam) * (1 - list_of_epsilons ** 2)
+            D = (-1 + f_of_d + np.sqrt(list_of_epsilons ** 2 + f_of_d ** 2)) / (1 - list_of_epsilons ** 2)
+            I_pu_aprox = (((lam - 1) ** 3) / (4 * lam ** 3)) * list_of_epsilons ** 2
+            I_pw_aprox = -((lam + 1) * (lam - 1) ** 2 / (4 * lam ** 3)) * list_of_epsilons ** 2
+            A_aprox_theory.append(-I_pu_aprox + I_pw_aprox)
+            A_exact_theory_full = -(1 / 2) * (q_star[2] + q_star[3]) - (1 / lam) * D
+            A_exact_theory.append(A_exact_theory_full - s0)
+
+            # pudu=simps((path_new[:, 2] - path_new[:, 3]), ((path_new[:, 0] - path_new[:, 1] )/2))
+            # pwdw=simps((path_new[:, 2] + path_new[:, 3]), ((path_new[:, 0] + path_new[:, 1] )/2))
+            # pwdwcor=pwdw-s0
+            # A_numerical.append(pwdwcor+pudu)
+
+            # pudu_org=simps((path[:, 2] - path[:, 3]), ((path[:, 0] - path[:, 1] )/2))
+            # pwdw_org=simps((path[:, 2] + path[:, 3]), ((path[:, 0] + path[:, 1] )/2))
+            # pwdwcor_org=pwdw-s0
+            # A_numerical_org=pwdwcor_org+pudu_org
+
+            # pudu_add=simps((path_addition[:, 2] - path_addition[:, 3]), ((path_addition[:, 0] - path_addition[:, 1] )/2))
+            # pwdw_add=simps((path_addition[:, 2] + path_addition[:, 3]), ((path_addition[:, 0] + path_addition[:, 1] )/2))
+            # py1_add=simps(path_addition[:, 2], path_addition[:, 0])
+            # py2_add=simps((path_addition[:, 3], path_addition[:, 1]))
+
+            # pwdwcor_add=pwdw-s0
+            # A_numerical_add=pwdwcor_add+pudu_add
+
+            # generic_plot(guessed_paths,list_of_epsilons,lambda p,eps,alph:(p[:, 0] - p[:, 1]) / 2,lambda p,eps,x:p[:, 2] - p[:, 3]
+            #              ,'zw','u','pu',x0,lam,'p_u vs u','pu_vs_u',case_to_run,tf)
+
+            guessed_paths = [path_addition]
+            # generic_plot(guessed_paths,list_of_epsilons,lambda p,eps,alph:(p[:, 0] - p[:, 1]) / 2,lambda p,eps,x:p[:, 2] - p[:, 3]
+            #              ,'zw','u','pu',x0,lam,'p_u vs u','pu_vs_u_after',case_to_run,tf)
+
+            A_integration_y = simps(path[:, 2], path[:, 0]) + simps(path[:, 3], path[:, 1]) - s0 + I_addition_to_path
+            A_numerical.append(A_integration_y)
+        # fig = plt.figure()
+        # ax = fig.add_subplot(1, 1, 1)
+        plt.plot(np.array(beta), A_numerical, linewidth=4, linestyle='None', Marker='o',
+                 label='Numerical', markersize=10)
+        plt.plot(np.array(beta), A_exact_theory, linewidth=4, linestyle='None', Marker='^',
+                 label='Clancy', markersize=10)
+        plt.plot(np.array(beta), A_exact_theory, linewidth=4, linestyle='None', Marker='X',
+                 label='Miki', markersize=10)
+        beta_for_curve_function=np.linspace(1.01,beta[-1],1000)
+        f_of_lam=[-(l-1)**2/(2*l**2)*list_of_epsilons**2 for l in beta_for_curve_function]
+        plt.plot(beta_for_curve_function,f_of_lam, linewidth=4, linestyle='--',label='-(lam-1)^2/(2*lam^2)*eps^2')
+        plt.xlabel('lam')
+        plt.ylabel('S1')
+        plt.title('S1 vs lam epsilon=' + str(list_of_epsilons))
+        plt.legend()
+        plt.tight_layout()
+        savefig('A_v_lam' + '.png', dpi=500)
+        plt.show()
 
 
-
-
-def plot_one_shot(angle_to_shoot,linear_combination,radius,time_vec,one_shot_dt,q_star,J,shot_dq_dt):
+def plot_one_shot(angle_to_shoot,linear_combination,radius,time_vec,one_shot_dt,q_star,J,shot_dq_dt,beta):
     path = one_shot(angle_to_shoot, linear_combination,q_star,radius,time_vec,one_shot_dt,J,shot_dq_dt)
     plt.plot(path[:, 0] + path[:, 1], path[:, 2] + path[:, 3], linewidth=4,
              linestyle='None', Marker='.', label='Numerical for epsilon=' + str(epsilon))
@@ -515,16 +610,16 @@ def plot_one_shot(angle_to_shoot,linear_combination,radius,time_vec,one_shot_dt,
     plt.show()
     return path
 
-def man_find_best_div_path(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt):
+def man_find_best_div_path(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta):
     temp_best_div,r=best_diverge_path(shot_angle,radius,org_lin_combo,one_shot_dt,q_star, t0,J,shot_dq_dt)
     print(temp_best_div,' ', r)
-    path = plot_one_shot(shot_angle,temp_best_div,r,t0 , one_shot_dt, q_star,J,shot_dq_dt)
+    path = plot_one_shot(shot_angle,temp_best_div,r,t0 , one_shot_dt, q_star,J,shot_dq_dt,beta)
     return temp_best_div,r,path
 
-def man_find_fine_tuning(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt):
+def man_find_fine_tuning(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta):
     temp_fine_tuning = fine_tuning(shot_angle,org_lin_combo,q_star,radius,t0,one_shot_dt,J,shot_dq_dt)
     print(temp_fine_tuning)
-    path=plot_one_shot(shot_angle,temp_fine_tuning,radius,t0 ,one_shot_dt,q_star,J,shot_dq_dt)
+    path=plot_one_shot(shot_angle,temp_fine_tuning,radius,t0 ,one_shot_dt,q_star,J,shot_dq_dt,beta)
     return temp_fine_tuning
 
 
@@ -543,13 +638,13 @@ def plot_u_clancy_theory(path,epsilon,beta,gamma):
     plt.legend()
 
 
-def man_div_path_and_fine_tuning(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt):
-    lin_combo,r,path=man_find_best_div_path(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt)
-    lin_combo=man_find_fine_tuning(shot_angle, r, t0, lin_combo, one_shot_dt, q_star, J, shot_dq_dt)
-    plot_all_var(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt)
+def man_div_path_and_fine_tuning(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta):
+    lin_combo,r,path=man_find_best_div_path(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta)
+    lin_combo=man_find_fine_tuning(shot_angle, r, t0, lin_combo, one_shot_dt, q_star, J, shot_dq_dt,beta)
+    plot_all_var(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt,beta)
 
 
-def plot_all_var(shot_angle,lin_combo,one_shot_dt,radius,final_time_path,q_star,J,shot_dq_dt):
+def plot_all_var(shot_angle,lin_combo,one_shot_dt,radius,final_time_path,q_star,J,shot_dq_dt,beta):
     lam=beta/gamma
     path = one_shot(shot_angle, lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
     epsilon_theory = epsilon if type(epsilon) is float else epsilon[0]
@@ -809,18 +904,22 @@ def plot_z(shot_angle, lin_combo,radius,final_time_path,one_shot_dt,beta,q_star,
 
 if __name__=='__main__':
     #Network Parameters
-    beta, gamma = 1.5, 1.0
+    # beta, gamma = 1.5, 1.0
+
+    gamma=1.0
+    beta=[1.5,1.8,2.1,2.4,2.7,3.0,3.3,3.6,4.0,4.5,5.0]
+
     abserr,relerr = 1.0e-20,1.0e-13
-    # list_of_epsilons=[(0.1,0.1),(0.1,0.12),(0.1,0.14),(0.1,0.16),(0.1,0.18),(0.1,0.2)]
-    list_of_epsilons=[(0.02,0.0),(0.04,0.0),(0.06,0.0),(0.08,0.0),(0.1,0.0),(0.12,0.0),(0.14,0.0),(0.16,0.0),(0.18,0.0),(0.2,0.0)]
-    sim='bc'
+    # list_of_epsilons=[(0.02,0.0),(0.04,0.0),(0.06,0.0),(0.08,0.0),(0.1,0.0),(0.12,0.0),(0.14,0.0),(0.16,0.0),(0.18,0.0),(0.2,0.0)]
+    list_of_epsilons=0.1
+    sim='lm'
 
     # A way to confirm the hamiltion's numericaly
     # Jacobian_H = ndft.Jacobian(H)
     # dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
 
     # ODE parameters
-    stoptime=20.0
+    stoptime=6.0
     numpoints = 10000
 
 
@@ -837,10 +936,11 @@ if __name__=='__main__':
     epsilon=(0.1,0.0)
     #lin002=0.9999930516412242
     #int_lin_combo001=0.9999658209936237
-    int_lin_combo=0.9999930516412242
-    y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
+    # int_lin_combolam5=0.9999658419290037
+    int_lin_combo=0.9999658209936237
+    y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta[0], list_of_epsilons, t, gamma)
     q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
-    # man_div_path_and_fine_tuning(np.pi/4-0.785084,r,t,0.9999658209936237,dt,q_star,J,dq_dt_sus_inf)
+    # man_div_path_and_fine_tuning(np.pi/4-0.785084,r,t,0.9999658419290037,dt,q_star,J,dq_dt_sus_inf,beta[0])
     # multi_eps_normalized_path(sim,)
     # eq_points_alpha(epsilon, beta, gamma)
     multi_eps_normalized_path(sim, list_of_epsilons, beta, gamma, numpoints, dt, r,int_lin_combo)
