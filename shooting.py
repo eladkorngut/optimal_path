@@ -602,19 +602,19 @@ def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_r
         u_thoery_alpha= alpha*(pu_for_path-2*x0*epsilon_lam)/(4*lam)
         u_function_pu=-((pu_for_path*(-2*epsilon_lam*(-1 + lam) +pu_for_path*lam)*(pu_for_path*lam-2*epsilon_lam*(1 + 2*lam)))/(4*(pu_for_path - 2*epsilon_lam)**3*lam**3))*epsilon_lam
         u_function_pu_linear=-epsilon_lam/(4*lam)
-        u_theory_full= (u_thoery_alpha+(1-alpha)*u_function_pu)
+        u_theory_full= u_thoery_alpha+np.exp(-alpha)*u_function_pu
         integral_numeric=-(simps((path[:, 2] - path[:, 3]), ((path[:, 0] - path[:, 1] )/2)))
         integral_theory=(-(lam-1)**2/(2*lam**3))*(x0/2+alpha*(1-x0/2))*epsilon_lam**2
-        plt.plot(pu_for_path,u_for_path,linewidth=4,label='Numerical eps='+str(epsilon))
-        plt.plot(pu_for_path,u_theory_full,linestyle='--',linewidth=4,label='Theory eps='+str(epsilon))
-    plt.xlabel('pu')
-    plt.ylabel('u')
-    plt.title('u vs pu, lam='+str(lam))
+        plt.plot(pu_for_path/epsilon_lam,u_for_path/epsilon_lam,linewidth=4,label='Numerical eps='+str(epsilon))
+        plt.plot(pu_for_path/epsilon_lam,u_theory_full/epsilon_lam,linestyle='--',linewidth=4,label='Theory eps='+str(epsilon))
+    plt.xlabel('pu/eps')
+    plt.ylabel('u/eps')
+    plt.title('u/eps vs pu/eps, lam='+str(lam))
     plt.legend()
     plt.savefig('u_v_pu_thoery_both'+'.png',dpi=500)
     plt.show()
 
-    A_numerical,A_theory,alpha_list=[],[],[]
+    A_numerical,A_theory,alpha_list,A_numerical_norm=[],[],[],[]
     for path, epsilon in zip(guessed_paths, list_of_epsilons):
         epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
         alpha=epsilon_mu/epsilon_lam
@@ -632,15 +632,17 @@ def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_r
         I_addition_to_path=simps(py1_linear-py2_linear,(y1_for_linear-y2_for_linear)/2)
         pudu = simps((path[:, 2] - path[:, 3]), ((path[:, 0] - path[:, 1]) / 2))
         A_numerical.append(-(pudu+I_addition_to_path))
-        A_theory.append(-((epsilon_lam**2) * (-1 + lam)**2 *(1 + alpha - lam +alpha *lam))/(4 *lam**3))
+        A_numerical_norm.append(-(pudu+I_addition_to_path)/epsilon_lam**2)
 
     theory_line_for_plot=[-((eps[0]**2) * (-1 + lam)**2 *(1 + a - lam +a *lam))/(4 *lam**3) for eps,a in zip(list_of_epsilons,alpha_list)]
-    plt.plot(alpha_list,A_numerical,linewidth=4,linestyle='None', Marker='o', label='Numerical',markersize=10)
-    plt.plot(alpha_list,theory_line_for_plot,linewidth=4,linestyle='--', label='Theory',markersize=10)
+    theory_line_for_plot_exp=np.array([(-1)*a*(lam-1)**2/(2*lam**3)+np.exp(-a)*(-1+lam)**3/(4*lam**3) for a in alpha_list])
+    plt.plot(alpha_list,A_numerical_norm,linewidth=4,linestyle='None', Marker='o', label='Numerical',markersize=10)
+    # plt.plot(alpha_list,theory_line_for_plot,linewidth=4,linestyle='--', label='Theory',markersize=10)
+    plt.plot(alpha_list,theory_line_for_plot_exp,linewidth=4,linestyle='--', label='Theory',markersize=10)
     # plt.plot(alpha_list,A_theory,linewidth=4,linestyle='None',label='Theory', Marker='v',markersize=10)
     plt.xlabel('alpha')
-    plt.ylabel('I_u')
-    plt.title('I_u vs epsilon^2 lam='+str(lam))
+    plt.ylabel('Iu/eps^2')
+    plt.title('I_u vs alpha lam='+str(lam))
     plt.legend()
     plt.tight_layout()
     plt.savefig('pudu_v_eps' + '.png', dpi=500)
@@ -963,7 +965,7 @@ if __name__=='__main__':
     # beta=[1.5,1.8,2.1,2.4,2.7,3.0,3.3,3.6,4.0,4.5,5.0]
 
     abserr,relerr = 1.0e-20,1.0e-13
-    list_of_epsilons=[(0.1,0.1),(0.1,0.08),(0.1,0.06),(0.1,0.04),(0.1,0.02),(0.1,0.0)]
+    list_of_epsilons=[(0.1,0.2),(0.1,0.16),(0.1,0.12),(0.1,0.1),(0.1,0.06),(0.1,0.02)]
     # list_of_epsilons=0.1
     sim='bc'
 
