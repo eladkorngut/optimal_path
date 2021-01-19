@@ -648,6 +648,43 @@ def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_r
     plt.savefig('pudu_v_eps' + '.png', dpi=500)
     plt.show()
 
+    s0=-1+1/lam+np.log(lam)
+    for path, epsilon in zip(guessed_paths, list_of_epsilons):
+        epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+        alpha=epsilon_mu/epsilon_lam
+        pw_for_path=path[:,2]+path[:,3]
+        w_for_path=(path[:,0]+path[:,1])
+        w_for_path_clancy=(path[:,0]+path[:,1])/2
+        pw0=- 2*np.log(lam - w_for_path*(1+alpha*((1+alpha)/lam)*epsilon_lam**2)*lam)
+        pw0_clancy=-2*np.log(lam - 2*w_for_path_clancy*(1+alpha*((1+alpha)/lam)*epsilon_lam**2)*lam)
+        pw_theory=-((epsilon_lam**2*((2*w_for_path*alpha*(1 + alpha)*lam)/(-1 + w_for_path) + (1 + (-1 + w_for_path)*lam)*(1 + lam + 2*alpha*lam)))/lam**2)- 2*np.log(lam - w_for_path*lam)
+        pw_theory_norm = -((((2*w_for_path*alpha*(1 + alpha)*lam)/(-1 + w_for_path) + (1 + (-1 + w_for_path)*lam)*(1 + lam + 2*alpha*lam)))/lam**2)
+        pw_theory_clancy= -((epsilon_lam**2*((4*w_for_path_clancy*alpha*(1 + alpha)*lam)/(-1 + 2*w_for_path_clancy)+ (1 + (-1 + 2*w_for_path_clancy)*lam)*(1 + lam + 2*alpha*lam)))/lam**2)- 2*np.log(lam - w_for_path*lam)
+        pw_theory_clancy_norm= -((((4*w_for_path_clancy*alpha*(1 + alpha)*lam)/(-1 + 2*w_for_path_clancy)+ (1 + (-1 + 2*w_for_path_clancy)*lam)*(1 + lam + 2*alpha*lam)))/lam**2)
+
+
+        y1_for_linear=np.linspace(path[:,0][-1],0,1000)
+        py1_linear=p1_star_clancy-((p1_star_clancy-path[:,2][-1])/path[:,0][-1])*y1_for_linear
+        y2_for_linear=np.linspace(path[:,1][-1],0,1000)
+        py2_linear=p2_star_clancy-((p2_star_clancy-path[:,3][-1])/path[:,1][-1])*y2_for_linear
+        I_addition_to_path=simps(py1_linear+py2_linear,(y1_for_linear+y2_for_linear))
+
+        integral_numeric=(1/2)*simps(path[:, 2] + path[:, 3], (path[:, 0] + path[:, 1]))
+        integral_numeric_correction=integral_numeric+I_addition_to_path-s0
+        integral_theory=(-((lam-1)*(-1+lam*(lam+2*alpha*(-3-2*alpha+lam))))/(4*lam**3)-alpha*(1+alpha)*np.log(lam)/lam)*epsilon_lam**2
+        # plt.plot(w_for_path,(pw_for_path-pw0)/epsilon_lam**2,linewidth=4,label='Numerical alpha='+str(alpha)+' eps='+str(epsilon))
+        # plt.plot(w_for_path,(pw_theory-pw0)/epsilon_lam**2,linestyle='--',linewidth=4,label='Theory alpha='+str(alpha)+' eps='+str(epsilon))
+        plt.plot(w_for_path_clancy,(pw_for_path-pw0_clancy)/epsilon_lam**2+2*alpha,linewidth=4,label='Numerical eps='+str(epsilon))
+        # plt.plot(w_for_path_clancy,((pw_for_path+(2*np.log(lam+2*lam*w_for_path_clancy)+(4*alpha*(w_for_path_clancy+w_for_path_clancy*alpha)/(lam+2*lam*w_for_path_clancy))*epsilon_lam**2))),linewidth=4,label='Numerical eps='+str(epsilon))
+        plt.plot(w_for_path_clancy,(pw_theory_clancy-pw0_clancy)/epsilon_lam**2,linestyle='--',linewidth=4,label='Theory eps='+str(epsilon))
+    plt.xlabel('w')
+    plt.ylabel('(pw-pw0)/eps^2')
+    plt.title('((pw-pw0)/eps^2 vs pw, lam='+str(lam))
+    plt.legend()
+    plt.savefig('pw_vs_w_with_theory'+'.png',dpi=500)
+    plt.show()
+    print('Integral Numeric = '+str(integral_numeric_correction)+' | Theory = '+str(integral_theory))
+
 
 def plot_one_shot(angle_to_shoot,linear_combination,radius,time_vec,one_shot_dt,q_star,J,shot_dq_dt,beta):
     path = one_shot(angle_to_shoot, linear_combination,q_star,radius,time_vec,one_shot_dt,J,shot_dq_dt)
@@ -965,7 +1002,7 @@ if __name__=='__main__':
     # beta=[1.5,1.8,2.1,2.4,2.7,3.0,3.3,3.6,4.0,4.5,5.0]
 
     abserr,relerr = 1.0e-20,1.0e-13
-    list_of_epsilons=[(0.1,0.2),(0.1,0.16),(0.1,0.12),(0.1,0.1),(0.1,0.06),(0.1,0.02)]
+    list_of_epsilons=[(0.1,0.1)]
     # list_of_epsilons=0.1
     sim='bc'
 
