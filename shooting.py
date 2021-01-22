@@ -636,7 +636,7 @@ def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_r
     plt.xlabel('pu/eps')
     plt.ylabel('u/eps')
     plt.title('u/eps vs pu/eps, lam='+str(lam))
-    plt.legend()
+    # plt.legend()
     plt.savefig('u_v_pu_thoery_both'+'.png',dpi=500)
     plt.show()
 
@@ -705,11 +705,10 @@ def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_r
         plt.plot(w_for_path_clancy,(pw_theory_clancy-pw0_clancy)/epsilon_lam**2,linestyle='--',linewidth=4,label='Theory eps='+str(epsilon))
     plt.xlabel('w')
     plt.ylabel('(pw-pw0)/eps^2')
-    plt.title('((pw-pw0)/eps^2 vs pw, lam='+str(lam))
-    plt.legend()
+    plt.title('((pw-pw0)/eps^2 vs w, lam='+str(lam))
+    # plt.legend()
     plt.savefig('pw_vs_w_with_theory'+'.png',dpi=500)
     plt.show()
-    print('Integral Numeric = '+str(integral_numeric_correction)+' | Theory = '+str(integral_theory))
 
     A_numerical,A_theory,alpha_list,A_numerical_norm=[],[],[],[]
     for path, epsilon in zip(guessed_paths, list_of_epsilons):
@@ -1101,7 +1100,7 @@ if __name__=='__main__':
     # beta=[1.5,1.8,2.1,2.4,2.7,3.0,3.3,3.6,4.0,4.5,5.0]
 
     abserr,relerr = 1.0e-20,1.0e-13
-    list_of_epsilons=[(0.1,0.0),(0.1,0.04),(0.1,0.8),(0.1,0.1),(0.1,0.14),(0.1,0.16),(0.1,0.18)]
+    list_of_epsilons=[(0.02,0.1),(0.04,0.1),(0.06,0.1),(0.08,0.1),(0.1,0.1),(0.12,0.1),(0.14,0.1),(0.16,0.1),(0.18,0.1),(0.2,0.1)]
     # list_of_epsilons=0.1
     sim='al'
 
