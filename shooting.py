@@ -6,7 +6,10 @@ from scipy.integrate import odeint
 from scipy.integrate import simps
 from pylab import figure, plot, xlabel, grid, legend, title,savefig,ylabel
 import numdifftools as ndft
+from  scipy.optimize import curve_fit
 
+
+parabola=lambda x,a,b,c:a*x**2+b*x+c
 
 def eq_points_alpha(epsilon,beta,gamma):
     epsilon_lam, epsilon_mu,lam = epsilon[0], epsilon[1],beta/gamma
@@ -636,7 +639,7 @@ def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_r
     plt.xlabel('pu/eps')
     plt.ylabel('u/eps')
     plt.title('u/eps vs pu/eps, lam='+str(lam))
-    # plt.legend()
+    plt.legend()
     plt.savefig('u_v_pu_thoery_both'+'.png',dpi=500)
     plt.show()
 
@@ -706,7 +709,7 @@ def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_r
     plt.xlabel('w')
     plt.ylabel('(pw-pw0)/eps^2')
     plt.title('((pw-pw0)/eps^2 vs w, lam='+str(lam))
-    # plt.legend()
+    plt.legend()
     plt.savefig('pw_vs_w_with_theory'+'.png',dpi=500)
     plt.show()
 
@@ -780,6 +783,127 @@ def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_r
     plt.title('S1/eps^2 vs alpha, lam='+str(lam))
     plt.legend()
     plt.savefig('s1_vs_eps'+'.png',dpi=500)
+    plt.show()
+
+
+    for path, epsilon in zip(guessed_paths, list_of_epsilons):
+        epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+
+        # y1_for_linear=np.linspace(path[:,0][-1],0,1000)
+        # py1_linear=p1_star_clancy-((p1_star_clancy-path[:,2][-1])/path[:,0][-1])*y1_for_linear
+        # y2_for_linear=np.linspace(path[:,1][-1],0,1000)
+        # py2_linear=p2_star_clancy-((p2_star_clancy-path[:,3][-1])/path[:,1][-1])*y2_for_linear
+        # addition_to_path = np.stack((y1_for_linear,y2_for_linear,py1_linear,py2_linear),axis=1)
+        #
+        # path_addition = np.vstack((path, addition_to_path))
+
+        pu_for_path = path[:,2]-path[:,3]
+        u_for_path = (path[:, 0] - path[:, 1]) / 2
+
+        popt, pcov=curve_fit(parabola,pu_for_path,u_for_path)
+        plt.plot(pu_for_path,u_for_path,linewidth=4,label='Numerical eps='+str(epsilon))
+        plt.plot(pu_for_path,parabola(pu_for_path,*popt),linestyle=':',linewidth=4,label='fit a=%5.2f , b=%5.3f , c=%5.5f' %tuple(popt))
+
+    plt.xlabel('pu')
+    plt.ylabel('u')
+    plt.title('u vs pu parbolic fit, lam='+str(lam))
+    # plt.legend()
+    plt.savefig('u_v_pu_parbolic_fit'+'.png',dpi=500)
+    plt.show()
+
+
+    for path, epsilon in zip(guessed_paths, list_of_epsilons):
+        epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+        u_for_path = ( (path[:, 0] - path[:, 1]) / 2 )/epsilon_lam
+        pu_for_path=(path[:,2]-path[:,3])/epsilon_lam
+        popt, pcov=curve_fit(parabola,pu_for_path,u_for_path)
+        plt.plot(pu_for_path,u_for_path,linewidth=4,label='Numerical eps='+str(epsilon))
+        plt.plot(pu_for_path,parabola(pu_for_path,*popt),linestyle=':',linewidth=4,label='fit a=%5.2f , b=%5.3f , c=%5.5f' %tuple(popt))
+
+    plt.xlabel('pu/eps')
+    plt.ylabel('u/eps')
+    plt.title('u vs pu parbolic fit, lam='+str(lam))
+    # plt.legend()
+    plt.savefig('u_v_pu_parbolic_fit_normalized'+'.png',dpi=500)
+    plt.show()
+
+    a_list,b_list,c_list,alpha_list=[],[],[],[]
+    for path, epsilon in zip(guessed_paths, list_of_epsilons):
+        epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+        alpha=epsilon_mu/epsilon_lam
+
+        y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy,\
+        dq_dt_sus_inf, J = eq_hamilton_J(case_to_run, beta, epsilon, tf,gamma)
+
+        y1_for_linear=np.linspace(path[:,0][-1],0,1000)
+        py1_linear=p1_star_clancy-((p1_star_clancy-path[:,2][-1])/path[:,0][-1])*y1_for_linear
+        y2_for_linear=np.linspace(path[:,1][-1],0,1000)
+        py2_linear=p2_star_clancy-((p2_star_clancy-path[:,3][-1])/path[:,1][-1])*y2_for_linear
+        addition_to_path = np.stack((y1_for_linear,y2_for_linear,py1_linear,py2_linear),axis=1)
+
+        path_addition = np.vstack((path, addition_to_path))
+
+        u_for_path = ( (path_addition[:, 0] - path_addition[:, 1]) / 2 )/epsilon_lam
+        pu_for_path=(path_addition[:,2]-path_addition[:,3])/epsilon_lam
+        popt, pcov=curve_fit(parabola,pu_for_path,u_for_path)
+        a_list.append(popt[0])
+        b_list.append(popt[1])
+        c_list.append(popt[2])
+        alpha_list.append(alpha)
+
+    plt.plot(alpha_list,a_list,linewidth=4,marker='o',markersize=10,linestyle='None')
+    plt.xlabel('alpha')
+    plt.ylabel('a')
+    plt.title('a vs alpha parbolic fit (norm), lam='+str(lam))
+    plt.savefig('a_parbola_norm'+'.png',dpi=500)
+    plt.show()
+
+    plt.plot(alpha_list,b_list,linewidth=4,marker='v',markersize=10,linestyle='None',color='r')
+    plt.xlabel('alpha')
+    plt.ylabel('b')
+    plt.title('b vs alpha parbolic fit (norm), lam='+str(lam))
+    plt.savefig('b_parbola_norm'+'.png',dpi=500)
+    plt.show()
+
+    plt.plot(alpha_list,c_list,linewidth=4,marker='^',markersize=10,linestyle='None',color='g')
+    plt.xlabel('alpha')
+    plt.ylabel('c')
+    plt.title('c vs alpha parbolic fit (norm), lam='+str(lam))
+    plt.savefig('c_parbola_norm'+'.png',dpi=500)
+    plt.show()
+
+
+    a_list,b_list,c_list,alpha_list=[],[],[],[]
+    for path, epsilon in zip(guessed_paths, list_of_epsilons):
+        epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+        alpha=epsilon_mu/epsilon_lam
+        u_for_path = ( (path[:, 0] - path[:, 1]) / 2 )
+        pu_for_path=(path[:,2]-path[:,3])
+        popt, pcov=curve_fit(parabola,pu_for_path,u_for_path)
+        a_list.append(popt[0])
+        b_list.append(popt[1])
+        c_list.append(popt[2])
+        alpha_list.append(alpha)
+
+    plt.plot(alpha_list,a_list,linewidth=4,marker='o',markersize=10,linestyle='None')
+    plt.xlabel('alpha')
+    plt.ylabel('a')
+    plt.title('a vs alpha parbolic fit, lam='+str(lam))
+    plt.savefig('a_parbola'+'.png',dpi=500)
+    plt.show()
+
+    plt.plot(alpha_list,b_list,linewidth=4,marker='v',markersize=10,linestyle='None',color='r')
+    plt.xlabel('alpha')
+    plt.ylabel('b')
+    plt.title('b vs alpha parbolic fit, lam='+str(lam))
+    plt.savefig('b_parbola'+'.png',dpi=500)
+    plt.show()
+
+    plt.plot(alpha_list,c_list,linewidth=4,marker='^',markersize=10,linestyle='None',color='g')
+    plt.xlabel('alpha')
+    plt.ylabel('c')
+    plt.title('c vs alpha parbolic fit, lam='+str(lam))
+    plt.savefig('c_parbola'+'.png',dpi=500)
     plt.show()
 
 
@@ -1100,7 +1224,8 @@ if __name__=='__main__':
     # beta=[1.5,1.8,2.1,2.4,2.7,3.0,3.3,3.6,4.0,4.5,5.0]
 
     abserr,relerr = 1.0e-20,1.0e-13
-    list_of_epsilons=[(0.02,0.1),(0.04,0.1),(0.06,0.1),(0.08,0.1),(0.1,0.1),(0.12,0.1),(0.14,0.1),(0.16,0.1),(0.18,0.1),(0.2,0.1)]
+    # list_of_epsilons=[(0.1,0.0)]
+    list_of_epsilons=[(0.1,x) for x in np.linspace(0.0,0.25,10)]
     # list_of_epsilons=0.1
     sim='al'
 
