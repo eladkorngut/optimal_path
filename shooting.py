@@ -9,6 +9,7 @@ import numdifftools as ndft
 from itertools import cycle
 
 
+
 def eq_points_alpha(epsilon,beta,gamma):
     epsilon_lam, epsilon_mu,lam = epsilon[0], epsilon[1],beta/gamma
     alpha,x0=epsilon_mu/epsilon_lam,(lam-1)/lam
@@ -466,6 +467,12 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
     lam = beta / gamma
     x0,s0 = (lam - 1) / lam, 1 / lam + np.log(lam) - 1
     A_w,A_u,alpha_list_w,alpha_list_u,path_list=[],[],[],[],[]
+
+    # f = open('shooting_path_lam_' + str(lam).replace('.', '') + '.csv', "w+")
+    # with f:
+    #     writer = csv.writer(f)
+    #     writer.writerows([Epsilon, fluctuation, Num_meauserments, T_final])
+
     for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
 
         sim_label= 'const eps mu' if case_to_run is 'la' else 'const eps lam'
@@ -562,10 +569,20 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
             epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
             epsilon_numerical = epsilon_mu if case_to_run is 'la' else epsilon_lam
 
+            if epsilon_mu==0.0 or epsilon_lam==0.0:
+                alpha=0
+            elif case_to_run is 'la':
+                alpha=epsilon_lam/epsilon_mu
+            else:
+                alpha=epsilon_mu / epsilon_lam
+
             pu_for_path = path[:, 2] - path[:, 3]
             u_for_path = (path[:, 0] - path[:, 1]) / 2
             plt.plot(u_for_path / epsilon_numerical, pu_for_path / epsilon_numerical, linewidth=4,
                      label='Numerical eps=' + str(epsilon))
+            pu_theory_alpha = 2 * x0 * epsilon_lam + (4 * lam * u_for_path) / alpha if case_to_run is 'al' else 2*alpha*x0*epsilon_mu+4*lam*alpha*u_for_path
+            plt.plot(u_for_path / epsilon_numerical, pu_theory_alpha / epsilon_numerical, linewidth=4,
+                     label='Theory eps=' + str(epsilon),linestyle=':')
         plt.xlabel('u/eps')
         plt.ylabel('pu/eps')
         plt.title('pu/eps vs u, lam=' + str(lam)+ ' '+sim_label)
@@ -606,6 +623,13 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         A_w.append(A_numerical_norm)
         plt.plot(alpha_list_w, A_numerical_norm, linewidth=4, linestyle='None', Marker='o', label='Numerical',
                  markersize=10)
+        alpha_list_for_theory=np.linspace(alpha_list_w[0],alpha_list_w[-1],1000)
+        theory_I_w = np.array(
+            [  (-((lam-1)*(-1+lam*(lam+2*a*(-3-2*a+lam))))/(4*lam**3)-a*(1+a)*np.log(lam)/lam) for a in
+             alpha_list_for_theory]) if case_to_run is 'al' else np.array(
+            [(-((-1 + lam)*(-4*lam +2*a*(-3 +lam)*lam +a**2*(-1 + lam**2)))/(4*lam**3) -((1 + a)*np.log(lam))/lam) for a in
+             alpha_list_for_theory])
+        plt.plot(alpha_list_for_theory, theory_I_w, linewidth=4, linestyle=':', label='Theory')
         plt.xlabel('alpha')
         plt.ylabel('Iw/eps^2')
         plt.title('Iw/eps^2 vs alpha, lam=' + str(lam)+ ' '+sim_label)
@@ -640,9 +664,14 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
             I_addition_to_path=simps(py1_linear-py2_linear,(y1_for_linear-y2_for_linear)/2)
             pudu = simps((path[:, 2] - path[:, 3]), ((path[:, 0] - path[:, 1]) / 2))
             # A_numerical_norm.append((pudu+I_addition_to_path)/epsilon_numerical**2)
-            A_numerical_norm.append(-(pudu+I_addition_to_path)/epsilon_numerical**2)
+            A_numerical_norm.append((pudu+I_addition_to_path)/epsilon_numerical**2)
         A_u.append(A_numerical_norm)
         plt.plot(alpha_list_u,A_numerical_norm,linewidth=4,linestyle='None', Marker='o', label='Numerical',markersize=10)
+
+        alpha_list_for_theory=np.linspace(alpha_list_u[0],alpha_list_u[-1],1000)
+        theory_I_u = [a*((lam-1)**2)/(2*lam**3) for a in alpha_list_for_theory]
+        plt.plot(alpha_list_for_theory, theory_I_u, linewidth=4, linestyle=':', label='Theory')
+
         plt.xlabel('alpha')
         plt.ylabel('Iu/eps^2')
         plt.title('Iu/eps^2 vs alpha lam='+str(lam))
@@ -1490,7 +1519,7 @@ def plot_z(shot_angle, lin_combo,radius,final_time_path,one_shot_dt,beta,q_star,
 
 if __name__=='__main__':
     #Network Parameters
-    beta, gamma = 1.5, 1.0
+    beta, gamma = 1.6, 1.0
 
     gamma=1.0
     # beta=[1.5,1.8,2.1,2.4,2.7,3.0,3.3,3.6,4.0,4.5,5.0]
@@ -1535,8 +1564,8 @@ if __name__=='__main__':
 
     sim=['al','la']
     epsilon_matrix=[[(0.1,0.0),(0.1,0.03),(0.1,0.06),(0.1,0.1),(0.1,0.13),(0.1,0.16)],[(0.0,0.1),(0.03,0.1),(0.06,0.1),(0.1,0.1),(0.13,0.1),(0.16,0.1)]]
-    # epsilon_matrix = [[(0.1, 0.0)],
-    #                   [(0.0, 0.1)]]
+    # epsilon_matrix = [[(0.1, 0.02)],
+    #                   [(0.02, 0.1)]]
     sim_paths=[]
     for case,epsilons in zip(sim,epsilon_matrix):
         sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo))
