@@ -452,6 +452,7 @@ def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,
     else:
         for eps in list_of_epsilons:
             sampleingtime=[7.0,9.0,10.0,10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,14.5,15.0,15.5,16.0,16.5,17.0,17.5,18.0,18.5,19.5,20.0]
+            # sampleingtime = np.linspace(7.0,40.0,10)
             y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,eps,t,gamma)
             q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
             # lam=beta if type(beta) is float else beta/(1+eps[0]*eps[1])
@@ -506,6 +507,54 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         plt.savefig('pw_vs_w_'+case_to_run + '.png', dpi=500)
         plt.show()
 
+
+
+        for path, epsilon in zip(guessed_paths, list_of_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            epsilon_numerical = epsilon_mu if case_to_run is 'la' else epsilon_lam
+
+            if epsilon_mu == 0.0 or epsilon_lam == 0.0:
+                alpha = 0
+            elif case_to_run is 'la':
+                alpha = epsilon_lam / epsilon_mu
+            else:
+                alpha = epsilon_mu / epsilon_lam
+
+            y1=path[:, 0]
+            p1=path[:, 2]
+            px1_0= -np.log(lam*(1-2*y1*(1+(1/lam)*epsilon_mu+((1+lam+alpha*lam)/(lam**2))*epsilon_mu**2))) if case_to_run is 'la' else -np.log(lam*(1-2*y1*(1+(alpha/lam)*epsilon_lam+(alpha*(alpha+lam+alpha*lam)/lam**2)*epsilon_lam**2)))
+            plt.plot(y1, (p1-px1_0), linewidth=4,
+                     label='Numerical eps=' + str(epsilon))
+        plt.xlabel('x1')
+        plt.ylabel('p1-p1_0')
+        plt.title('p1 vs x1 normalized, lam=' + str(lam) + ' ' + sim_label)
+        plt.legend()
+        plt.savefig('p1_v_x1_norm' + case_to_run + '.png', dpi=500)
+        plt.show()
+
+
+        for path, epsilon in zip(guessed_paths, list_of_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            epsilon_numerical = epsilon_mu if case_to_run is 'la' else epsilon_lam
+
+            if epsilon_mu == 0.0 or epsilon_lam == 0.0:
+                alpha = 0
+            elif case_to_run is 'la':
+                alpha = epsilon_lam / epsilon_mu
+            else:
+                alpha = epsilon_mu / epsilon_lam
+
+            y2=path[:, 1]
+            p2=path[:, 3]
+            px2_0= -np.log(lam*(1-2*y2*(1-(1/lam)*epsilon_mu+((1+lam+alpha*lam)/(lam**2))*epsilon_mu**2))) if case_to_run is 'la' else -np.log(lam*(1-2*y2*(1-(alpha/lam)*epsilon_lam+(alpha*(alpha+lam+alpha*lam)/lam**2)*epsilon_lam**2)))
+            plt.plot(y2, (p2-px2_0), linewidth=4,
+                     label='Numerical eps=' + str(epsilon))
+        plt.xlabel('x2')
+        plt.ylabel('p2-p2_0')
+        plt.title('p2 vs x2 normalized, lam=' + str(lam) + ' ' + sim_label)
+        plt.legend()
+        plt.savefig('p2_v_x2_norm' + case_to_run + '.png', dpi=500)
+        plt.show()
 
         for path, epsilon in zip(guessed_paths, list_of_epsilons):
             epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
@@ -585,7 +634,7 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
                      label='Theory eps=' + str(epsilon),linestyle=':')
         plt.xlabel('u/eps')
         plt.ylabel('pu/eps')
-        plt.title('pu/eps vs u, lam=' + str(lam)+ ' '+sim_label)
+        plt.title('pu/eps vs u, lam=' + str(lam)+ ' '+ sim_label)
         plt.legend()
         plt.savefig('pu_v_u_numerical_' + case_to_run + '.png', dpi=500)
         plt.show()
@@ -674,10 +723,34 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
 
         plt.xlabel('alpha')
         plt.ylabel('Iu/eps^2')
-        plt.title('Iu/eps^2 vs alpha lam='+str(lam))
+        plt.title('Iu/eps^2 vs alpha lam='+str(lam)+ ' ' +  case_to_run)
         plt.legend()
         plt.tight_layout()
         plt.savefig('pudu_v_eps_'+case_to_run + '.png', dpi=500)
+        plt.show()
+
+        for path, epsilon in zip(guessed_paths, list_of_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            epsilon_numerical = epsilon_mu if case_to_run is 'la' else epsilon_lam
+            plt.plot(path[:, 0], path[:, 2], linewidth=4,
+                     label='Numerical eps=' + str(epsilon))
+        plt.xlabel('x1')
+        plt.ylabel('p1')
+        plt.title('p1 vs x1, lam=' + str(lam) + ' ' + sim_label)
+        plt.legend()
+        plt.savefig('p1_v_x1_' + case_to_run + '.png', dpi=500)
+        plt.show()
+
+        for path, epsilon in zip(guessed_paths, list_of_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            epsilon_numerical = epsilon_mu if case_to_run is 'la' else epsilon_lam
+            plt.plot(path[:, 1], path[:, 3], linewidth=4,
+                     label='Numerical eps=' + str(epsilon))
+        plt.xlabel('x2')
+        plt.ylabel('p2')
+        plt.title('p2 vs x2, lam=' + str(lam) + ' ' + sim_label)
+        plt.legend()
+        plt.savefig('p2_v_x2_' + case_to_run + '.png', dpi=500)
         plt.show()
 
     for action_w,action_u,case_to_run in zip(A_w,A_u,list_sims):
@@ -685,7 +758,7 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         plt.plot(alpha_list_w,s1,linewidth=4,label='Numerical ' + case_to_run,linestyle='None', Marker='o',markersize=10)
     plt.xlabel('alpha')
     plt.ylabel('s1')
-    plt.title('s1 vs alpha lam=' + str(lam)+ ' ' +sim_label)
+    plt.title('s1 vs alpha lam=' + str(lam))
     plt.legend()
     plt.tight_layout()
     plt.savefig('s1_la_and_al' + '.png', dpi=500)
@@ -856,6 +929,8 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
     plt.tight_layout()
     plt.savefig('pu_v_w_togther' + '.png', dpi=500)
     plt.show()
+
+
 
 
 def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_run,tf):
@@ -1563,9 +1638,9 @@ if __name__=='__main__':
     # multi_eps_normalized_path(sim, list_of_epsilons, beta, gamma, numpoints, dt, r,int_lin_combo)
 
     sim=['al','la']
-    epsilon_matrix=[[(0.1,0.0),(0.1,0.03),(0.1,0.06),(0.1,0.1),(0.1,0.13),(0.1,0.16)],[(0.0,0.1),(0.03,0.1),(0.06,0.1),(0.1,0.1),(0.13,0.1),(0.16,0.1)]]
-    # epsilon_matrix = [[(0.1, 0.02)],
-    #                   [(0.02, 0.1)]]
+    # epsilon_matrix=[[(0.1,0.0),(0.1,0.03),(0.1,0.06),(0.1,0.1),(0.1,0.13),(0.1,0.16)],[(0.0,0.1),(0.03,0.1),(0.06,0.1),(0.1,0.1),(0.13,0.1),(0.16,0.1)]]
+    epsilon_matrix = [[(0.1, 0.02)],
+                      [(0.02, 0.1)]]
     sim_paths=[]
     for case,epsilons in zip(sim,epsilon_matrix):
         sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo))
