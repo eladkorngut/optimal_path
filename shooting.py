@@ -453,6 +453,7 @@ def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,
         for eps in list_of_epsilons:
             sampleingtime=[7.0,9.0,10.0,10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,14.5,15.0,15.5,16.0,16.5,17.0,17.5,18.0,18.5,19.5,20.0]
             # sampleingtime = np.linspace(7.0,40.0,10)
+            # sampleingtime=[7.0,9.0,10.0,10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,14.5,15.0]
             y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,eps,t,gamma)
             q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
             # lam=beta if type(beta) is float else beta/(1+eps[0]*eps[1])
@@ -756,6 +757,15 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
     for action_w,action_u,case_to_run in zip(A_w,A_u,list_sims):
         s1=[iu+iw for iw,iu in zip(action_w,action_u)]
         plt.plot(alpha_list_w,s1,linewidth=4,label='Numerical ' + case_to_run,linestyle='None', Marker='o',markersize=10)
+        alpha_list_for_theory=np.linspace(alpha_list_u[0],alpha_list_u[-1],1000)
+        theory_I_w = np.array(
+            [  (-((lam-1)*(-1+lam*(lam+2*a*(-3-2*a+lam))))/(4*lam**3)-a*(1+a)*np.log(lam)/lam) for a in
+             alpha_list_for_theory]) if case_to_run is 'al' else np.array(
+            [(-((-1 + lam)*(-4*lam +2*a*(-3 +lam)*lam +a**2*(-1 + lam**2)))/(4*lam**3) -((1 + a)*np.log(lam))/lam) for a in
+             alpha_list_for_theory])
+        theory_I_u =np.array( [a*((lam-1)**2)/(2*lam**3) for a in alpha_list_for_theory])
+        s_theory=theory_I_u+theory_I_w
+        plt.plot(alpha_list_for_theory,s_theory,linewidth=4,label='Theory ' + case_to_run,linestyle='--')
     plt.xlabel('alpha')
     plt.ylabel('s1')
     plt.title('s1 vs alpha lam=' + str(lam))
@@ -1333,7 +1343,7 @@ def plot_u_clancy_theory(path,epsilon,beta,gamma):
 def man_div_path_and_fine_tuning(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta,case_to_run):
     lin_combo,r,path=man_find_best_div_path(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta)
     lin_combo=man_find_fine_tuning(shot_angle, r, t0, lin_combo, one_shot_dt, q_star, J, shot_dq_dt,beta)
-    plot_all_var(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt,beta,case_to_run,t0)
+    # plot_all_var(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt,beta,case_to_run,t0)
 
 
 def plot_all_var(shot_angle,lin_combo,one_shot_dt,radius,final_time_path,q_star,J,shot_dq_dt,beta,case_to_run,tf):
@@ -1602,7 +1612,7 @@ if __name__=='__main__':
     abserr,relerr = 1.0e-20,1.0e-13
     list_of_epsilons=[(0.02,0.1),(0.06,0.1),(0.1,0.1),(0.16,0.1)]
     # list_of_epsilons=0.1
-    sim='la'
+    sim='al'
 
     # A way to confirm the hamiltion's numericaly
     # Jacobian_H = ndft.Jacobian(H)
@@ -1621,14 +1631,15 @@ if __name__=='__main__':
     # Radius around eq point,Time of to advance the self vector
     # r002=2e-07
     # r001=4e-7
-    r=6.4e-06
+    r=1.6e-6
 
-    epsilon=(0.0,0.1)
+    epsilon=(0.9,0.0)
     #lin002=0.9999930516412242
     #int_lin_combo001=0.9999658209936237
     # int_lin_combolam5=0.9999658419290037
     # int_lin_comboeps(01,01)=1.0001955976196242
     # int_lin_combo0018e-7=0.9999657791228237
+    # int_lin_combo_all_runs=1.0002181438489302
     int_lin_combo=1.0002181438489302
     # y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
     # q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
@@ -1638,9 +1649,9 @@ if __name__=='__main__':
     # multi_eps_normalized_path(sim, list_of_epsilons, beta, gamma, numpoints, dt, r,int_lin_combo)
 
     sim=['al','la']
-    # epsilon_matrix=[[(0.1,0.0),(0.1,0.03),(0.1,0.06),(0.1,0.1),(0.1,0.13),(0.1,0.16)],[(0.0,0.1),(0.03,0.1),(0.06,0.1),(0.1,0.1),(0.13,0.1),(0.16,0.1)]]
-    epsilon_matrix = [[(0.1, 0.02)],
-                      [(0.02, 0.1)]]
+    # epsilon_matrix=[[(0.9,0.0),(0.9,0.03),(0.9,0.06),(0.9,0.1),(0.9,0.13),(0.9,0.16)],[(0.0,0.9),(0.03,0.9),(0.06,0.9),(0.1,0.9),(0.13,0.9),(0.16,0.9)]]
+    epsilon_matrix = [[(0.1, 0.0)],
+                      [(0.0, 0.1)]]
     sim_paths=[]
     for case,epsilons in zip(sim,epsilon_matrix):
         sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo))
