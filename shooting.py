@@ -32,6 +32,38 @@ def eq_points_alpha(epsilon,beta,gamma):
                 -alpha * epsilon_lam ** 2 + (-1 + lam) * (alpha * epsilon_lam) ** 2- lam * (-1 + lam))
     print('This no love song')
 
+
+def eq_points_exact(epsilon,beta,gamma):
+    epsilon_lam, epsilon_mu,lam = epsilon[0], epsilon[1],beta/gamma
+    x0=(lam-1)/lam
+
+    # if epsilon_mu == 0.0 or epsilon_lam == 0.0:
+    #     alpha = 0
+    # elif case_to_run is 'la':
+    #     alpha = epsilon_lam / epsilon_mu
+    # else:
+    #     alpha = epsilon_mu / epsilon_lam
+
+    y1star=(-2*epsilon_mu*(1 + epsilon_lam*epsilon_mu)+ lam*(-1 + epsilon_mu)*(1 + (-1 + 2*epsilon_lam)*epsilon_mu)+ np.sqrt(lam**2 +epsilon_mu*(4*epsilon_mu +lam**2*epsilon_mu*(-2 +epsilon_mu**2) +4*epsilon_lam*(lam -(-2 + lam)*epsilon_mu**2) +4*epsilon_lam**2*epsilon_mu*(lam -(-1 + lam)*epsilon_mu**2))))/(4*lam*(-1 +epsilon_lam)*(-1 +epsilon_mu)*epsilon_mu)
+    y2star=(lam + epsilon_mu*(-2 + 2*lam +lam*epsilon_mu+ 2*epsilon_lam*(lam +(-1 + lam)*epsilon_mu)) -np.sqrt(lam**2 +epsilon_mu*(4*epsilon_mu +lam**2*epsilon_mu*(-2 +epsilon_mu**2) +4*epsilon_lam*(lam -(-2 + lam)*epsilon_mu**2) +4*epsilon_lam**2*epsilon_mu*(lam -(-1 + lam)*epsilon_mu**2))))/(4*lam*(1 +epsilon_lam)*epsilon_mu*(1 + epsilon_mu))
+    p1star=-np.log((lam + 2*epsilon_lam -epsilon_lam**2*(lam -2*epsilon_mu) +np.sqrt(lam**2 +4*lam*epsilon_lam*epsilon_mu- 4*(-2 + lam)*epsilon_lam**3*epsilon_mu+ epsilon_lam**4*(lam**2 -4*(-1 + lam)*epsilon_mu**2) +epsilon_lam**2*(4 - 2*lam**2 + 4*lam*epsilon_mu**2)))/(2*(1 +epsilon_lam)*(1 +epsilon_lam*epsilon_mu)))
+    # p2star = -np.log(-(lam - 2*epsilon_lam- epsilon_lam**2*(lam + 2*epsilon_mu) + np.sqrt(lam**2 + 4*lam*epsilon_lam*epsilon_mu- 4*(-2 + lam)*lam**3*epsilon_mu+ epsilon_lam**4*(lam**2 -4*(-1 + lam)*epsilon_mu**2) +epsilon_lam**2*(4 - 2*lam**2 +4*lam*epsilon_mu**2)))/(2*(-1 +epsilon_lam)*(1 +epsilon_lam*epsilon_mu)))
+    p2star= -np.log(-(lam - 2*epsilon_lam- epsilon_lam**2*(lam + 2*epsilon_mu) +np.sqrt(lam**2 + 4*lam*epsilon_lam*epsilon_mu- 4*(-2 + lam)*epsilon_lam**3*epsilon_mu+ epsilon_lam**4*(lam**2 - 4*(-1 + lam)*epsilon_mu**2) + epsilon_lam**2*(4 - 2*lam**2 + 4*lam*epsilon_mu**2)))/(2*(-1 + epsilon_lam)*(1 + epsilon_lam*epsilon_mu)))
+
+    # y1staralphaepslamconst=(-lam +alpha*epsilon_lam*(2*(-1 + lam) -(2 + alpha)*lam*epsilon_lam+ 2*alpha*(-1 + lam)*epsilon_lam**2) +np.sqrt(lam**2 +alpha*epsilon_lam**2*(4*lam -2*alpha*(-2 + lam**2) +alpha*(4*lam +alpha*(8 +lam*(-4 + alpha*lam)))*epsilon_lam**2 -4*alpha**3*(-1 + lam)*epsilon_lam**4)))/(4*alpha*lam*(-1 +epsilon_lam)*epsilon_lam*(-1 +alpha*epsilon_lam))
+    # y2staralphaepslamconst= (lam +alpha*epsilon_lam*(2*(-1 + lam) +(2 + alpha)*lam*epsilon_lam+ 2*alpha*(-1 + lam)*epsilon_lam**2) -np.sqrt(lam**2 +alpha*epsilon_lam**2*(4*lam -2*alpha*(-2 + lam**2) +alpha*(4*lam +alpha*(8 +lam*(-4 + alpha*lam)))*epsilon_lam**2 -4*alpha**3*(-1 + lam)*epsilon_lam**4)))/(4*alpha*lam*epsilon_lam*(1 +epsilon_lam)*(1 +alpha*epsilon_lam))
+    #
+    # y1staralphaepsmuconst=(-2*(epsilon_mu + alpha*epsilon_mu**3) + np.sqrt(lam**2 + (4 + 4*alpha*lam - 2*lam**2)*epsilon_mu**2+ (8*alpha + 4*(-1 + alpha)*alpha*lam + lam**2)*epsilon_mu**4- 4*alpha**2*(-1 + lam)*epsilon_mu**6) + lam*(-1 + epsilon_mu)*(1 + epsilon_mu*(-1 + 2*alpha*epsilon_mu)))/(4*lam*(-1 + epsilon_mu)*epsilon_mu*(-1 + alpha*epsilon_mu))
+    # y2staralphaepsmuconst= (lam - np.sqrt(lam**2 + (4 + 4*alpha*lam - 2*lam**2)*epsilon_mu**2+ (8*alpha + 4*(-1 + alpha)*alpha*lam + lam**2)*epsilon_mu**4- 4*alpha**2*(-1 + lam)*epsilon_mu**6) + epsilon_mu*(2*(-1 + lam) + epsilon_mu*(lam + 2*alpha*lam + 2*alpha*(-1 + lam)*epsilon_mu)))/(4*lam*epsilon_mu*(1 + epsilon_mu)*(1 + alpha*epsilon_mu))
+    #
+    # p1staralphaepslamconst=-np.log((lam + 2*epsilon_lam - lam*epsilon_lam**2+ 2*alpha*epsilon_lam**3+ np.sqrt(lam**2 + (4 + 4*alpha*lam - 2*lam**2)*epsilon_lam**2 + (8*alpha - 4*alpha*lam + 4*alpha**2*lam + lam**2)*epsilon_lam**4 - 4*alpha**2*(-1 + lam)*epsilon_lam**6))/(2*(1 + epsilon_lam)*(1 + alpha*epsilon_lam**2)))
+    # p2staralphaepslamconst=-np.log(-(lam - 2*epsilon_lam- lam*epsilon_lam**2 - 2*alpha*epsilon_lam**3 + np.sqrt(lam**2 + (4 + 4*alpha*lam - 2*lam**2)*epsilon_lam**2 + (8*alpha - 4*alpha*lam + 4*alpha**2*lam + lam**2)*epsilon_lam**4 - 4*alpha**2*(-1 + lam)*epsilon_lam**6))/(2*(-1 + epsilon_lam)*(1 + alpha*epsilon_lam**2)))
+    #
+    # p1staralphaepsmuconst= -np.log((lam + 2*alpha*epsilon_mu - alpha**2*lam*epsilon_mu**2+ 2*alpha**2*epsilon_mu**3+ np.sqrt(lam**2 + 2*alpha*(2*alpha + 2*lam - alpha*lam**2)*epsilon_mu**2 + alpha**2*(8*alpha + 4*lam - 4*alpha*lam + alpha**2*lam**2)*epsilon_mu**4 - 4*alpha**4*(-1 + lam)*epsilon_mu**6))/(2*(1 + alpha*epsilon_mu)*(1 + alpha*epsilon_mu**2)))
+    # p2staralphaepsmuconst=    -np.log(-(lam -2*alpha*epsilon_mu- alpha**2*lam*epsilon_mu**2 - 2*alpha**2*epsilon_mu**3 + np.sqrt(lam**2 + 2*alpha*(2*alpha + 2*lam - alpha*lam**2)*epsilon_mu**2 + alpha**2*(8*alpha + 4*lam - 4*alpha*lam + alpha**2*lam**2)*epsilon_mu**4 - 4*alpha**4*(-1 + lam)*epsilon_mu**6))/(2*(-1 + alpha*epsilon_mu)*(1 + alpha*epsilon_mu**2)))
+    return y1star, y2star, 0.0, 0.0, p1star, p2star
+
+
 def plot_generic_theory(epsilon_lam,path,x0,lam,theory_type,ax,numeric_x,case_to_run,tf,alpha):
     if theory_type is 'zw':
         u_for_path,w_for_path=numeric_x(path,epsilon_lam,alpha),(path[:, 0] + path[:, 1]) / 2
@@ -309,6 +341,11 @@ def eq_hamilton_J(case_to_run,beta,epsilon=0.0,t=None,gamma=1.0):
         dq_dt_sus_inf = bimodal_mu_lam(beta/(1+epsilon[0]*epsilon[1]))
         y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy = eq_point_alpha_reverse(epsilon, beta, gamma)
         return y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, ndft.Jacobian(dq_dt_sus_inf)
+    elif case_to_run is 'x':
+        dq_dt_sus_inf = bimodal_mu_lam(beta/(1+epsilon[0]*epsilon[1]))
+        y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy = eq_points_exact(epsilon, beta, gamma)
+        return y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, ndft.Jacobian(dq_dt_sus_inf)
+
     return None
 
 
@@ -475,11 +512,13 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
     #     writer = csv.writer(f)
     #     writer.writerows([Epsilon, fluctuation, Num_meauserments, T_final])
 
+    count=0
     for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
 
         sim_label= 'const eps mu' if case_to_run is 'la' else 'const eps lam'
         path_list.append(guessed_paths)
-
+        count=count+1
+        save_label=str(count) if case_to_run is 'x' else case_to_run
         for path, epsilon in zip(guessed_paths, list_of_epsilons):
             epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
             epsilon_numerical= epsilon_mu if case_to_run is 'la' else epsilon_lam
@@ -505,7 +544,7 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         plt.ylabel('(pw-pw0)/eps^2')
         plt.title('((pw-pw0)/eps^2 vs w, lam=' + str(lam)+' '+sim_label)
         plt.legend()
-        plt.savefig('pw_vs_w_'+case_to_run + '.png', dpi=500)
+        plt.savefig('pw_vs_w_'+save_label + '.png', dpi=500)
         plt.show()
 
 
@@ -530,7 +569,7 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         plt.ylabel('p1-p1_0')
         plt.title('p1 vs x1 normalized, lam=' + str(lam) + ' ' + sim_label)
         plt.legend()
-        plt.savefig('p1_v_x1_norm' + case_to_run + '.png', dpi=500)
+        plt.savefig('p1_v_x1_norm' + save_label + '.png', dpi=500)
         plt.show()
 
 
@@ -554,7 +593,7 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         plt.ylabel('p2-p2_0')
         plt.title('p2 vs x2 normalized, lam=' + str(lam) + ' ' + sim_label)
         plt.legend()
-        plt.savefig('p2_v_x2_norm' + case_to_run + '.png', dpi=500)
+        plt.savefig('p2_v_x2_norm' + save_label + '.png', dpi=500)
         plt.show()
 
         for path, epsilon in zip(guessed_paths, list_of_epsilons):
@@ -578,7 +617,7 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         plt.ylabel('(pw-pw0)/eps^2')
         plt.title('((pw-pw0)/eps^2 vs u/eps, lam=' + str(lam)+' '+sim_label)
         plt.legend()
-        plt.savefig('pw_vs_u_'+case_to_run + '.png', dpi=500)
+        plt.savefig('pw_vs_u_'+save_label + '.png', dpi=500)
         plt.show()
 
 
@@ -594,7 +633,7 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         plt.ylabel('u/eps')
         plt.title('u/eps vs w, lam=' + str(lam)+' '+sim_label)
         plt.legend()
-        plt.savefig('w_v_u_numerical_' + case_to_run + '.png', dpi=500)
+        plt.savefig('w_v_u_numerical_' + save_label + '.png', dpi=500)
         plt.show()
 
 
@@ -611,7 +650,7 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         plt.ylabel('pu/eps')
         plt.title('pu/eps vs w, lam=' + str(lam)+ ' '+sim_label)
         plt.legend()
-        plt.savefig('pu_v_w_numerical_' + case_to_run + '.png', dpi=500)
+        plt.savefig('pu_v_w_numerical_' + save_label + '.png', dpi=500)
         plt.show()
 
 
@@ -637,7 +676,7 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         plt.ylabel('pu/eps')
         plt.title('pu/eps vs u, lam=' + str(lam)+ ' '+ sim_label)
         plt.legend()
-        plt.savefig('pu_v_u_numerical_' + case_to_run + '.png', dpi=500)
+        plt.savefig('pu_v_u_numerical_' + save_label + '.png', dpi=500)
         plt.show()
 
 
@@ -684,7 +723,7 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         plt.ylabel('Iw/eps^2')
         plt.title('Iw/eps^2 vs alpha, lam=' + str(lam)+ ' '+sim_label)
         plt.legend()
-        plt.savefig('Iw_v_eps_alpha_'+case_to_run + '.png', dpi=500)
+        plt.savefig('Iw_v_eps_alpha_'+save_label + '.png', dpi=500)
         plt.show()
 
         A_numerical,A_theory,alpha_list_u,A_numerical_norm=[],[],[],[]
@@ -727,7 +766,7 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         plt.title('Iu/eps^2 vs alpha lam='+str(lam)+ ' ' +  case_to_run)
         plt.legend()
         plt.tight_layout()
-        plt.savefig('pudu_v_eps_'+case_to_run + '.png', dpi=500)
+        plt.savefig('pudu_v_eps_'+save_label + '.png', dpi=500)
         plt.show()
 
         for path, epsilon in zip(guessed_paths, list_of_epsilons):
@@ -739,7 +778,7 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         plt.ylabel('p1')
         plt.title('p1 vs x1, lam=' + str(lam) + ' ' + sim_label)
         plt.legend()
-        plt.savefig('p1_v_x1_' + case_to_run + '.png', dpi=500)
+        plt.savefig('p1_v_x1_' + save_label + '.png', dpi=500)
         plt.show()
 
         for path, epsilon in zip(guessed_paths, list_of_epsilons):
@@ -751,7 +790,7 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         plt.ylabel('p2')
         plt.title('p2 vs x2, lam=' + str(lam) + ' ' + sim_label)
         plt.legend()
-        plt.savefig('p2_v_x2_' + case_to_run + '.png', dpi=500)
+        plt.savefig('p2_v_x2_' + save_label + '.png', dpi=500)
         plt.show()
 
     for action_w,action_u,case_to_run in zip(A_w,A_u,list_sims):
@@ -1612,14 +1651,14 @@ if __name__=='__main__':
     abserr,relerr = 1.0e-20,1.0e-13
     list_of_epsilons=[(0.02,0.1),(0.06,0.1),(0.1,0.1),(0.16,0.1)]
     # list_of_epsilons=0.1
-    sim='al'
+    sim='x'
 
     # A way to confirm the hamiltion's numericaly
     # Jacobian_H = ndft.Jacobian(H)
     # dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
 
     # ODE parameters
-    stoptime=20.0
+    stoptime=15.0
     numpoints = 10000
 
 
@@ -1633,7 +1672,7 @@ if __name__=='__main__':
     # r001=4e-7
     r=1.6e-6
 
-    epsilon=(0.9,0.0)
+    epsilon=(0.01,0.9)
     #lin002=0.9999930516412242
     #int_lin_combo001=0.9999658209936237
     # int_lin_combolam5=0.9999658419290037
@@ -1648,11 +1687,13 @@ if __name__=='__main__':
     # eq_points_alpha(epsilon, beta, gamma)
     # multi_eps_normalized_path(sim, list_of_epsilons, beta, gamma, numpoints, dt, r,int_lin_combo)
 
-    sim=['al','la']
-    # epsilon_matrix=[[(0.9,0.0),(0.9,0.03),(0.9,0.06),(0.9,0.1),(0.9,0.13),(0.9,0.16)],[(0.0,0.9),(0.03,0.9),(0.06,0.9),(0.1,0.9),(0.13,0.9),(0.16,0.9)]]
-    epsilon_matrix = [[(0.1, 0.0)],
-                      [(0.0, 0.1)]]
+    # sim=['al','la']
+    sim=['x','x']
+    epsilon_matrix=[[(0.1,0.001),(0.1,0.03),(0.1,0.06),(0.1,0.1),(0.1,0.13),(0.1,0.16)],[(0.001,0.1),(0.03,0.1),(0.06,0.1),(0.1,0.1),(0.13,0.1),(0.16,0.1)]]
+    # epsilon_matrix = [[(0.1, 0.01)],
+    #                   [(0.01, 0.1)]]
     sim_paths=[]
     for case,epsilons in zip(sim,epsilon_matrix):
         sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo))
     plot_multi_sim_path(sim_paths, beta, gamma, epsilon_matrix, sim, t)
+    # eq_points_exact(epsilon,beta,gamma)
