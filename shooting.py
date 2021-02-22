@@ -35,32 +35,10 @@ def eq_points_alpha(epsilon,beta,gamma):
 
 def eq_points_exact(epsilon,beta,gamma):
     epsilon_lam, epsilon_mu,lam = epsilon[0], epsilon[1],beta/gamma
-    x0=(lam-1)/lam
-
-    # if epsilon_mu == 0.0 or epsilon_lam == 0.0:
-    #     alpha = 0
-    # elif case_to_run is 'la':
-    #     alpha = epsilon_lam / epsilon_mu
-    # else:
-    #     alpha = epsilon_mu / epsilon_lam
-
     y1star=(-2*epsilon_mu*(1 + epsilon_lam*epsilon_mu)+ lam*(-1 + epsilon_mu)*(1 + (-1 + 2*epsilon_lam)*epsilon_mu)+ np.sqrt(lam**2 +epsilon_mu*(4*epsilon_mu +lam**2*epsilon_mu*(-2 +epsilon_mu**2) +4*epsilon_lam*(lam -(-2 + lam)*epsilon_mu**2) +4*epsilon_lam**2*epsilon_mu*(lam -(-1 + lam)*epsilon_mu**2))))/(4*lam*(-1 +epsilon_lam)*(-1 +epsilon_mu)*epsilon_mu)
     y2star=(lam + epsilon_mu*(-2 + 2*lam +lam*epsilon_mu+ 2*epsilon_lam*(lam +(-1 + lam)*epsilon_mu)) -np.sqrt(lam**2 +epsilon_mu*(4*epsilon_mu +lam**2*epsilon_mu*(-2 +epsilon_mu**2) +4*epsilon_lam*(lam -(-2 + lam)*epsilon_mu**2) +4*epsilon_lam**2*epsilon_mu*(lam -(-1 + lam)*epsilon_mu**2))))/(4*lam*(1 +epsilon_lam)*epsilon_mu*(1 + epsilon_mu))
     p1star=-np.log((lam + 2*epsilon_lam -epsilon_lam**2*(lam -2*epsilon_mu) +np.sqrt(lam**2 +4*lam*epsilon_lam*epsilon_mu- 4*(-2 + lam)*epsilon_lam**3*epsilon_mu+ epsilon_lam**4*(lam**2 -4*(-1 + lam)*epsilon_mu**2) +epsilon_lam**2*(4 - 2*lam**2 + 4*lam*epsilon_mu**2)))/(2*(1 +epsilon_lam)*(1 +epsilon_lam*epsilon_mu)))
-    # p2star = -np.log(-(lam - 2*epsilon_lam- epsilon_lam**2*(lam + 2*epsilon_mu) + np.sqrt(lam**2 + 4*lam*epsilon_lam*epsilon_mu- 4*(-2 + lam)*lam**3*epsilon_mu+ epsilon_lam**4*(lam**2 -4*(-1 + lam)*epsilon_mu**2) +epsilon_lam**2*(4 - 2*lam**2 +4*lam*epsilon_mu**2)))/(2*(-1 +epsilon_lam)*(1 +epsilon_lam*epsilon_mu)))
     p2star= -np.log(-(lam - 2*epsilon_lam- epsilon_lam**2*(lam + 2*epsilon_mu) +np.sqrt(lam**2 + 4*lam*epsilon_lam*epsilon_mu- 4*(-2 + lam)*epsilon_lam**3*epsilon_mu+ epsilon_lam**4*(lam**2 - 4*(-1 + lam)*epsilon_mu**2) + epsilon_lam**2*(4 - 2*lam**2 + 4*lam*epsilon_mu**2)))/(2*(-1 + epsilon_lam)*(1 + epsilon_lam*epsilon_mu)))
-
-    # y1staralphaepslamconst=(-lam +alpha*epsilon_lam*(2*(-1 + lam) -(2 + alpha)*lam*epsilon_lam+ 2*alpha*(-1 + lam)*epsilon_lam**2) +np.sqrt(lam**2 +alpha*epsilon_lam**2*(4*lam -2*alpha*(-2 + lam**2) +alpha*(4*lam +alpha*(8 +lam*(-4 + alpha*lam)))*epsilon_lam**2 -4*alpha**3*(-1 + lam)*epsilon_lam**4)))/(4*alpha*lam*(-1 +epsilon_lam)*epsilon_lam*(-1 +alpha*epsilon_lam))
-    # y2staralphaepslamconst= (lam +alpha*epsilon_lam*(2*(-1 + lam) +(2 + alpha)*lam*epsilon_lam+ 2*alpha*(-1 + lam)*epsilon_lam**2) -np.sqrt(lam**2 +alpha*epsilon_lam**2*(4*lam -2*alpha*(-2 + lam**2) +alpha*(4*lam +alpha*(8 +lam*(-4 + alpha*lam)))*epsilon_lam**2 -4*alpha**3*(-1 + lam)*epsilon_lam**4)))/(4*alpha*lam*epsilon_lam*(1 +epsilon_lam)*(1 +alpha*epsilon_lam))
-    #
-    # y1staralphaepsmuconst=(-2*(epsilon_mu + alpha*epsilon_mu**3) + np.sqrt(lam**2 + (4 + 4*alpha*lam - 2*lam**2)*epsilon_mu**2+ (8*alpha + 4*(-1 + alpha)*alpha*lam + lam**2)*epsilon_mu**4- 4*alpha**2*(-1 + lam)*epsilon_mu**6) + lam*(-1 + epsilon_mu)*(1 + epsilon_mu*(-1 + 2*alpha*epsilon_mu)))/(4*lam*(-1 + epsilon_mu)*epsilon_mu*(-1 + alpha*epsilon_mu))
-    # y2staralphaepsmuconst= (lam - np.sqrt(lam**2 + (4 + 4*alpha*lam - 2*lam**2)*epsilon_mu**2+ (8*alpha + 4*(-1 + alpha)*alpha*lam + lam**2)*epsilon_mu**4- 4*alpha**2*(-1 + lam)*epsilon_mu**6) + epsilon_mu*(2*(-1 + lam) + epsilon_mu*(lam + 2*alpha*lam + 2*alpha*(-1 + lam)*epsilon_mu)))/(4*lam*epsilon_mu*(1 + epsilon_mu)*(1 + alpha*epsilon_mu))
-    #
-    # p1staralphaepslamconst=-np.log((lam + 2*epsilon_lam - lam*epsilon_lam**2+ 2*alpha*epsilon_lam**3+ np.sqrt(lam**2 + (4 + 4*alpha*lam - 2*lam**2)*epsilon_lam**2 + (8*alpha - 4*alpha*lam + 4*alpha**2*lam + lam**2)*epsilon_lam**4 - 4*alpha**2*(-1 + lam)*epsilon_lam**6))/(2*(1 + epsilon_lam)*(1 + alpha*epsilon_lam**2)))
-    # p2staralphaepslamconst=-np.log(-(lam - 2*epsilon_lam- lam*epsilon_lam**2 - 2*alpha*epsilon_lam**3 + np.sqrt(lam**2 + (4 + 4*alpha*lam - 2*lam**2)*epsilon_lam**2 + (8*alpha - 4*alpha*lam + 4*alpha**2*lam + lam**2)*epsilon_lam**4 - 4*alpha**2*(-1 + lam)*epsilon_lam**6))/(2*(-1 + epsilon_lam)*(1 + alpha*epsilon_lam**2)))
-    #
-    # p1staralphaepsmuconst= -np.log((lam + 2*alpha*epsilon_mu - alpha**2*lam*epsilon_mu**2+ 2*alpha**2*epsilon_mu**3+ np.sqrt(lam**2 + 2*alpha*(2*alpha + 2*lam - alpha*lam**2)*epsilon_mu**2 + alpha**2*(8*alpha + 4*lam - 4*alpha*lam + alpha**2*lam**2)*epsilon_mu**4 - 4*alpha**4*(-1 + lam)*epsilon_mu**6))/(2*(1 + alpha*epsilon_mu)*(1 + alpha*epsilon_mu**2)))
-    # p2staralphaepsmuconst=    -np.log(-(lam -2*alpha*epsilon_mu- alpha**2*lam*epsilon_mu**2 - 2*alpha**2*epsilon_mu**3 + np.sqrt(lam**2 + 2*alpha*(2*alpha + 2*lam - alpha*lam**2)*epsilon_mu**2 + alpha**2*(8*alpha + 4*lam - 4*alpha*lam + alpha**2*lam**2)*epsilon_mu**4 - 4*alpha**4*(-1 + lam)*epsilon_mu**6))/(2*(-1 + alpha*epsilon_mu)*(1 + alpha*epsilon_mu**2)))
     return y1star, y2star, 0.0, 0.0, p1star, p2star
 
 
@@ -221,14 +199,33 @@ def eq_point_alpha_reverse(epsilon,beta,gamma):
     alpha = epsilon_lam / epsilon_mu
     lam=beta/gamma
     x0=1-1/lam
-    # y1star = x0/2+((alpha-alpha*lam)/(2*lam**2))*epsilon_lam-((alpha*(1+alpha)*(-1+lam)/(2*lam**2)))*epsilon_lam**2
-    # y2star = x0/2+(alpha*(-1+lam)/(2*lam**2))*epsilon_lam-(alpha*(1+alpha)*(-1+lam)/(2*lam**2))*epsilon_lam**2
-    # p1star = -np.log(lam)+((-1+lam)/lam)*epsilon_lam+((-1+lam)*(1+lam+2*alpha*lam)/(2*lam**2))*epsilon_lam**2
-    # p2star = -np.log(lam)+(-1+1/lam)*epsilon_lam+((-1+lam)*(1+lam+2*alpha*lam)/(2*lam**2))*epsilon_lam**2
     y1star = x0/2+((1-lam)/(2*lam**2))*epsilon_mu-((1+alpha)*(-1+lam)/(2*lam**2))*epsilon_mu**2
     y2star = x0/2+((-1+lam)/(2*lam**2))*epsilon_mu-((1+alpha)*(-1+lam)/(2*lam**2))*epsilon_mu**2
     p1star = -np.log(lam)+(alpha*(-1+lam)/lam)*epsilon_mu+(alpha*(-1+lam)*(alpha+(2+alpha)*lam)/(2*lam**2))*epsilon_mu**2
     p2star = -np.log(lam)+alpha*(-1+1/lam)*epsilon_mu+(alpha*(-1+lam)*(alpha+(2+alpha)*lam)/(2*lam**2))*epsilon_mu**2
+    return y1star, y2star, 0.0, 0.0, p1star, p2star
+
+
+
+def eq_point_delta_eps_lam_const(epsilon,beta,gamma):
+    epsilon_lam, epsilon_mu,lam = epsilon[0], epsilon[1],beta/gamma
+    delta_lam,delta_mu=1-epsilon_lam,1-epsilon_mu
+    alpha,x0 = delta_mu / delta_lam,1-1/lam
+    y1star=(alpha*(-1 + lam)*delta_lam)/4- (alpha**2*(-2 + lam)*(-1 + lam)*delta_lam**2)/8
+    y2star=(-1 + lam)/(2*lam) +(alpha*(-1 + lam)*delta_lam**2)/(8*lam)
+    p1star= ((1 - lam)*delta_lam)/2 + ((-3 + lam)*(-1 + lam)*delta_lam**2)/8
+    p2star= -np.log(lam) + ((alpha - alpha*lam)*delta_lam**2)/4
+    return y1star, y2star, 0.0, 0.0, p1star, p2star
+
+
+def eq_point_delta_eps_mu_const(epsilon,beta,gamma):
+    epsilon_lam, epsilon_mu,lam = epsilon[0], epsilon[1],beta/gamma
+    delta_lam,delta_mu=1-epsilon_lam,1-epsilon_mu
+    alpha,x0 = delta_lam / delta_mu,1-1/lam
+    y1star=((-1 + lam)*delta_mu)/4 - ((-2 + lam)*(-1 + lam)*delta_mu**2)/8
+    y2star= (-1 + lam)/(2*lam) +(alpha*(-1 + lam)*delta_mu**2)/(8*lam)
+    p1star= ((alpha - alpha*lam)*delta_mu)/2+ (alpha**2*(-3 + lam)*(-1 + lam)*delta_mu**2)/8
+    p2star= -np.log(lam) + ((alpha - alpha*lam)*delta_mu**2)/4
     return y1star, y2star, 0.0, 0.0, p1star, p2star
 
 
@@ -346,6 +343,16 @@ def eq_hamilton_J(case_to_run,beta,epsilon=0.0,t=None,gamma=1.0):
         dq_dt_sus_inf = bimodal_mu_lam(beta/(1+epsilon[0]*epsilon[1]))
         y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy = eq_points_exact(epsilon, beta, gamma)
         return y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, ndft.Jacobian(dq_dt_sus_inf)
+    elif case_to_run is 'dl':
+        dq_dt_sus_inf = bimodal_mu_lam(beta/(1+epsilon[0]*epsilon[1]))
+        y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy = eq_point_delta_eps_lam_const(epsilon, beta, gamma)
+        return y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, ndft.Jacobian(dq_dt_sus_inf)
+    elif case_to_run is 'dm':
+        dq_dt_sus_inf = bimodal_mu_lam(beta/(1+epsilon[0]*epsilon[1]))
+        y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy = eq_point_delta_eps_mu_const(epsilon, beta, gamma)
+        return y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, ndft.Jacobian(dq_dt_sus_inf)
+
+
 
     return None
 
@@ -1679,13 +1686,13 @@ def plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_r
 def plot_one_shot(angle_to_shoot,linear_combination,radius,time_vec,one_shot_dt,q_star,J,shot_dq_dt,beta):
     path = one_shot(angle_to_shoot, linear_combination,q_star,radius,time_vec,one_shot_dt,J,shot_dq_dt)
     plt.plot(path[:, 0] + path[:, 1], path[:, 2] + path[:, 3], linewidth=4,
-             linestyle='None', Marker='.', label='Numerical for epsilon=' + str(epsilon))
+             linestyle='None', Marker='.', label='Numerical')
     plt.plot(path[:, 0] + path[:, 1],
              [2 * np.log(gamma / (beta * (1 - (i + j)))) for i, j in zip(path[:, 0], path[:, 1])],
              linewidth=4, linestyle='--', color='y', label='Theory')
     xlabel('y1+y2')
     ylabel('p1+p2')
-    title('For eps='+str(epsilon)+' theory vs numerical results, clancy different lambdas')
+    title('Theory vs numerical results')
     plt.legend()
     plt.scatter((path[:, 0][0] + path[:, 1][0], path[:, 0][-1] + path[:, 1][-1]),
                 (path[:, 2][0] + path[:, 3][0], path[:, 2][-1] + path[:, 3][-1]), c=('g', 'r'), s=(100, 100))
@@ -1996,7 +2003,7 @@ if __name__=='__main__':
     # list_of_epsilons=[(0.002,0.1)]
     # list_of_epsilons = [(0.5, 0.05)]
     # list_of_epsilons=0.1
-    sim='x'
+    sim='dl'
 
     # A way to confirm the hamiltion's numericaly
     # Jacobian_H = ndft.Jacobian(H)
@@ -2017,7 +2024,7 @@ if __name__=='__main__':
     # r001=4e-7
     r=1.28e-05
 
-    epsilon=(0.9,0.05)
+    epsilon=(1-1e-8,1-1e-8)
     #lin002=0.9999930516412242
     #int_lin_combo001=0.9999658209936237
     # int_lin_combolam5=0.9999658419290037
@@ -2031,16 +2038,19 @@ if __name__=='__main__':
 
     y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
     q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
-    man_div_path_and_fine_tuning(np.pi/4-0.785084,r,t,0.9999758373880197,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
+    man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
+    # plot_one_shot(-np.pi/2, 0.9920007999, r, t, dt, q_star, J, dq_dt_sus_inf, beta)
+
+    # man_div_path_and_fine_tuning(np.pi/4-0.785084,r,t,0.9999758373880197,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(np.pi / 4 - 0.74, r, t, 0.7386390749669806, dt, q_star, J, dq_dt_sus_inf,
     #                              beta / (1 + epsilon[0] * epsilon[1]), sim)
     # multi_eps_normalized_path(sim,)
     # eq_points_alpha(epsilon, beta, gamma)
     # multi_eps_normalized_path(sim, list_of_epsilons, beta, gamma, numpoints, dt, r,int_lin_combo)
-    temp=multi_eps_normalized_path(sim, list_of_epsilons, beta, gamma, numpoints, dt, r, int_lin_combo)
+    # temp=multi_eps_normalized_path(sim, list_of_epsilons, beta, gamma, numpoints, dt, r, int_lin_combo)
     # plot_eps_mu_clancy(temp, beta, gamma, list_of_epsilons, sim, t)
     # plot_eps_mu_sub(temp,beta,gamma,list_of_epsilons,sim,t)
-    plot_eps_lam_sub(temp,beta,gamma,list_of_epsilons,sim,t)
+    # plot_eps_lam_sub(temp,beta,gamma,list_of_epsilons,sim,t)
 
     # sim=['al','la']
     # sim=['x','x']
