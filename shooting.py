@@ -404,12 +404,13 @@ def when_path_diverge(path):
 def best_diverge_path(shot_angle,radius,org_lin_combo,one_shot_dt,q_star,final_time_path,J,shot_dq_dt):
     path=one_shot(shot_angle,org_lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
     org_div_time = when_path_diverge(path)
-    going_up=path[:,0][int(org_div_time)-2]+path[:,1][int(org_div_time)-2]>=path[:,0][0]+path[:,0][0]
+    going_up=False if org_div_time == 0.0 else path[:,0][int(org_div_time)-2]+path[:,1][int(org_div_time)-2]>=path[:,0][0]+path[:,0][0]
     while going_up:
         radius=radius*2
         path=one_shot(shot_angle,org_lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
         org_div_time = when_path_diverge(path)
-        going_up = path[:, 0][int(org_div_time) - 2] + path[:, 1][int(org_div_time) - 2] >= path[:, 0][0] + path[:, 0][0]
+        going_up = False if org_div_time == 0.0 else path[:, 0][int(org_div_time) - 2] + path[:, 1][
+            int(org_div_time) - 2] >= path[:, 0][0] + path[:, 0][0]
     dl = 0.1
     path=one_shot(shot_angle,org_lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
     lin_combo=org_lin_combo
@@ -1728,10 +1729,42 @@ def plot_u_clancy_theory(path,epsilon,beta,gamma):
     plt.legend()
 
 
+def plot_numerical_only(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt, beta, case_to_run):
+    lam=beta/gamma
+    path = one_shot(shot_angle, lin_combo,q_star,radius,t0,one_shot_dt,J,shot_dq_dt)
+    A_integration = simps(path[:, 2], path[:, 0]) + simps(path[:, 3], path[:, 1])
+    y1 = path[:, 0]
+    p1 = path[:, 2]
+    plt.plot(y1, p1, linewidth=4,label='Numerical')
+    plt.xlabel('x1')
+    plt.ylabel('p1')
+    plt.title('p1 vs x1, lam=' + str(round(lam,2)))
+    plt.legend()
+    plt.savefig('p1_v_x1_' + case_to_run + '.png', dpi=500)
+    plt.show()
+    y2 = path[:, 1]
+    p2 = path[:, 3]
+    plt.plot(y2, p2, linewidth=4,label='Numerical')
+    plt.xlabel('x2')
+    plt.ylabel('p2')
+    plt.title('p2 vs x2, lam=' + str(round(lam,2)))
+    plt.legend()
+    plt.savefig('p2_v_x2_' + case_to_run + '.png', dpi=500)
+    plt.show()
+    plt.plot((y2+y1)/2,p1+ p2, linewidth=4,label='Numerical Int='+str(round(A_integration,5)))
+    plt.xlabel('w')
+    plt.ylabel('pw')
+    plt.title('pw vs w, lam=' + str(round(lam,2)))
+    plt.legend()
+    plt.savefig('pw_v_w_' + case_to_run + '.png', dpi=500)
+    plt.show()
+
+
 def man_div_path_and_fine_tuning(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta,case_to_run):
     lin_combo,r,path=man_find_best_div_path(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta)
     lin_combo=man_find_fine_tuning(shot_angle, r, t0, lin_combo, one_shot_dt, q_star, J, shot_dq_dt,beta)
     # plot_all_var(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt,beta,case_to_run,t0)
+    plot_numerical_only(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt, beta, case_to_run)
 
 
 def plot_all_var(shot_angle,lin_combo,one_shot_dt,radius,final_time_path,q_star,J,shot_dq_dt,beta,case_to_run,tf):
@@ -2010,7 +2043,7 @@ if __name__=='__main__':
     # dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
 
     # ODE parameters
-    stoptime=20.0
+    stoptime=7.0
     numpoints = 10000
 
 
@@ -2022,9 +2055,9 @@ if __name__=='__main__':
     # Radius around eq point,Time of to advance the self vector
     # r002=2e-07
     # r001=4e-7
-    r=1.28e-05
+    r=5.28e-04
 
-    epsilon=(1-1e-8,1-1e-8)
+    epsilon=(0.9,1-1e-8)
     #lin002=0.9999930516412242
     #int_lin_combo001=0.9999658209936237
     # int_lin_combolam5=0.9999658419290037
@@ -2033,11 +2066,12 @@ if __name__=='__main__':
     # int_lin_combo_all_runs=1.0002181438489302
     # int_lin_combo=1.0259660334473293
     # int_lin_combo=0.7386390749669806
-    int_lin_combo=0.9999758373880197
+    int_lin_combo=0.9920007989
 
 
     y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
     q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
+    # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # plot_one_shot(-np.pi/2, 0.9920007999, r, t, dt, q_star, J, dq_dt_sus_inf, beta)
 
