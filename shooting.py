@@ -229,6 +229,15 @@ def eq_point_delta_eps_mu_const(epsilon,beta,gamma):
     return y1star, y2star, 0.0, 0.0, p1star, p2star
 
 
+def eq_point_delta_mu(epsilon,beta,gamma):
+    epsilon_lam, epsilon_mu,lam = epsilon[0], epsilon[1],beta/gamma
+    delta_lam,delta_mu=1-epsilon_lam,1-epsilon_mu
+    y1star= ((-1 + lam)*delta_mu)/4- ((-1 + lam)*delta_mu**2*(-1 +(-1 + lam)*epsilon_lam))/(4*(1 +epsilon_lam))
+    y2star = (-1 + lam)/(2*lam) -((-1 + lam)*delta_mu*(-1 +epsilon_lam))/(4*lam*(1 +epsilon_lam)) + ((-1 + lam)**2*delta_mu**2*(-1 +epsilon_lam))/(8*lam*(1 +epsilon_lam))
+    p1star = -np.log((lam -(-2 + lam)*epsilon_lam)/(1 +epsilon_lam))- ((-1 + lam)*lam*delta_mu*(-1 +epsilon_lam)**2*epsilon_lam)/((1 +epsilon_lam)*(lam -(-2 + lam)*epsilon_lam)**2) -((-1 + lam)*lam*delta_mu**2*(-1 +epsilon_lam)**2*epsilon_lam**2*(lam*(3 + lam) -2*(-3 + lam)*lam*epsilon_lam+ (8 - 9*lam +lam**2)*epsilon_lam**2))/(2*(1 +epsilon_lam)**2*(lam -(-2 + lam)*epsilon_lam)**4)
+    p2star = -np.log(lam) - ((-1 + lam)*delta_mu*(-1 + epsilon_lam)*epsilon_lam)/(-lam + epsilon_lam*(-2 + (-2 + lam)*epsilon_lam)) - ((-1 + lam)*delta_mu**2*(-1 + epsilon_lam)*epsilon_lam**2*(lam*(3 + lam) + epsilon_lam*(2 - 2*(-2 + lam)*lam + (-6 + lam)*(-1 + lam)*epsilon_lam)))/(2*(1 + epsilon_lam)**2*(-lam + (-2 + lam)*epsilon_lam)**3)
+    return y1star, y2star, 0.0, 0.0, p1star, p2star
+
 
 def eq_hamilton_J(case_to_run,beta,epsilon=0.0,t=None,gamma=1.0):
 
@@ -351,6 +360,10 @@ def eq_hamilton_J(case_to_run,beta,epsilon=0.0,t=None,gamma=1.0):
         dq_dt_sus_inf = bimodal_mu_lam(beta/(1+epsilon[0]*epsilon[1]))
         y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy = eq_point_delta_eps_mu_const(epsilon, beta, gamma)
         return y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, ndft.Jacobian(dq_dt_sus_inf)
+    elif case_to_run is 'dem':
+        dq_dt_sus_inf = bimodal_mu_lam(beta/(1+epsilon[0]*epsilon[1]))
+        y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy = eq_point_delta_mu(epsilon, beta, gamma)
+        return y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, ndft.Jacobian(dq_dt_sus_inf)
 
 
 
@@ -404,13 +417,15 @@ def when_path_diverge(path):
 def best_diverge_path(shot_angle,radius,org_lin_combo,one_shot_dt,q_star,final_time_path,J,shot_dq_dt):
     path=one_shot(shot_angle,org_lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
     org_div_time = when_path_diverge(path)
-    going_up=False if org_div_time == 0.0 else path[:,0][int(org_div_time)-2]+path[:,1][int(org_div_time)-2]>=path[:,0][0]+path[:,0][0]
+    # going_up=False if org_div_time == 0.0 else path[:,0][int(org_div_time)-2]+path[:,1][int(org_div_time)-2]>=path[:,0][0]+path[:,0][0]
+    going_up = path[:,0][int(org_div_time)-2]+path[:,1][int(org_div_time)-2]>=path[:,0][0]+path[:,0][0]
     while going_up:
         radius=radius*2
         path=one_shot(shot_angle,org_lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
         org_div_time = when_path_diverge(path)
-        going_up = False if org_div_time == 0.0 else path[:, 0][int(org_div_time) - 2] + path[:, 1][
-            int(org_div_time) - 2] >= path[:, 0][0] + path[:, 0][0]
+        # going_up = False if org_div_time == 0.0 else path[:, 0][int(org_div_time) - 2] + path[:, 1][
+        #     int(org_div_time) - 2] >= path[:, 0][0] + path[:, 0][0]
+        going_up = path[:,0][int(org_div_time)-2]+path[:,1][int(org_div_time)-2]>=path[:,0][0]+path[:,0][0]
     dl = 0.1
     path=one_shot(shot_angle,org_lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
     lin_combo=org_lin_combo
@@ -2036,7 +2051,7 @@ if __name__=='__main__':
     # list_of_epsilons=[(0.002,0.1)]
     # list_of_epsilons = [(0.5, 0.05)]
     # list_of_epsilons=0.1
-    sim='dl'
+    sim='dem'
 
     # A way to confirm the hamiltion's numericaly
     # Jacobian_H = ndft.Jacobian(H)
@@ -2055,9 +2070,9 @@ if __name__=='__main__':
     # Radius around eq point,Time of to advance the self vector
     # r002=2e-07
     # r001=4e-7
-    r=5.28e-04
+    r=5.28e-08
 
-    epsilon=(0.9,1-1e-8)
+    epsilon=(0.4,0.9)
     #lin002=0.9999930516412242
     #int_lin_combo001=0.9999658209936237
     # int_lin_combolam5=0.9999658419290037
@@ -2072,8 +2087,10 @@ if __name__=='__main__':
     y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
     q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
-    man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
-    # plot_one_shot(-np.pi/2, 0.9920007999, r, t, dt, q_star, J, dq_dt_sus_inf, beta)
+    # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
+    man_div_path_and_fine_tuning(np.pi/4-0.8,r,t,1.0081923932,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
+
+    # plot_one_shot(np.pi/4-0.62, 1.0081923932, r, t, dt, q_star, J, dq_dt_sus_inf, beta)
 
     # man_div_path_and_fine_tuning(np.pi/4-0.785084,r,t,0.9999758373880197,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(np.pi / 4 - 0.74, r, t, 0.7386390749669806, dt, q_star, J, dq_dt_sus_inf,
