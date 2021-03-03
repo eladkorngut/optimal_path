@@ -414,21 +414,48 @@ def when_path_diverge(path):
     if p2_div is 0.0: return p1_div
     return min(p1_div,p2_div)
 
-def best_diverge_path(shot_angle,radius,org_lin_combo,one_shot_dt,q_star,final_time_path,J,shot_dq_dt):
+
+def change_shot_angle(shot_angle,radius,org_lin_combo,one_shot_dt,q_star,final_time_path,J,shot_dq_dt):
+    path = one_shot(shot_angle,org_lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
+    going_up = path[:,0][-10]+path[:,1][-10]>=path[:,0][0]+path[:,1][0]
+    dtheta=1e-3
+    shot_angle_down,shot_angle_up=shot_angle - dtheta,shot_angle + dtheta
+    count,max_steps=0,int(np.pi/dtheta)
+    while going_up and max_steps>count:
+        path_down=one_shot(shot_angle_down,org_lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
+        if not path_down[:, 0][-10] + path_down[:, 1][-10] >= path_down[:, 0][0] + path_down[:, 1][0]:
+            shot_angle=shot_angle_down
+            break
+        path_up=one_shot(shot_angle_up,org_lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
+        if not path_up[:, 0][-10] + path_up[:, 1][-10] >= path_up[:, 1][0] + path_up[:, 0][0]:
+            shot_angle=shot_angle_up
+            break
+        shot_angle_down, shot_angle_up = shot_angle_down - dtheta, shot_angle_up + dtheta
+        count=count+1
+    return shot_angle
+
+
+def path_going_up(shot_angle,radius,org_lin_combo,one_shot_dt,q_star,final_time_path,J,shot_dq_dt):
+    org_radius=radius
     path=one_shot(shot_angle,org_lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
     org_div_time = when_path_diverge(path)
-    # going_up=False if org_div_time == 0.0 else path[:,0][int(org_div_time)-2]+path[:,1][int(org_div_time)-2]>=path[:,0][0]+path[:,0][0]
-    going_up = path[:,0][int(org_div_time)-2]+path[:,1][int(org_div_time)-2]>=path[:,0][0]+path[:,0][0]
+    going_up = path[:,0][int(org_div_time)-2]+path[:,1][int(org_div_time)-2]>=path[:,0][0]+path[:,1][0]
     while going_up:
         radius=radius*2
         path=one_shot(shot_angle,org_lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
         org_div_time = when_path_diverge(path)
-        # going_up = False if org_div_time == 0.0 else path[:, 0][int(org_div_time) - 2] + path[:, 1][
-        #     int(org_div_time) - 2] >= path[:, 0][0] + path[:, 0][0]
-        going_up = path[:,0][int(org_div_time)-2]+path[:,1][int(org_div_time)-2]>=path[:,0][0]+path[:,0][0]
-    dl = 0.1
+        going_up = path[:,0][int(org_div_time)-2]+path[:,1][int(org_div_time)-2]>=path[:,0][0]+path[:,1][0]
+    if radius>5e-3:
+        shot_angle=change_shot_angle(shot_angle,org_radius,org_lin_combo,one_shot_dt,q_star,final_time_path,J,shot_dq_dt)
+        radius=org_radius
     path=one_shot(shot_angle,org_lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
-    lin_combo=org_lin_combo
+    return path,radius,shot_angle
+
+
+def best_diverge_path(shot_angle,radius,org_lin_combo,one_shot_dt,q_star,final_time_path,J,shot_dq_dt):
+    path,radius,shot_angle=path_going_up(shot_angle,radius,org_lin_combo,one_shot_dt,q_star,final_time_path,J,shot_dq_dt)
+    org_div_time = when_path_diverge(path)
+    dl,lin_combo = 0.1,org_lin_combo
     while path_diverge(path) is True:
         org_div_time = when_path_diverge(path)
         lin_combo_step_up=lin_combo+dl
@@ -437,9 +464,9 @@ def best_diverge_path(shot_angle,radius,org_lin_combo,one_shot_dt,q_star,final_t
         path_down=one_shot(shot_angle,lin_combo_step_down,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
         time_div_up,time_div_down=when_path_diverge(path_up),when_path_diverge(path_down)
         if time_div_down == 0.0:
-            return lin_combo_step_down,radius
+            return lin_combo_step_down,radius,shot_angle
         if time_div_up == 0.0:
-            return lin_combo_step_up,radius
+            return lin_combo_step_up,radius,shot_angle
         best_time_before_diverge=max(time_div_up,time_div_down,org_div_time)
         if best_time_before_diverge == org_div_time:
             dl=dl/10
@@ -448,7 +475,7 @@ def best_diverge_path(shot_angle,radius,org_lin_combo,one_shot_dt,q_star,final_t
         elif best_time_before_diverge is time_div_up:
             lin_combo=lin_combo+dl
         path = one_shot(shot_angle,lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
-    return lin_combo,radius
+    return lin_combo,radius,shot_angle
 
 def fine_tuning(shot_angle,org_lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt):
     min_accurecy,dl=0.001,1e-4
@@ -456,28 +483,29 @@ def fine_tuning(shot_angle,org_lin_combo,q_star,radius,final_time_path,one_shot_
     distance_from_theory = lambda p:np.sqrt(((p[:,0][-1]-p[:,1][-1])/2)**2+(q_star[2]-q_star[3]-(p[:,2][-1]-p[:,3][-1]))**2)
     lin_combo = org_lin_combo
     current_distance = distance_from_theory(path)
-    while current_distance>min_accurecy:
-        lin_combo_step_up = lin_combo + dl
-        lin_combo_step_down = lin_combo - dl
-        path_up = one_shot(shot_angle, lin_combo_step_up, q_star,radius, final_time_path,one_shot_dt,J,shot_dq_dt)
-        path_down = one_shot(shot_angle, lin_combo_step_down,q_star ,radius, final_time_path, one_shot_dt,J,shot_dq_dt)
-        if not path_diverge(path_up) and distance_from_theory(path_up)<current_distance:
-            current_distance=distance_from_theory(path_up)
-            lin_combo=lin_combo+dl
-        elif not path_diverge(path_down) and distance_from_theory(path_down)<current_distance:
-            current_distance=distance_from_theory(path_down)
-            lin_combo=lin_combo-dl
-        elif dl<1e-16:
-            break
-        else:
-            dl=dl/10
+    if path[:,0][-1]+path[:,1][-1]<1e-1:
+        while current_distance>min_accurecy:
+            lin_combo_step_up = lin_combo + dl
+            lin_combo_step_down = lin_combo - dl
+            path_up = one_shot(shot_angle, lin_combo_step_up, q_star,radius, final_time_path,one_shot_dt,J,shot_dq_dt)
+            path_down = one_shot(shot_angle, lin_combo_step_down,q_star ,radius, final_time_path, one_shot_dt,J,shot_dq_dt)
+            if not path_diverge(path_up) and distance_from_theory(path_up)<current_distance:
+                current_distance=distance_from_theory(path_up)
+                lin_combo=lin_combo+dl
+            elif not path_diverge(path_down) and distance_from_theory(path_down)<current_distance:
+                current_distance=distance_from_theory(path_down)
+                lin_combo=lin_combo-dl
+            elif dl<1e-16:
+                break
+            else:
+                dl=dl/10
     return lin_combo
 
 def guess_path(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,org_radius,sample_size,J,shot_dq_dt):
     radius=org_radius
     for s in sampleingtime:
-        lin_combo, radius = best_diverge_path(shot_angle, radius,lin_combo,one_shot_dt,q_star,np.linspace(0.0,s,sample_size),J,shot_dq_dt )
-    lin_combo, radius = best_diverge_path(shot_angle, org_radius, lin_combo, one_shot_dt, q_star,np.linspace(0.0, sampleingtime[-1], sample_size), J, shot_dq_dt)
+        lin_combo, radius,shot_angle = best_diverge_path(shot_angle, radius,lin_combo,one_shot_dt,q_star,np.linspace(0.0,s,sample_size),J,shot_dq_dt )
+    lin_combo, radius,shot_angle = best_diverge_path(shot_angle, org_radius, lin_combo, one_shot_dt, q_star,np.linspace(0.0, sampleingtime[-1], sample_size), J, shot_dq_dt)
     lin_combo= fine_tuning(shot_angle, lin_combo,q_star,radius, np.linspace(0.0,sampleingtime[-1],sample_size), one_shot_dt,J,shot_dq_dt)
     # plot_one_shot(shot_angle,lin_combo,radius,np.linspace(0.0,sampleingtime[-1],sample_size),one_shot_dt)
     # plot_all_var(shot_angle,lin_combo,one_shot_dt,radius,np.linspace(0.0,sampleingtime[-1],sample_size))
@@ -486,7 +514,7 @@ def guess_path(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,org_radius,
 def guess_path_lam(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,org_radius,sample_size,J,shot_dq_dt,beta):
     radius=org_radius
     for s in sampleingtime:
-        lin_combo, radius = best_diverge_path(shot_angle, radius,lin_combo,one_shot_dt,q_star,np.linspace(0.0,s,sample_size),J,shot_dq_dt)
+        lin_combo, radius,shot_angle = best_diverge_path(shot_angle, radius,lin_combo,one_shot_dt,q_star,np.linspace(0.0,s,sample_size),J,shot_dq_dt)
         lin_combo = fine_tuning(shot_angle, lin_combo, q_star, radius, np.linspace(0.0, s, sample_size),
                                 one_shot_dt, J, shot_dq_dt)
         path=one_shot(shot_angle, lin_combo,q_star,radius,np.linspace(0.0,s,sample_size),one_shot_dt,J,shot_dq_dt)
@@ -1716,15 +1744,15 @@ def plot_one_shot(angle_to_shoot,linear_combination,radius,time_vec,one_shot_dt,
     return path
 
 def man_find_best_div_path(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta):
-    temp_best_div,r=best_diverge_path(shot_angle,radius,org_lin_combo,one_shot_dt,q_star, t0,J,shot_dq_dt)
-    print(temp_best_div,' ', r)
+    temp_best_div,r,shot_angle=best_diverge_path(shot_angle,radius,org_lin_combo,one_shot_dt,q_star, t0,J,shot_dq_dt)
+    print(temp_best_div,' ', r, ' ',shot_angle)
     path = plot_one_shot(shot_angle,temp_best_div,r,t0 , one_shot_dt, q_star,J,shot_dq_dt,beta)
-    return temp_best_div,r,path
+    return temp_best_div,r,shot_angle,path
 
 def man_find_fine_tuning(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta):
     # temp_fine_tuning = fine_tuning(shot_angle,org_lin_combo,q_star,radius,t0,one_shot_dt,J,shot_dq_dt)
     temp_fine_tuning = fine_tuning(shot_angle,org_lin_combo,q_star,radius,t0,one_shot_dt,J,shot_dq_dt)
-    print('linear combination= ',temp_fine_tuning,'radius=',radius)
+    print('linear combination= ',temp_fine_tuning,'radius=',radius, ' shot_angle=', shot_angle)
     path=plot_one_shot(shot_angle,temp_fine_tuning,radius,t0 ,one_shot_dt,q_star,J,shot_dq_dt,beta)
     return temp_fine_tuning
 
@@ -1776,10 +1804,10 @@ def plot_numerical_only(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, 
 
 
 def man_div_path_and_fine_tuning(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta,case_to_run):
-    lin_combo,r,path=man_find_best_div_path(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta)
+    lin_combo,r,shot_angle,path=man_find_best_div_path(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta)
     lin_combo=man_find_fine_tuning(shot_angle, r, t0, lin_combo, one_shot_dt, q_star, J, shot_dq_dt,beta)
     # plot_all_var(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt,beta,case_to_run,t0)
-    plot_numerical_only(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt, beta, case_to_run)
+    # plot_numerical_only(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt, beta, case_to_run)
 
 
 def plot_all_var(shot_angle,lin_combo,one_shot_dt,radius,final_time_path,q_star,J,shot_dq_dt,beta,case_to_run,tf):
@@ -2058,7 +2086,7 @@ if __name__=='__main__':
     # dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
 
     # ODE parameters
-    stoptime=7.0
+    stoptime=20.0
     numpoints = 10000
 
 
@@ -2070,9 +2098,9 @@ if __name__=='__main__':
     # Radius around eq point,Time of to advance the self vector
     # r002=2e-07
     # r001=4e-7
-    r=5.28e-08
+    r=8.650752e-07
 
-    epsilon=(0.4,0.9)
+    epsilon=(0.1,0.9)
     #lin002=0.9999930516412242
     #int_lin_combo001=0.9999658209936237
     # int_lin_combolam5=0.9999658419290037
@@ -2088,7 +2116,7 @@ if __name__=='__main__':
     q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
-    man_div_path_and_fine_tuning(np.pi/4-0.8,r,t,1.0081923932,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
+    man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.0046906878240105,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
 
     # plot_one_shot(np.pi/4-0.62, 1.0081923932, r, t, dt, q_star, J, dq_dt_sus_inf, beta)
 
