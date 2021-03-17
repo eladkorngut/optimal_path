@@ -158,6 +158,124 @@ def generic_plot(guessed_paths,list_of_epsilons,numeric_x,numeric_y,theory_type,
 
 
 
+def plot_multi_eps_theory(epsilon,lam,theory_type,ax,q_star):
+    epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+    delta_mu=1-epsilon_mu
+    if theory_type is 'p2':
+        y2_for_theory = np.linspace(q_star[1], 0, 10000)
+        p2_theory = ((-1 + epsilon_lam) * (y2_for_theory * lam + (-1 + 4 * y2_for_theory) * (
+                    1 + (-1 + y2_for_theory) * lam) * epsilon_lam)) / (
+                                (-1 + 2 * y2_for_theory) * (1 + epsilon_lam) * (-lam + (-2 + lam) * epsilon_lam))
+        ax.plot(y2_for_theory, p2_theory, linewidth=4, label='Theory', linestyle='--')
+    elif theory_type is 'p1':
+        y1_for_theory = np.linspace(q_star[0], 0, 10000) / delta_mu
+        p1_theory = ((1 + 4 * (y1_for_theory) - lam) * np.log(2 - lam + (2 * (-1 + lam)) / (1 + epsilon_lam))) / (
+                    -1 + lam)
+        ax.plot(y1_for_theory, p1_theory, linewidth=4, label='Theory', linestyle='--')
+    elif theory_type is 'pl1':
+        y1_for_theory=np.linspace(q_star[0],0,10000)
+        p1_theory= ((1 - lam +2*y1_for_theory*(-2 + lam -2/(-1 +epsilon_mu))))/2
+        ax.plot(y1_for_theory, p1_theory, linewidth=4, label='Theory', linestyle='--')
+    elif theory_type is 'pl2':
+        y2_for_theory=np.linspace(q_star[1],0,10000)
+        p2_theory = ((-1 + epsilon_mu)*(-1 + lam - 2*y2_for_theory*lam + (4*y2_for_theory*epsilon_mu)/((-1 + 2*y2_for_theory)*(-lam + (-2 + lam)*epsilon_mu))))/(2*(1 + epsilon_mu))
+        ax.plot(y2_for_theory, p2_theory, linewidth=4, label='Theory', linestyle='--')
+    return ax
+
+
+def plot_deltas(guessed_paths,list_of_epsilons,axis_x,axis_y,sim,graph_fig,
+                 x_label,y_label,lam,name_title,savename,labeladdon=lambda x,y:''):
+    for sim_paths,sim_epsilons in zip(guessed_paths,list_of_epsilons):
+        for theory_type,numeric_x,numeric_y,x_label_c,y_label_c,name_title_c,savename_c in zip(graph_fig,axis_x,axis_y,x_label,y_label,name_title,savename):
+            fig = plt.figure()
+            ax = fig.add_subplot(1, 1, 1)
+            for path,epsilon in zip(sim_paths,sim_epsilons):
+                epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+                y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, J = eq_hamilton_J(sim, lam, epsilon,
+                                                                                                         None, 1.0)
+                q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
+                ax.plot(numeric_x(path,epsilon,lam), numeric_y(path,epsilon,lam), linewidth=4,
+                         linestyle='None', Marker='.', label='Numeric eps=' + str(epsilon)+labeladdon(path,epsilon_lam))
+                # ax=plot_multi_eps_theory(epsilon,lam,theory_type,ax,q_star)
+            ax = plot_multi_eps_theory(epsilon, lam, theory_type, ax, q_star)
+            # ax=plot_generic_theory_outside(epsilon_lam,path,x0,lam,theory_type,ax,numeric_x,case_to_run,tf,alpha)
+            ax.set_xlabel(x_label_c)
+            ax.set_ylabel(y_label_c)
+            ax.set_title(name_title_c+' lam='+ str(lam))
+            ax.legend()
+            plt.tight_layout()
+            fig.savefig(savename_c + '.png', dpi=500)
+            plt.show()
+
+
+def plot_integation(guessed_paths,list_of_epsilons,lam,sim):
+    fig_tot,fig_i1,fig_i2 = plt.figure(),plt.figure(),plt.figure()
+    ax_tot,ax_i1,ax_i2 = fig_tot.add_subplot(1, 1, 1),fig_i1.add_subplot(1, 1, 1),fig_i2.add_subplot(1, 1, 1)
+    s0= 1 / lam - 1 + np.log(lam)
+    for sim_paths,sim_epsilons in zip(guessed_paths,list_of_epsilons):
+        action_numeric,I1_numeric,I2_numeric,delta_mu,delta_lam=[],[],[],[],[]
+        for path, epsilon in zip(sim_paths, sim_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            I1, I2 = simps(path[:, 2], path[:, 0]), simps(path[:, 3], path[:, 1])
+            p2_numerical_normalized = (path[:,3] + np.log(lam*(1-2*path[:,1])))
+            I2_numerical_correction = simps(p2_numerical_normalized, path[:,1])
+            action_numeric.append(I1+I2-s0/2)
+            I1_numeric.append(I1)
+            I2_numeric.append(I2_numerical_correction)
+            delta_mu.append(1-epsilon_mu)
+            delta_lam.append(1-epsilon_lam)
+
+    # delta_mu,delta_lam=np.array(delta_mu),np.array(delta_lam)
+    # delta_mu_theory=np.linspace(min(delta_mu),max(delta_mu),1000)
+    # action_theory = (delta_mu_theory*((-1 + lam)*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)) - (2* (-1 + epsilon_lam)*(lam*(-1 + lam - lam*np.log(lam)) + (-3 + (5 - 2*lam)*lam + (-2 + lam)*lam*np.log(lam))*epsilon_lam))/(lam*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam))))/8
+    # I1_theory = (((-1 + lam)*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)))/ 8)*delta_mu_theory
+    # I2_theory = (((-1 + epsilon_lam)*(lam*(1 - lam + lam*np.log(lam)) + (3 - 5*lam + 2*lam**2 - (-2 + lam)*lam*np.log(lam))*epsilon_lam))/(4*lam*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam)))*delta_mu_theory
+
+    if sim is'dem':
+        delta=np.array(delta_mu)
+        delta_theory = np.linspace(min(delta), max(delta), 1000)
+        action_theory = (delta_theory*((-1 + lam)*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)) - (2* (-1 + epsilon_lam)*(lam*(-1 + lam - lam*np.log(lam)) + (-3 + (5 - 2*lam)*lam + (-2 + lam)*lam*np.log(lam))*epsilon_lam))/(lam*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam))))/8
+        I1_theory = (((-1 + lam)*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)))/ 8)*delta_theory
+        I2_theory = (((-1 + epsilon_lam)*(lam*(1 - lam + lam*np.log(lam)) + (3 - 5*lam + 2*lam**2 - (-2 + lam)*lam*np.log(lam))*epsilon_lam))/(4*lam*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam)))*delta_theory
+        label_for_x='delta_mu'
+    elif sim is 'del':
+        delta=np.array(delta_lam)
+        delta_theory = np.linspace(min(delta), max(delta), 1000)
+        action_theory = ((delta_theory *(-1 +epsilon_mu)*((-1 + lam) ** 2 *lam +(3 - 4 * lam +lam ** 2 +2 * lam * np.log(lam))*epsilon_mu))/ (4 *lam *(1 +epsilon_mu)*(-lam +(-2 + lam) *epsilon_mu)))
+        I1_theory = delta_theory*(((-1 + lam)**2*(-1 + epsilon_mu))/(-8*lam + 8*(-2 + lam)*epsilon_mu))
+        I2_theory = delta_theory*(-((-1 + epsilon_mu)*(-((-1 + lam)**2*lam) + ((-1 + lam)*(6 + (-3 + lam)*lam)- 4*lam*np.log(lam))*epsilon_mu))/(8*lam*(1 + epsilon_mu)*(-lam + (-2 + lam)*epsilon_mu)))
+        label_for_x='delta_lam'
+
+
+
+    ax_i1.plot(delta,I1_numeric,linewidth=4,linestyle='None',markersize=10,Marker='o',label='Numeric')
+    ax_i2.plot(delta,I2_numeric,linewidth=4,linestyle='None',markersize=10,Marker='o',label='Numeric')
+    ax_tot.plot(delta,action_numeric,linewidth=4,linestyle='None',markersize=10,Marker='o',label='Numeric')
+
+    ax_i1.plot(delta_theory,I1_theory,linewidth=4,linestyle='--',label='Theory')
+    ax_i2.plot(delta_theory,I2_theory,linewidth=4,linestyle='--',label='Theory')
+    ax_tot.plot(delta_theory,action_theory,linewidth=4,linestyle='--',label='Theory')
+
+
+    ax_i1.set_xlabel(label_for_x)
+    ax_i1.set_ylabel('I1')
+    ax_i1.set_title('I1 vs delta' + ' lam=' + str(lam))
+    ax_i1.legend()
+    ax_i2.set_xlabel(label_for_x)
+    ax_i2.set_ylabel('I2')
+    ax_i2.set_title('I2 vs delta' + ' lam=' + str(lam))
+    ax_i2.legend()
+    ax_tot.set_xlabel(label_for_x)
+    ax_tot.set_ylabel('s1')
+    ax_tot.set_title('s1 vs delta' + ' lam=' + str(lam))
+    ax_tot.legend()
+    plt.tight_layout()
+    fig_tot.savefig('action_correction' + '.png', dpi=200)
+    fig_i1.savefig('i1' + '.png', dpi=200)
+    fig_i2.savefig('i2' + '.png', dpi=200)
+    plt.show()
+
+
 def eq_points_inf_only(epsilon,beta,gamma):
     if type(epsilon) is float:
         return (1/2)*(1-gamma/beta), (1/2)*(1-gamma/beta), 0, 0,  -np.log((epsilon + np.sqrt(
@@ -236,6 +354,25 @@ def eq_point_delta_mu(epsilon,beta,gamma):
     y2star = (-1 + lam)/(2*lam) -((-1 + lam)*delta_mu*(-1 +epsilon_lam))/(4*lam*(1 +epsilon_lam)) + ((-1 + lam)**2*delta_mu**2*(-1 +epsilon_lam))/(8*lam*(1 +epsilon_lam))
     p1star = -np.log((lam -(-2 + lam)*epsilon_lam)/(1 +epsilon_lam))- ((-1 + lam)*lam*delta_mu*(-1 +epsilon_lam)**2*epsilon_lam)/((1 +epsilon_lam)*(lam -(-2 + lam)*epsilon_lam)**2) -((-1 + lam)*lam*delta_mu**2*(-1 +epsilon_lam)**2*epsilon_lam**2*(lam*(3 + lam) -2*(-3 + lam)*lam*epsilon_lam+ (8 - 9*lam +lam**2)*epsilon_lam**2))/(2*(1 +epsilon_lam)**2*(lam -(-2 + lam)*epsilon_lam)**4)
     p2star = -np.log(lam) - ((-1 + lam)*delta_mu*(-1 + epsilon_lam)*epsilon_lam)/(-lam + epsilon_lam*(-2 + (-2 + lam)*epsilon_lam)) - ((-1 + lam)*delta_mu**2*(-1 + epsilon_lam)*epsilon_lam**2*(lam*(3 + lam) + epsilon_lam*(2 - 2*(-2 + lam)*lam + (-6 + lam)*(-1 + lam)*epsilon_lam)))/(2*(1 + epsilon_lam)**2*(-lam + (-2 + lam)*epsilon_lam)**3)
+    return y1star, y2star, 0.0, 0.0, p1star, p2star
+
+
+def eq_point_delta_lam(epsilon,beta,gamma):
+    epsilon_lam, epsilon_mu,lam = epsilon[0], epsilon[1],beta/gamma
+    delta_lam,delta_mu=1-epsilon_lam,1-epsilon_mu
+    p1star = (1/2)*(1-lam)*delta_lam
+    p2star = -np.log(lam) + ((-1+lam)*(-1+epsilon_mu)/(2*(1+epsilon_mu)))*delta_lam
+    y1star = -((-1 + lam)*lam*delta_lam*(-1 + epsilon_mu)**2*epsilon_mu)/(2*(-lam + (-2 + lam)*epsilon_mu)**3) + ((-1 + lam)*(-1 + epsilon_mu))/(-2*lam + 2*(-2 + lam)*epsilon_mu)
+    y2star = (-1 + lam)/(2.*lam) + ((-1 + lam)*delta_lam*(-1 + epsilon_mu)*epsilon_mu)/(2*lam*(1 + epsilon_mu)*(-lam + (-2 + lam)*epsilon_mu))
+    return y1star, y2star, 0.0, 0.0, p1star, p2star
+
+
+def eq_point_eps_mu(epsilon,beta,gamma):
+    epsilon_lam, epsilon_mu,lam = epsilon[0], epsilon[1],beta/gamma
+    y1star= (-1 + lam)/(2*lam) - ((-1 + lam)*(1 + epsilon_lam)*epsilon_mu)/(2*lam**2)
+    y2star= (-1 + lam)/(2*lam) - ((-1 + lam)*(-1 + epsilon_lam)*epsilon_mu)/(2*lam**2)
+    p1star= -np.log((lam + 2*epsilon_lam - lam*epsilon_lam**2 + np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 + lam**2*epsilon_lam**4))/(2*(1 + epsilon_lam))) - (lam*epsilon_lam*(-1 + epsilon_lam**2)*(-2 + lam - lam*epsilon_lam**2 + np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 + lam**2*epsilon_lam**4))*epsilon_mu)/(np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 + lam**2*epsilon_lam**4)*(lam + 2*epsilon_lam - lam*epsilon_lam**2 + np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 + lam**2*epsilon_lam**4)))
+    p2star= np.log((-2*(-1 + epsilon_lam))/(lam - epsilon_lam*(2 + lam*epsilon_lam) +np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 +lam**2*epsilon_lam**4))) -(lam*epsilon_lam*(-1 + epsilon_lam**2)*(-2 + lam - lam*epsilon_lam**2 +np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 +lam**2*epsilon_lam**4))*epsilon_mu)/(np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 +lam**2*epsilon_lam**4)*(lam - epsilon_lam*(2 + lam*epsilon_lam) +np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 +lam**2*epsilon_lam**4)))
     return y1star, y2star, 0.0, 0.0, p1star, p2star
 
 
@@ -364,9 +501,14 @@ def eq_hamilton_J(case_to_run,beta,epsilon=0.0,t=None,gamma=1.0):
         dq_dt_sus_inf = bimodal_mu_lam(beta/(1+epsilon[0]*epsilon[1]))
         y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy = eq_point_delta_mu(epsilon, beta, gamma)
         return y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, ndft.Jacobian(dq_dt_sus_inf)
-
-
-
+    elif case_to_run is 'del':
+        dq_dt_sus_inf = bimodal_mu_lam(beta/(1+epsilon[0]*epsilon[1]))
+        y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy = eq_point_delta_lam(epsilon, beta, gamma)
+        return y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, ndft.Jacobian(dq_dt_sus_inf)
+    elif case_to_run is 'mu':
+        dq_dt_sus_inf = bimodal_mu_lam(beta/(1+epsilon[0]*epsilon[1]))
+        y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy = eq_point_eps_mu(epsilon, beta, gamma)
+        return y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, ndft.Jacobian(dq_dt_sus_inf)
     return None
 
 
@@ -509,7 +651,7 @@ def guess_path(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,org_radius,
     lin_combo= fine_tuning(shot_angle, lin_combo,q_star,radius, np.linspace(0.0,sampleingtime[-1],sample_size), one_shot_dt,J,shot_dq_dt)
     # plot_one_shot(shot_angle,lin_combo,radius,np.linspace(0.0,sampleingtime[-1],sample_size),one_shot_dt)
     # plot_all_var(shot_angle,lin_combo,one_shot_dt,radius,np.linspace(0.0,sampleingtime[-1],sample_size))
-    return lin_combo,radius, one_shot(shot_angle, lin_combo,q_star,radius,np.linspace(0.0,sampleingtime[-1],sample_size),one_shot_dt,J,shot_dq_dt)
+    return lin_combo,radius,shot_angle, one_shot(shot_angle, lin_combo,q_star,radius,np.linspace(0.0,sampleingtime[-1],sample_size),one_shot_dt,J,shot_dq_dt)
 
 def guess_path_lam(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,org_radius,sample_size,J,shot_dq_dt,beta):
     radius=org_radius
@@ -526,8 +668,9 @@ def guess_path_lam(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,org_rad
     return lin_combo,radius, one_shot(shot_angle, lin_combo,q_star,radius,np.linspace(0.0,s,sample_size),one_shot_dt,J,shot_dq_dt)
 
 
-def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,one_shot_dt,radius,lin_combo=1.00008204478397):
+def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,one_shot_dt,radius,lin_combo=1.00008204478397,org_shot_angle=np.pi/4-0.785084):
     guessed_paths=[]
+    shot_angle=org_shot_angle
     if type(beta) is list:
         for l in beta:
             sampleingtime = [6.0,7.0, 9.0, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 15.5, 16.0,
@@ -542,11 +685,11 @@ def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,
         for eps in list_of_epsilons:
             sampleingtime=[7.0,9.0,10.0,10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,14.5,15.0,15.5,16.0,16.5,17.0,17.5,18.0,18.5,19.5,20.0]
             # sampleingtime = np.linspace(7.0,40.0,10)
-            # sampleingtime=[7.0,9.0,10.0,10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,14.5,15.0]
+            # sampleingtime=[7.0,9.0,10.0]
             y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,eps,t,gamma)
             q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
             # lam=beta if type(beta) is float else beta/(1+eps[0]*eps[1])
-            lin_combo,temp_radius,path=guess_path(sampleingtime,np.pi/4-0.785084,lin_combo,q_star,one_shot_dt,radius,numpoints,J,shot_dq_dt)
+            lin_combo,temp_radius,shot_angle,path=guess_path(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,radius,numpoints,J,shot_dq_dt)
             # lin_combo,temp_radius,path=guess_path(sampleingtime,np.pi/4-0.74,lin_combo,q_star,one_shot_dt,radius,numpoints,J,shot_dq_dt)
             guessed_paths.append(path)
 
@@ -1772,42 +1915,219 @@ def plot_u_clancy_theory(path,epsilon,beta,gamma):
     plt.legend()
 
 
-def plot_numerical_only(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt, beta, case_to_run):
-    lam=beta/gamma
-    path = one_shot(shot_angle, lin_combo,q_star,radius,t0,one_shot_dt,J,shot_dq_dt)
-    A_integration = simps(path[:, 2], path[:, 0]) + simps(path[:, 3], path[:, 1])
-    y1 = path[:, 0]
-    p1 = path[:, 2]
-    plt.plot(y1, p1, linewidth=4,label='Numerical')
+def plot_numerical_only(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt, beta, case_to_run,epsilon,lam):
+    epsilon_lam, epsilon_mu, s0 = epsilon[0], epsilon[1], 1 / lam - 1 + np.log(lam)
+    path = one_shot(shot_angle, lin_combo, q_star, radius, t0, one_shot_dt, J, shot_dq_dt)
+    I1, I2 = simps(path[:, 2], path[:, 0]), simps(path[:, 3], path[:, 1])
+    A_integration = I1 + I2
+    y1,y2,p1,p2 = path[:, 0],path[:, 1],path[:, 2],path[:, 3]
+    delta_mu,delta_lam = 1 - epsilon_mu,1-epsilon_lam
+
+    plt.plot(y1, p1, linewidth=4, label='Numerical, I= ' + str(round(I1, 4)))
     plt.xlabel('x1')
     plt.ylabel('p1')
-    plt.title('p1 vs x1, lam=' + str(round(lam,2)))
+    plt.scatter((q_star[0], 0), (0, q_star[2]), c=('g', 'r'), s=(100, 100))
+    plt.title('p1 vs x1, lam=' + str(round(lam, 2)))
     plt.legend()
     plt.savefig('p1_v_x1_' + case_to_run + '.png', dpi=500)
     plt.show()
-    y2 = path[:, 1]
-    p2 = path[:, 3]
-    plt.plot(y2, p2, linewidth=4,label='Numerical')
+
+    plt.plot(y2, p2, linewidth=4, label='Numerical')
+    plt.scatter((q_star[1], 0), (0, q_star[3]), c=('g', 'r'), s=(100, 100))
     plt.xlabel('x2')
     plt.ylabel('p2')
-    plt.title('p2 vs x2, lam=' + str(round(lam,2)))
+    plt.title('p2 vs x2, lam=' + str(round(lam, 2)))
     plt.legend()
     plt.savefig('p2_v_x2_' + case_to_run + '.png', dpi=500)
     plt.show()
-    plt.plot((y2+y1)/2,p1+ p2, linewidth=4,label='Numerical Int='+str(round(A_integration,5)))
+
+    w, u, pw, pu = (y1 + y2) / 2, (y1 - y2) / 2, p1 + p2, p1 - p2
+    plt.plot(w, pw, linewidth=4,
+             label='Numerical Int=' + str(round((A_integration - s0) / delta_mu, 8)))
+    plt.scatter(((q_star[1] + q_star[0]) / 2, 0), (0, q_star[2] + q_star[3]), c=('g', 'r'), s=(100, 100))
     plt.xlabel('w')
     plt.ylabel('pw')
-    plt.title('pw vs w, lam=' + str(round(lam,2)))
+    # plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
+    plt.title('pw vs w, lam=' + str(lam))
     plt.legend()
     plt.savefig('pw_v_w_' + case_to_run + '.png', dpi=500)
     plt.show()
 
+    plt.plot(u, pu, linewidth=4,
+             label='Numerical Int=' + str(round((I2 - I1) / delta_mu, 8)))
+    plt.scatter(((q_star[0] - q_star[1]) / 2, 0), (0, q_star[2] - q_star[3]), c=('g', 'r'), s=(100, 100))
+    plt.xlabel('u')
+    plt.ylabel('pu')
+    # plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
+    plt.title('pu vs u, lam=' + str(lam))
+    plt.legend()
+    plt.savefig('pu_v_u_' + case_to_run + '.png', dpi=500)
+    plt.show()
 
-def man_div_path_and_fine_tuning(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta,case_to_run):
+    m=y1-y2
+    pm=p1*(1+epsilon_lam)-p2*(1-epsilon_lam)
+    plt.plot(m, pm, linewidth=4,
+             label='Numerical Int=' + str(round((I2 - I1) / delta_mu, 8)))
+    # plt.scatter(((q_star[0] - q_star[1]) / 2, 0), (0, q_star[2] - q_star[3]), c=('g', 'r'), s=(100, 100))
+    plt.xlabel('m')
+    plt.ylabel('pm')
+    # plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
+    plt.title('pm vs m, lam=' + str(lam))
+    plt.legend()
+    plt.savefig('pm_v_m_' + case_to_run + '.png', dpi=500)
+    plt.show()
+
+
+
+    if case_to_run is 'dem':
+        delta_mu=1-epsilon_mu
+        action_theory = (1 - lam + lam*np.log(lam))/(2*lam) + (delta_mu*((-1 + lam)*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)) - (2* (-1 + epsilon_lam)*(lam*(-1 + lam - lam*np.log(lam)) + (-3 + (5 - 2*lam)*lam + (-2 + lam)*lam*np.log(lam))*epsilon_lam))/(lam*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam))))/8
+
+        plt.plot((y2 + y1) / 2, p1 + p2, linewidth=4,
+                 label='Numerical Int=' + str(round((A_integration - s0 / 2) / delta_mu, 8)))
+        plt.scatter(((q_star[1] + q_star[0]) / 2, 0), (0, q_star[2] + q_star[3]), c=('g', 'r'), s=(100, 100))
+        plt.xlabel('w')
+        plt.ylabel('pw')
+        plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
+        plt.legend()
+        plt.savefig('pw_v_w_' + case_to_run + '.png', dpi=500)
+        plt.show()
+
+        coef=(-1+epsilon_lam)/(2*(1+epsilon_lam))
+        y2_for_theory=np.linspace(q_star[1],0,10000)
+        # y2_theory= ((1 + (-1 + 2*y2_for_theory)*lam)*(-1 + epsilon_lam)*epsilon_lam)/(-lam + epsilon_lam*(-2 + (-2 + lam)*epsilon_lam))
+        # p2_0_path=-np.log(lam*(1-2*y2*(1+coef*delta_mu)))
+        p2_theory = ((-1 + epsilon_lam)*(y2_for_theory*lam + (-1 + 4*y2_for_theory)*(1 + (-1 + y2_for_theory)*lam)*epsilon_lam))/((-1 + 2*y2_for_theory)*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam))
+        p2_0_path=-np.log(lam*(1-2*y2))
+        p2_numerical_normalized=(p2-p2_0_path)/delta_mu
+
+        # I2_theory_normalized= ((-1 +epsilon_lam)*(lam*(1 - lam +lam*np.log(lam)) +(3 - 5*lam +2*lam**2 -(-2 + lam)*lam*np.log(lam))*epsilon_lam))/(4*lam*(1 +epsilon_lam)*(-lam +(-2 + lam)*epsilon_lam))
+        # I2_numerical_correction=(I2-s0/2)/delta_mu
+        # I2_theory_normalized = ((-1 + lam)**2*(-1 + epsilon_lam)*epsilon_lam)/(4*lam*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam))
+        I2_theory_normalized= ((-1 + epsilon_lam)*(lam*(1 - lam + lam*np.log(lam)) + (3 - 5*lam + 2*lam**2 - (-2 + lam)*lam*np.log(lam))*epsilon_lam))/(4*lam*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam))
+        I2_numerical_correction = simps(p2_numerical_normalized, y2)
+
+        plt.plot(y2, p2_numerical_normalized, linewidth=4,label='Numerical I= '+str(round(I2_numerical_correction,4)),linestyle='None',marker='.')
+        plt.plot(y2_for_theory, p2_theory, linewidth=4,label='Theory, I= '+str(round(I2_theory_normalized,4)),linestyle='--')
+        plt.scatter((q_star[1],0),(p2_numerical_normalized[0], (q_star[3]+np.log(lam))/delta_mu), c=('g', 'r'), s=(100, 100))
+        plt.xlabel('y2')
+        plt.ylabel('(p2-p2(0))/delta_mu')
+        plt.title('(p2-p2(0))/delta_mu vs y2, lam=' + str(round(lam,2)))
+        plt.legend()
+        plt.savefig('p2_v_y2_norm_' + case_to_run + '.png', dpi=500)
+        plt.show()
+
+        y1_for_theory=np.linspace(q_star[0],0,10000)/delta_mu
+        # y1_theory = (4*y1_for_theory*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)))/((-1 + lam)*delta_mu)
+
+        p1_theory= ((1 + 4*(y1_for_theory) - lam)*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)))/(-1 + lam)
+        path_y1_norm=y1/delta_mu
+        I1_norm=simps(p1, path_y1_norm)
+        I1_norm_theory= ((-1 + lam)*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)))/ 8
+        plt.plot(path_y1_norm, p1, linewidth=4,label='Numerical I ='+str(round(I1_norm,4)),linestyle='None',marker='.')
+        plt.plot(y1_for_theory, p1_theory, linewidth=4,linestyle='--',label='Theory I= '+str(round(I1_norm_theory,4)))
+        plt.xlabel('y1/delta_mu')
+        plt.ylabel('p1')
+        plt.scatter((q_star[0]/delta_mu,0),(0, q_star[2]), c=('g', 'r'), s=(100, 100))
+        plt.title('p1 vs y1/delta, lam=' + str(round(lam,2)))
+        plt.legend()
+        plt.savefig('p1_v_y1_norm_' + case_to_run + '.png', dpi=500)
+        plt.show()
+    elif case_to_run is 'del':
+        action_theory = (1 - lam + lam * np.log(lam)) /(2 *lam) +(delta_lam *(-1 +epsilon_mu)*((-1 + lam) ** 2 *lam +(3 - 4 * lam +lam ** 2 +2 * lam * np.log(lam))*epsilon_mu))/ (4 *lam *(1 +epsilon_mu)*(-lam +(-2 + lam) *epsilon_mu))
+
+        plt.plot((y2 + y1) / 2, p1 + p2, linewidth=4,
+                 label='Numerical Int=' + str(round((A_integration - s0 / 2) / delta_mu, 8)))
+        plt.scatter(((q_star[1] + q_star[0]) / 2, 0), (0, q_star[2] + q_star[3]), c=('g', 'r'), s=(100, 100))
+        plt.xlabel('w')
+        plt.ylabel('pw')
+        plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
+        plt.legend()
+        plt.savefig('pw_v_w_' + case_to_run + '.png', dpi=500)
+        plt.show()
+
+
+        coef= -(((-1 +  epsilon_mu)* epsilon_mu)/((1 + epsilon_mu)*(-lam + (-2 + lam)*epsilon_mu)))
+        y2_for_theory=np.linspace(q_star[1],0,10000)
+        p2_theory = ((-1 + epsilon_mu)*(-1 + lam - 2*y2_for_theory*lam + (4*y2_for_theory*epsilon_mu)/((-1 + 2*y2_for_theory)*(-lam + (-2 + lam)*epsilon_mu))))/(2*(1 + epsilon_mu))
+        p2_0_path=-np.log(lam*(1-2*y2))
+        p2_numerical_normalized=(p2-p2_0_path)/delta_lam
+        I2_theory_normalized= -((-1 + epsilon_mu)*(-((-1 + lam)**2*lam) + ((-1 + lam)*(6 + (-3 + lam)*lam)- 4*lam*np.log(lam))*epsilon_mu))/(8*lam*(1 + epsilon_mu)*(-lam + (-2 + lam)*epsilon_mu))
+        I2_numerical_correction = simps(p2_numerical_normalized, y2)
+        plt.plot(y2, p2_numerical_normalized, linewidth=4,label='Numerical I= '+str(round(I2_numerical_correction,4)),linestyle='None',marker='.')
+        plt.plot(y2_for_theory, p2_theory, linewidth=4,label='Theory, I= '+str(round(I2_theory_normalized,4)),linestyle='--')
+        plt.scatter((q_star[1],0),(p2_numerical_normalized[0], (q_star[3]+np.log(lam))/delta_lam), c=('g', 'r'), s=(100, 100))
+        plt.xlabel('y2')
+        plt.ylabel('(p2-p2(0))/delta_lam')
+        plt.title('(p2-p2(0))/delta_lam vs y2, lam=' + str(round(lam,2)))
+        plt.legend()
+        plt.savefig('p2_v_y2_norm_' + case_to_run + '.png', dpi=500)
+        plt.show()
+
+
+        y1_for_theory=np.linspace(q_star[0],0,10000)
+        p1_theory= ((1 - lam +2*y1_for_theory*(-2 + lam -2/(-1 +epsilon_mu))))/2
+        path_p1_norm=p1/delta_lam
+        I1_norm=simps(path_p1_norm, y1)
+
+        I1_norm_theory = ((-1 + lam)**2*(-1 + epsilon_mu))/(-8*lam + 8*(-2 + lam)*epsilon_mu)
+
+        plt.plot(y1, path_p1_norm, linewidth=4,label='Numerical I ='+str(round(I1_norm,4)),linestyle='None',marker='.')
+        plt.plot(y1_for_theory, p1_theory, linewidth=4,linestyle='--',label='Theory I= '+str(round(I1_norm_theory,4)))
+        plt.xlabel('y1')
+        plt.ylabel('p1/delta_lam')
+        plt.scatter((q_star[0],0),(0, q_star[2]/delta_lam), c=('g', 'r'), s=(100, 100))
+        plt.title('p1 vs y1/delta, lam=' + str(round(lam,2)))
+        plt.legend()
+        plt.savefig('p1_v_y1_norm_' + case_to_run + '.png', dpi=500)
+        plt.show()
+    elif case_to_run is 'mu':
+        w,u,pw,pu =(y1+y2)/2, (y1-y2)/2, p1+p2, p1-p2
+        plt.plot(w, pw, linewidth=4,
+                 label='Numerical Int=' + str(round((A_integration - s0) / delta_mu, 8)))
+        plt.scatter(((q_star[1] + q_star[0]) / 2, 0), (0, q_star[2] + q_star[3]), c=('g', 'r'), s=(100, 100))
+        plt.xlabel('w')
+        plt.ylabel('pw')
+        # plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
+        plt.title('pw vs w, lam='+str(lam))
+        plt.legend()
+        plt.savefig('pw_v_w_' + case_to_run + '.png', dpi=500)
+        plt.show()
+
+        plt.plot(u, pu, linewidth=4,
+                 label='Numerical Int=' + str(round((I2-I1) / delta_mu, 8)))
+        plt.scatter(((q_star[0] - q_star[1]) / 2, 0), (0, q_star[2] - q_star[3]), c=('g', 'r'), s=(100, 100))
+        plt.xlabel('u')
+        plt.ylabel('pu')
+        # plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
+        plt.title('pu vs u, lam='+str(lam))
+        plt.legend()
+        plt.savefig('pu_v_u_' + case_to_run + '.png', dpi=500)
+        plt.show()
+
+        pw_0_path = -2*np.log(lam*(1-2*w))
+        pw_norm=(pw-pw_0_path)/epsilon_mu
+        
+        pw_theory= (4*w*epsilon_lam)/(lam - 2*w*lam) + ((1 - (2*w*lam)/(-1 + lam))*epsilon_lam* (-2 + lam - lam*epsilon_lam**2 + np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 + lam**2*epsilon_lam**4)))/np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 + lam**2*epsilon_lam**4)
+        
+        plt.plot(w, pw_norm, linewidth=4,label='Numerical')
+        plt.plot(w, pw_theory, linewidth=4,label='Theory',linestyle='--')
+        plt.xlabel('w')
+        plt.ylabel('(pw-pw(0)/eps_mu')
+        # plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
+        plt.title('(pw-pw(0))/eps_mu vs w, lam='+str(lam))
+        plt.legend()
+        plt.savefig('pw_v_w_norm' + case_to_run + '.png', dpi=500)
+        plt.show()
+
+
+
+
+def man_div_path_and_fine_tuning(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta,case_to_run,epsilon,lam):
     lin_combo,r,shot_angle,path=man_find_best_div_path(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta)
     lin_combo=man_find_fine_tuning(shot_angle, r, t0, lin_combo, one_shot_dt, q_star, J, shot_dq_dt,beta)
     # plot_all_var(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt,beta,case_to_run,t0)
-    # plot_numerical_only(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt, beta, case_to_run)
+    plot_numerical_only(shot_angle, lin_combo, one_shot_dt, r, t0, q_star, J, shot_dq_dt, beta, case_to_run,epsilon,lam)
 
 
 def plot_all_var(shot_angle,lin_combo,one_shot_dt,radius,final_time_path,q_star,J,shot_dq_dt,beta,case_to_run,tf):
@@ -2079,7 +2399,7 @@ if __name__=='__main__':
     # list_of_epsilons=[(0.002,0.1)]
     # list_of_epsilons = [(0.5, 0.05)]
     # list_of_epsilons=0.1
-    sim='dem'
+    sim='x'
 
     # A way to confirm the hamiltion's numericaly
     # Jacobian_H = ndft.Jacobian(H)
@@ -2098,9 +2418,11 @@ if __name__=='__main__':
     # Radius around eq point,Time of to advance the self vector
     # r002=2e-07
     # r001=4e-7
-    r=8.650752e-07
+    # r=2.56e-06
+    r=1.6384e-06
+    angle=0.04239816339744822
 
-    epsilon=(0.1,0.9)
+    epsilon=(0.2,0.06)
     #lin002=0.9999930516412242
     #int_lin_combo001=0.9999658209936237
     # int_lin_combolam5=0.9999658419290037
@@ -2109,17 +2431,28 @@ if __name__=='__main__':
     # int_lin_combo_all_runs=1.0002181438489302
     # int_lin_combo=1.0259660334473293
     # int_lin_combo=0.7386390749669806
-    int_lin_combo=0.9920007989
+    int_lin_combo=1.0006148654602816
+    # int_lin_combo=1.001321728340301
+
 
 
     y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
     q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
-    man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.0046906878240105,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
+    man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.999974554371053,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
+
+    # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.000280636141402,dt,q_star,J,dq_dt_sus_inf,beta/(1-epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
+
+
+    # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.0006148654602816,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
+
+    # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.0001014251271045,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
+
 
     # plot_one_shot(np.pi/4-0.62, 1.0081923932, r, t, dt, q_star, J, dq_dt_sus_inf, beta)
 
+    # man_div_path_and_fine_tuning(np.pi/4-0.785084,r,t,1.0001758373880196,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(np.pi/4-0.785084,r,t,0.9999758373880197,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(np.pi / 4 - 0.74, r, t, 0.7386390749669806, dt, q_star, J, dq_dt_sus_inf,
     #                              beta / (1 + epsilon[0] * epsilon[1]), sim)
@@ -2141,3 +2474,17 @@ if __name__=='__main__':
     #     sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo))
     # plot_multi_sim_path(sim_paths, beta, gamma, epsilon_matrix, sim, t)
     # eq_points_exact(epsilon,beta,gamma)
+
+    #
+    # sim=['del']
+    # epsilon_matrix=[[(0.8,0.5),(0.83,0.5),(0.86,0.5),(0.9,0.5),(0.93,0.5),(0.96,0.5),(0.99,0.5)]]
+    # # epsilon_matrix = [[(0.1, 0.02)],
+    # #                   [(0.02, 0.1)]]
+    # sim_paths=[]
+    # for case,epsilons in zip(sim,epsilon_matrix):
+    #     sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
+    # # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]/(1-eps[1])] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[1]),lambda p,eps,l:p[:,2]],'dem',['p2','p1'],
+    # #              ['y2','y1/delta_mu'],['(p2-p2(0))/delta_mu','p1'],beta/gamma,['(p2-p2(0))/delta_mu vs y2','p1 vs y1/delta'],['p2_norm_v_y2','p1_norm_v_y1'],labeladdon=lambda x,y:'')
+    # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[0]),lambda p,eps,l:p[:,2]/(1-eps[0])],'del',['pl2','pl1'],
+    #              ['y2','y1'],['(p2-p2(0))/delta_mu','p1/delta_lam'],beta/gamma,['(p2-p2(0))/delta_mu vs y2','p1/delta_lam vs y1'],['pl2_norm_v_y2','pl1_norm_v_y1'],labeladdon=lambda x,y:'')
+    # plot_integation(sim_paths, epsilon_matrix,beta/gamma,'del')
