@@ -284,7 +284,7 @@ def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,gra
             epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
 
             y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, J = eq_hamilton_J('lm', beta,
-                                                                                                     epsilon_lam,
+                                                                                                     float(epsilon_lam),
                                                                                                      t, gamma)
 
             y1_0_linear, y2_0_linear, p1_0_linear, p2_0_linear, p1_star_clancy_linear, p2_star_clancy_linear, dq_dt_sus_inf_linear, J = eq_hamilton_J(
@@ -2822,8 +2822,10 @@ if __name__=='__main__':
     #
     sim=['x','x']
     # epsilon_matrix=[[(0.02,0.05),(0.04,0.05),(0.06,0.05),(0.08,0.05),(0.1,0.05),(0.14,0.05),(0.18,0.05),(0.22,0.05),(0.26,0.05),(0.3,0.05),(0.36,0.05),(0.4,0.05),(0.45,0.05),(0.5,0.05),(0.55,0.05),(0.6,0.05),(0.65,0.05),(0.7,0.05),(0.75,0.05),(0.8,0.05),(0.85,0.05),(0.9,0.05),(0.93,0.05),(0.94,0.05),(0.98,0.05)]]
-    epsilon_matrix=[[(0.5,0.1),(0.1,0.1)],[(0.5,0.05),(0.1,0.05)]]
-    # epsilon_matrix=[[(e,0.1) for e in np.linspace(0.5,0.6,2)]]
+    # epsilon_matrix=[[(0.5,0.1),(0.1,0.1)],[(0.5,0.05),(0.1,0.05)]]
+    # epsilon_matrix=[[(0.5,0.1),(0.5,0.1)]]
+    # epsilon_matrix = [[(0.5,0.1)]]
+    epsilon_matrix = [[(e,0.1) for e in np.linspace(0.5,0.6,2)]]
     # # epsilon_matrix = [[(0.1, 0.02)],
     # #                   [(0.02, 0.1)]]
     sim_paths=[]
