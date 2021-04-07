@@ -805,17 +805,26 @@ def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,
     shot_angle=org_shot_angle
     if type(beta) is list:
         for l in beta:
-            sampleingtime = [6.0,7.0, 9.0, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 15.5, 16.0,
+            if l<=1.8:
+                sampleingtime=[6.0,7.0, 9.0, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 15.5, 16.0,
                              16.5, 17.0, 17.5, 18.0, 18.5, 19.5, 20.0]
+            elif l<=2.4:
+                sampleingtime = [6.0,7.0, 10.0, 15.0]
+            elif l<=3.3:
+                sampleingtime = [6.0, 7.0, 10.0]
+            elif l<=4.4:
+                sampleingtime = [3.0, 7.0]
+            else:
+                sampleingtime = [3.0, 5.0]
             y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt, J = eq_hamilton_J(case_to_run, l,
                                                                                                   list_of_epsilons, t, gamma)
             q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
-            lin_combo, temp_radius, path = guess_path_lam(sampleingtime, np.pi / 4 - 0.785084, lin_combo, q_star,
-                                                      one_shot_dt, radius, numpoints, J, shot_dq_dt,l)
+            lin_combo,temp_radius,shot_angle,path=guess_path(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,radius,numpoints,J,shot_dq_dt)
             guessed_paths.append(path)
     else:
         for eps in list_of_epsilons:
-            sampleingtime=[7.0,9.0,10.0,10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,14.5,15.0,15.5,16.0,16.5,17.0,17.5,18.0,18.5,19.5,20.0]
+            # sampleingtime=[7.0,9.0,10.0,10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,14.5,15.0,15.5,16.0,16.5,17.0,17.5,18.0,18.5,19.5,20.0]
+            sampleingtime=[10.0]
             # sampleingtime = np.linspace(7.0,40.0,10)
             # sampleingtime=[7.0,9.0,10.0]
             y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,eps,t,gamma)
@@ -2733,10 +2742,10 @@ def plot_z(shot_angle, lin_combo,radius,final_time_path,one_shot_dt,beta,q_star,
 
 if __name__=='__main__':
     #Network Parameters
-    beta, gamma = 1.6, 1.0
+    # beta, gamma = 6.0, 1.0
 
+    beta=[1.6,5.0]
     gamma=1.0
-    # beta=[1.5,1.8,2.1,2.4,2.7,3.0,3.3,3.6,4.0,4.5,5.0]
 
     abserr,relerr = 1.0e-20,1.0e-13
     # list_of_epsilons=[(0.9,0.02),(0.9,0.04),(0.9,0.06),(0.9,0.08),(0.9,0.1)]
@@ -2751,7 +2760,7 @@ if __name__=='__main__':
     # dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
 
     # ODE parameters
-    stoptime=20.0
+    stoptime=5.0
     numpoints = 10000
 
 
@@ -2767,7 +2776,7 @@ if __name__=='__main__':
     r=1.6384e-06
     angle=0.04239816339744822
 
-    epsilon=(0.02,0.1)
+    epsilon=(0.5,0.1)
     #lin002=0.9999930516412242
     #int_lin_combo001=0.9999658209936237
     # int_lin_combolam5=0.9999658419290037
@@ -2776,15 +2785,16 @@ if __name__=='__main__':
     # int_lin_combo_all_runs=1.0002181438489302
     # int_lin_combo=1.0259660334473293
     # int_lin_combo=0.7386390749669806
-    int_lin_combo=1.000040262472682
+    int_lin_combo=1.0090525856982824
     # int_lin_combo=1.000040262472682
 
     # int_lin_combo=1.001321728340301
-    y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
-    q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
+    # y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
+    # q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.000040262472682,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
+    # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.0456797315726813,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
 
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.000280636141402,dt,q_star,J,dq_dt_sus_inf,beta/(1-epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
 
@@ -2824,19 +2834,25 @@ if __name__=='__main__':
     # epsilon_matrix=[[(0.02,0.05),(0.04,0.05),(0.06,0.05),(0.08,0.05),(0.1,0.05),(0.14,0.05),(0.18,0.05),(0.22,0.05),(0.26,0.05),(0.3,0.05),(0.36,0.05),(0.4,0.05),(0.45,0.05),(0.5,0.05),(0.55,0.05),(0.6,0.05),(0.65,0.05),(0.7,0.05),(0.75,0.05),(0.8,0.05),(0.85,0.05),(0.9,0.05),(0.93,0.05),(0.94,0.05),(0.98,0.05)]]
     # epsilon_matrix=[[(0.5,0.1),(0.1,0.1)],[(0.5,0.05),(0.1,0.05)]]
     # epsilon_matrix=[[(0.5,0.1),(0.5,0.1)]]
-    # epsilon_matrix = [[(0.5,0.1)]]
-    epsilon_matrix = [[(e,0.1) for e in np.linspace(0.5,0.6,2)]]
-    # # epsilon_matrix = [[(0.1, 0.02)],
-    # #                   [(0.02, 0.1)]]
+    # epsilon_matrix = [[(0.5,0.05)]]
+    # epsilon_matrix = [[(e,0.1) for e in np.linspace(0.1,0.9,3)]]
+    # epsilon_matrix = [[(0.1, 0.02)],
+    #                   [(0.02, 0.1)]]
+
     sim_paths=[]
-    for case,epsilons in zip(sim,epsilon_matrix):
-        sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
+    # for case,epsilons in zip(sim,epsilon_matrix):
+    #     sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
     # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]/(1-eps[1])] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[1]),lambda p,eps,l:p[:,2]],'dem',['p2','p1'],
     #              ['y2','y1/delta_mu'],['(p2-p2(0))/delta_mu','p1'],beta/gamma,['(p2-p2(0))/delta_mu vs y2','p1 vs y1/delta'],['p2_norm_v_y2','p1_norm_v_y1'],labeladdon=lambda x,y:'')
     # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[0]),lambda p,eps,l:p[:,2]/(1-eps[0])],'del',['pl2','pl1'],
     #              ['y2','y1'],['(p2-p2(0))/delta_mu','p1/delta_lam'],beta/gamma,['(p2-p2(0))/delta_mu vs y2','p1/delta_lam vs y1'],['pl2_norm_v_y2','pl1_norm_v_y1'],labeladdon=lambda x,y:'')
     # plot_integation(sim_paths, epsilon_matrix,beta/gamma,'del')
-    plot_integration_theory_z(sim_paths, epsilon_matrix,sim ,beta, gamma,'s')
+    # plot_integration_theory_z(sim_paths, epsilon_matrix,sim ,beta, gamma,'s')
 
 
     # plot_eq_points(sim,beta,epsilon_matrix,t,gamma)
+    # print('This no love song')
+
+    beta_epsilon=(0.5,0.1)
+    sim_paths.append(multi_eps_normalized_path('x', beta_epsilon, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
+    print('This no love song')
