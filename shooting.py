@@ -274,56 +274,86 @@ def plot_integation(guessed_paths,list_of_epsilons,lam,sim):
     plt.show()
 
 def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,graph_type):
+    #graph type s is for the case where the is scaling (multi parbola), l is for single parbola, and m is for eps_mu v action
     fig_tot, fig_correction = plt.figure(), plt.figure()
     ax_tot, ax_correction = fig_tot.add_subplot(1, 1, 1), fig_correction.add_subplot(1, 1, 1)
-    lam = beta / gamma
     # s0 = 1 / lam - 1 + np.log(lam)
-    for sim_paths, sim_epsilons, s in zip(guessed_paths, list_of_epsilons, sim):
-        action_numeric, action_numeric_correction, eps_mu_array, eps_lam_array = [], [], [], []
-        for path, epsilon in zip(sim_paths, sim_epsilons):
-            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+    if type(beta) is list:
+        epsilon_lam, epsilon_mu = list_of_epsilons[0], list_of_epsilons[1]
+        for sim_paths, s in zip(guessed_paths, sim):
+            action_numeric, action_numeric_correction, lam_array = [], [], []
+            for path, sim_beta in zip(sim_paths, beta):
+                y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, J = eq_hamilton_J('lm', sim_beta,
+                                                                                                         float(epsilon_lam),
+                                                                                                         t, gamma)
 
-            y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, J = eq_hamilton_J('lm', beta,
-                                                                                                     float(epsilon_lam),
-                                                                                                     t, gamma)
+                y1_0_linear, y2_0_linear, p1_0_linear, p2_0_linear, p1_star_clancy_linear, p2_star_clancy_linear, dq_dt_sus_inf_linear, J = eq_hamilton_J(
+                    s, sim_beta, list_of_epsilons,
+                    t, gamma)
+                y1_for_linear = np.linspace(path[:, 0][-1], 0, 1000)
+                py1_linear = p1_star_clancy_linear - (
+                            (p1_star_clancy_linear - path[:, 2][-1]) / path[:, 0][-1]) * y1_for_linear
+                y2_for_linear = np.linspace(path[:, 1][-1], 0, 1000)
+                py2_linear = p1_star_clancy_linear - (
+                            (p1_star_clancy_linear - path[:, 3][-1]) / path[:, 1][-1]) * y2_for_linear
+                I_addition_to_path = simps(py1_linear, y1_for_linear) + simps(py2_linear, y2_for_linear)
 
-            y1_0_linear, y2_0_linear, p1_0_linear, p2_0_linear, p1_star_clancy_linear, p2_star_clancy_linear, dq_dt_sus_inf_linear, J = eq_hamilton_J(
-                s, beta, epsilon,
-                t, gamma)
-            y1_for_linear = np.linspace(path[:, 0][-1], 0, 1000)
-            py1_linear = p1_star_clancy_linear - (
-                        (p1_star_clancy_linear - path[:, 2][-1]) / path[:, 0][-1]) * y1_for_linear
-            y2_for_linear = np.linspace(path[:, 1][-1], 0, 1000)
-            py2_linear = p1_star_clancy_linear - (
-                        (p1_star_clancy_linear - path[:, 3][-1]) / path[:, 1][-1]) * y2_for_linear
-            I_addition_to_path = simps(py1_linear, y1_for_linear) + simps(py2_linear, y2_for_linear)
+                q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
+                f_of_d = (1 / 2) * (sim_beta / gamma) * (1 - epsilon_lam ** 2)
+                D = (-1 + f_of_d + np.sqrt(epsilon_lam ** 2 + f_of_d ** 2)) / (1 - epsilon_lam ** 2)
+                A_theory_clancy = -(1 / 2) * (q_star[2] + q_star[3]) - (gamma / sim_beta) * D
+                A_integration = simps(path[:, 2], path[:, 0]) + simps(path[:, 3], path[:, 1]) + I_addition_to_path
+                action_numerical_correction = A_integration - A_theory_clancy
+                action_numeric.append(A_integration)
+                action_numeric_correction.append(action_numerical_correction)
+    else:
+        lam = beta / gamma
+        for sim_paths, sim_epsilons, s in zip(guessed_paths, list_of_epsilons, sim):
+            action_numeric, action_numeric_correction, eps_mu_array, eps_lam_array = [], [], [], []
+            for path, epsilon in zip(sim_paths, sim_epsilons):
+                epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
 
-            q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
-            eps_mu_array.append(epsilon_mu)
-            eps_lam_array.append(epsilon_lam)
-            f_of_d = (1 / 2) * (beta / gamma) * (1 - epsilon_lam ** 2)
-            D = (-1 + f_of_d + np.sqrt(epsilon_lam ** 2 + f_of_d ** 2)) / (1 - epsilon_lam ** 2)
-            A_theory_clancy = -(1 / 2) * (q_star[2] + q_star[3]) - (gamma / beta) * D
-            A_integration = simps(path[:, 2], path[:, 0]) + simps(path[:, 3], path[:, 1]) + I_addition_to_path
-            action_numerical_correction = A_integration - A_theory_clancy
-            action_numeric.append(A_integration)
-            action_numeric_correction.append(action_numerical_correction)
-        if graph_type is 's':
-            eps_lam_array = np.array(eps_lam_array)
-            action_numeric_correction = np.array(action_numeric_correction)
-            # eps_lam_theory = np.linspace(min(eps_lam_array), max(eps_lam_array), 1000)
-            # action_theory = np.array([action_o1_epslam(eps_lam, epsilon_mu, lam) for eps_lam in eps_lam_theory])
-            ax_tot.plot(eps_lam_array, action_numeric, linewidth=4, linestyle='None', markersize=10, Marker='o',
-                        label='epsilon=' + str(epsilon_mu))
-            ax_correction.plot(eps_lam_array, action_numeric_correction / epsilon_mu, linewidth=4, linestyle='None',
-                               markersize=10,
-                               Marker='o', label='epsilon=' + str(epsilon_mu))
-            # ax_correction.plot(eps_lam_theory, action_theory, linewidth=4,
-            #                    label='Theory')
+                y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, J = eq_hamilton_J('lm', beta,
+                                                                                                         float(epsilon_lam),
+                                                                                                         t, gamma)
 
-    eps_mu_array = np.array(eps_mu_array)
-    eps_lam_array = np.array(eps_lam_array)
+                y1_0_linear, y2_0_linear, p1_0_linear, p2_0_linear, p1_star_clancy_linear, p2_star_clancy_linear, dq_dt_sus_inf_linear, J = eq_hamilton_J(
+                    s, beta, epsilon,
+                    t, gamma)
+                y1_for_linear = np.linspace(path[:, 0][-1], 0, 1000)
+                py1_linear = p1_star_clancy_linear - (
+                            (p1_star_clancy_linear - path[:, 2][-1]) / path[:, 0][-1]) * y1_for_linear
+                y2_for_linear = np.linspace(path[:, 1][-1], 0, 1000)
+                py2_linear = p1_star_clancy_linear - (
+                            (p1_star_clancy_linear - path[:, 3][-1]) / path[:, 1][-1]) * y2_for_linear
+                I_addition_to_path = simps(py1_linear, y1_for_linear) + simps(py2_linear, y2_for_linear)
+
+                q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
+                eps_mu_array.append(epsilon_mu)
+                eps_lam_array.append(epsilon_lam)
+                f_of_d = (1 / 2) * (beta / gamma) * (1 - epsilon_lam ** 2)
+                D = (-1 + f_of_d + np.sqrt(epsilon_lam ** 2 + f_of_d ** 2)) / (1 - epsilon_lam ** 2)
+                A_theory_clancy = -(1 / 2) * (q_star[2] + q_star[3]) - (gamma / beta) * D
+                A_integration = simps(path[:, 2], path[:, 0]) + simps(path[:, 3], path[:, 1]) + I_addition_to_path
+                action_numerical_correction = A_integration - A_theory_clancy
+                action_numeric.append(A_integration)
+                action_numeric_correction.append(action_numerical_correction)
+            if graph_type is 's':
+                eps_lam_array = np.array(eps_lam_array)
+                action_numeric_correction = np.array(action_numeric_correction)
+                # eps_lam_theory = np.linspace(min(eps_lam_array), max(eps_lam_array), 1000)
+                # action_theory = np.array([action_o1_epslam(eps_lam, epsilon_mu, lam) for eps_lam in eps_lam_theory])
+                ax_tot.plot(eps_lam_array, action_numeric, linewidth=4, linestyle='None', markersize=10, Marker='o',
+                            label='epsilon=' + str(epsilon_mu))
+                ax_correction.plot(eps_lam_array, action_numeric_correction / epsilon_mu, linewidth=4, linestyle='None',
+                                   markersize=10,
+                                   Marker='o', label='epsilon=' + str(epsilon_mu))
+                # ax_correction.plot(eps_lam_theory, action_theory, linewidth=4,
+                #                    label='Theory')
+
     if graph_type is 'm':
+        eps_mu_array = np.array(eps_mu_array)
+        eps_lam_array = np.array(eps_lam_array)
         eps_mu_theory = np.linspace(min(eps_mu_array), max(eps_mu_array), 1000)
         action_theory = np.array([action_o1_epslam(epsilon_lam, eps_mu, lam) for eps_mu in eps_mu_theory])
         action_slope_numerical = np.polyfit(eps_mu_array, action_numeric_correction, 1)
@@ -347,6 +377,8 @@ def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,gra
         fig_correction.savefig('action_correction_epslam_' + str(epsilon_lam).replace('.', '') + '.png', dpi=200)
         plt.show()
     elif graph_type is 'l':
+        eps_mu_array = np.array(eps_mu_array)
+        eps_lam_array = np.array(eps_lam_array)
         eps_lam_theory = np.linspace(min(eps_lam_array), max(eps_lam_array), 1000)
         action_theory = np.array([action_o1_epslam(eps_lam, epsilon_mu, lam) for eps_lam in eps_lam_theory])
         ax_tot.plot(eps_lam_array, action_numeric, linewidth=4, linestyle='None', markersize=10, Marker='o',
@@ -373,6 +405,8 @@ def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,gra
         fig_correction.savefig('action_correction_epsmu_' + str(epsilon_mu).replace('.', '') + '.png', dpi=200)
         plt.show()
     elif graph_type is 's':
+        eps_mu_array = np.array(eps_mu_array)
+        eps_lam_array = np.array(eps_lam_array)
         eps_lam_theory = np.linspace(0.0, 1.0, 1000)
         action_theory = np.array([action_o1_epslam_norm(eps_lam, lam) for eps_lam in eps_lam_theory])
         ax_correction.plot(eps_lam_theory, action_theory, linewidth=4, linestyle='--', label='Theory')
@@ -390,6 +424,31 @@ def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,gra
         plt.tight_layout()
         fig_correction.savefig('action_correction_epsmu_multi_mu_lam' + str(lam).replace('.', '') + '.png', dpi=200)
         plt.show()
+    elif graph_type is 'b':
+        beta_theory = np.linspace(min(beta),max(beta),1000)
+        action_numeric_correction=np.array(action_numeric_correction)
+        action_theory = np.array([action_o1_epslam_norm(epsilon_lam, l) for l in beta_theory])
+
+        ax_tot.plot(beta, action_numeric, linewidth=4, linestyle='None', markersize=10, Marker='o',
+                    label='Numeric')
+        ax_correction.plot(beta, action_numeric_correction/epsilon_mu, linewidth=4, linestyle='None', markersize=10,
+                           Marker='o', label='Numeric')
+        ax_correction.plot(beta_theory, action_theory, linewidth=4, label='Theory')
+        ax_tot.set_xlabel('Lambda')
+        ax_tot.set_ylabel('A')
+        ax_tot.set_title('Total action vs Lambda epslion= ' + str(list_of_epsilons))
+        ax_tot.legend()
+        plt.tight_layout()
+        fig_tot.savefig('action_total_with_clancy_epslam'+str(epsilon_lam).replace('.','')+'_epsmu'+str(epsilon_mu).replace('.','') + '.png', dpi=200)
+
+        ax_correction.set_xlabel('Lambda')
+        ax_correction.set_ylabel('S(1)\epsilon_mu')
+        ax_correction.set_title('S(1)\epsilon_mu vs Lambda epsilon=' + str(list_of_epsilons))
+        ax_correction.legend()
+        plt.tight_layout()
+        fig_correction.savefig('action_correction_epsmu_multi_mu_lam' + str(epsilon_lam).replace('.','')+'_epsmu'+str(epsilon_mu).replace('.','') + '.png', dpi=200)
+        plt.show()
+
 
 
 
@@ -2744,7 +2803,8 @@ if __name__=='__main__':
     #Network Parameters
     # beta, gamma = 6.0, 1.0
 
-    beta=[1.6,5.0]
+    # beta=[1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3.0]
+    beta=[1.6,1.8,2.0,2.4,2.8,3.0,3.3]
     gamma=1.0
 
     abserr,relerr = 1.0e-20,1.0e-13
@@ -2785,7 +2845,7 @@ if __name__=='__main__':
     # int_lin_combo_all_runs=1.0002181438489302
     # int_lin_combo=1.0259660334473293
     # int_lin_combo=0.7386390749669806
-    int_lin_combo=1.0090525856982824
+    int_lin_combo=1.000040262472682
     # int_lin_combo=1.000040262472682
 
     # int_lin_combo=1.001321728340301
@@ -2830,7 +2890,7 @@ if __name__=='__main__':
     # eq_points_exact(epsilon,beta,gamma)
 
     #
-    sim=['x','x']
+    sim=['x']
     # epsilon_matrix=[[(0.02,0.05),(0.04,0.05),(0.06,0.05),(0.08,0.05),(0.1,0.05),(0.14,0.05),(0.18,0.05),(0.22,0.05),(0.26,0.05),(0.3,0.05),(0.36,0.05),(0.4,0.05),(0.45,0.05),(0.5,0.05),(0.55,0.05),(0.6,0.05),(0.65,0.05),(0.7,0.05),(0.75,0.05),(0.8,0.05),(0.85,0.05),(0.9,0.05),(0.93,0.05),(0.94,0.05),(0.98,0.05)]]
     # epsilon_matrix=[[(0.5,0.1),(0.1,0.1)],[(0.5,0.05),(0.1,0.05)]]
     # epsilon_matrix=[[(0.5,0.1),(0.5,0.1)]]
@@ -2853,6 +2913,6 @@ if __name__=='__main__':
     # plot_eq_points(sim,beta,epsilon_matrix,t,gamma)
     # print('This no love song')
 
-    beta_epsilon=(0.5,0.1)
+    beta_epsilon=(0.3,0.05)
     sim_paths.append(multi_eps_normalized_path('x', beta_epsilon, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
-    print('This no love song')
+    plot_integration_theory_z(sim_paths, beta_epsilon, sim, beta, gamma, 'b')
