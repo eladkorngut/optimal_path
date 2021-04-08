@@ -7,6 +7,8 @@ from scipy.integrate import simps
 from pylab import figure, plot, xlabel, grid, legend, title,savefig,ylabel
 import numdifftools as ndft
 from itertools import cycle
+import itertools
+
 
 
 
@@ -278,6 +280,8 @@ def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,gra
     ax_tot, ax_correction = fig_tot.add_subplot(1, 1, 1), fig_correction.add_subplot(1, 1, 1)
     lam = beta / gamma
     # s0 = 1 / lam - 1 + np.log(lam)
+    marker_multi_s = itertools.cycle(('o', '+', '^', 'D', 'X','v'))
+
     for sim_paths, sim_epsilons, s in zip(guessed_paths, list_of_epsilons, sim):
         action_numeric, action_numeric_correction, eps_mu_array, eps_lam_array = [], [], [], []
         for path, epsilon in zip(sim_paths, sim_epsilons):
@@ -313,7 +317,7 @@ def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,gra
             action_numeric_correction = np.array(action_numeric_correction)
             # eps_lam_theory = np.linspace(min(eps_lam_array), max(eps_lam_array), 1000)
             # action_theory = np.array([action_o1_epslam(eps_lam, epsilon_mu, lam) for eps_lam in eps_lam_theory])
-            ax_tot.plot(eps_lam_array, action_numeric, linewidth=4, linestyle='None', markersize=10, Marker='o',
+            ax_tot.plot(eps_lam_array, action_numeric, linewidth=4, linestyle='None', markersize=10, Marker=marker_multi_s.next(),
                         label='epsilon=' + str(epsilon_mu))
             ax_correction.plot(eps_lam_array, action_numeric_correction / epsilon_mu, linewidth=4, linestyle='None',
                                markersize=10,
@@ -375,7 +379,7 @@ def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,gra
     elif graph_type is 's':
         eps_lam_theory = np.linspace(0.0, 1.0, 1000)
         action_theory = np.array([action_o1_epslam_norm(eps_lam, lam) for eps_lam in eps_lam_theory])
-        ax_correction.plot(eps_lam_theory, action_theory, linewidth=4, linestyle='--', label='Theory')
+        ax_correction.plot(eps_lam_theory, action_theory, linewidth=4, linestyle='-', label='Theory')
         ax_tot.set_xlabel('eps_lam')
         ax_tot.set_ylabel('A')
         ax_tot.set_title('Total action vs eps_lam' + ' lam=' + str(lam))
@@ -384,8 +388,8 @@ def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,gra
         fig_tot.savefig('action_total_with_clancy' + '.png', dpi=200)
 
         ax_correction.set_xlabel('epsilon_lam')
-        ax_correction.set_ylabel('S(1)')
-        ax_correction.set_title('S(1) vs eps_lam' + ' lam=' + str(lam))
+        ax_correction.set_ylabel('S(1)/epsilon_mu')
+        ax_correction.set_title('S(1)/epsilon_mu vs eps_lam' + ' lam=' + str(lam))
         ax_correction.legend()
         plt.tight_layout()
         fig_correction.savefig('action_correction_epsmu_multi_mu_lam' + str(lam).replace('.', '') + '.png', dpi=200)
@@ -2820,12 +2824,12 @@ if __name__=='__main__':
     # eq_points_exact(epsilon,beta,gamma)
 
     #
-    sim=['x','x']
+    sim=['x','x','x','x','x','x']
     # epsilon_matrix=[[(0.02,0.05),(0.04,0.05),(0.06,0.05),(0.08,0.05),(0.1,0.05),(0.14,0.05),(0.18,0.05),(0.22,0.05),(0.26,0.05),(0.3,0.05),(0.36,0.05),(0.4,0.05),(0.45,0.05),(0.5,0.05),(0.55,0.05),(0.6,0.05),(0.65,0.05),(0.7,0.05),(0.75,0.05),(0.8,0.05),(0.85,0.05),(0.9,0.05),(0.93,0.05),(0.94,0.05),(0.98,0.05)]]
     # epsilon_matrix=[[(0.5,0.1),(0.1,0.1)],[(0.5,0.05),(0.1,0.05)]]
     # epsilon_matrix=[[(0.5,0.1),(0.5,0.1)]]
     # epsilon_matrix = [[(0.5,0.1)]]
-    epsilon_matrix = [[(e,0.1) for e in np.linspace(0.5,0.6,2)]]
+    epsilon_matrix = [[(e,0.02) for e in np.linspace(0.02,0.98,20)],[(e,0.04) for e in np.linspace(0.02,0.98,20)],[(e,0.06) for e in np.linspace(0.02,0.98,20)],[(e,0.08) for e in np.linspace(0.02,0.98,20)],[(e,0.1) for e in np.linspace(0.02,0.98,20)],[(e,0.12) for e in np.linspace(0.02,0.98,20)]]
     # # epsilon_matrix = [[(0.1, 0.02)],
     # #                   [(0.02, 0.1)]]
     sim_paths=[]
