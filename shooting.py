@@ -280,7 +280,7 @@ def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,gra
     ax_tot, ax_correction = fig_tot.add_subplot(1, 1, 1), fig_correction.add_subplot(1, 1, 1)
     lam = beta / gamma
     # s0 = 1 / lam - 1 + np.log(lam)
-    marker_multi_s = itertools.cycle(('o', '+', '^', 'D', 'X','v'))
+    # marker = itertools.cycle(('o', 'v', '+', 'D', 'X','^'))
 
     for sim_paths, sim_epsilons, s in zip(guessed_paths, list_of_epsilons, sim):
         action_numeric, action_numeric_correction, eps_mu_array, eps_lam_array = [], [], [], []
@@ -317,7 +317,7 @@ def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,gra
             action_numeric_correction = np.array(action_numeric_correction)
             # eps_lam_theory = np.linspace(min(eps_lam_array), max(eps_lam_array), 1000)
             # action_theory = np.array([action_o1_epslam(eps_lam, epsilon_mu, lam) for eps_lam in eps_lam_theory])
-            ax_tot.plot(eps_lam_array, action_numeric, linewidth=4, linestyle='None', markersize=10, Marker=marker_multi_s.next(),
+            ax_tot.plot(eps_lam_array, action_numeric, linewidth=4, linestyle='None', markersize=10, Marker='o',
                         label='epsilon=' + str(epsilon_mu))
             ax_correction.plot(eps_lam_array, action_numeric_correction / epsilon_mu, linewidth=4, linestyle='None',
                                markersize=10,
@@ -2829,7 +2829,8 @@ if __name__=='__main__':
     # epsilon_matrix=[[(0.5,0.1),(0.1,0.1)],[(0.5,0.05),(0.1,0.05)]]
     # epsilon_matrix=[[(0.5,0.1),(0.5,0.1)]]
     # epsilon_matrix = [[(0.5,0.1)]]
-    epsilon_matrix = [[(e,0.02) for e in np.linspace(0.02,0.98,20)],[(e,0.04) for e in np.linspace(0.02,0.98,20)],[(e,0.06) for e in np.linspace(0.02,0.98,20)],[(e,0.08) for e in np.linspace(0.02,0.98,20)],[(e,0.1) for e in np.linspace(0.02,0.98,20)],[(e,0.12) for e in np.linspace(0.02,0.98,20)]]
+    # epsilon_matrix = [[(e,0.02) for e in np.linspace(0.02,0.98,20)],[(e,0.04) for e in np.linspace(0.02,0.98,20)],[(e,0.06) for e in np.linspace(0.02,0.98,20)],[(e,0.08) for e in np.linspace(0.02,0.98,20)],[(e,0.1) for e in np.linspace(0.02,0.98,20)],[(e,0.12) for e in np.linspace(0.02,0.98,20)]]
+    epsilon_matrix = [[(e,0.1) for e in np.linspace(0.02,0.98,2)],[(e,0.12) for e in np.linspace(0.02,0.98,2)]]
     # # epsilon_matrix = [[(0.1, 0.02)],
     # #                   [(0.02, 0.1)]]
     sim_paths=[]
