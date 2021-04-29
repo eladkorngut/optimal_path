@@ -409,7 +409,7 @@ def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,gra
         eps_lam_array = np.array(eps_lam_array)
         eps_lam_theory = np.linspace(0.0, 1.0, 1000)
         action_theory = np.array([action_o1_epslam_norm(eps_lam, lam) for eps_lam in eps_lam_theory])
-        ax_correction.plot(eps_lam_theory, action_theory, linewidth=4, linestyle='--', label='Theory')
+        ax_correction.plot(eps_lam_theory, action_theory, linewidth=4, label='Theory')
         ax_tot.set_xlabel('eps_lam')
         ax_tot.set_ylabel('A')
         ax_tot.set_title('Total action vs eps_lam' + ' lam=' + str(lam))
@@ -418,8 +418,8 @@ def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,gra
         fig_tot.savefig('action_total_with_clancy' + '.png', dpi=200)
 
         ax_correction.set_xlabel('epsilon_lam')
-        ax_correction.set_ylabel('S(1)')
-        ax_correction.set_title('S(1) vs eps_lam' + ' lam=' + str(lam))
+        ax_correction.set_ylabel('S(1)\epsilon_mu')
+        ax_correction.set_title('S(1)\epsilon_mu vs eps_lam' + ' lam=' + str(lam))
         ax_correction.legend()
         plt.tight_layout()
         fig_correction.savefig('action_correction_epsmu_multi_mu_lam' + str(lam).replace('.', '') + '.png', dpi=200)
@@ -882,8 +882,8 @@ def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,
             guessed_paths.append(path)
     else:
         for eps in list_of_epsilons:
-            # sampleingtime=[7.0,9.0,10.0,10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,14.5,15.0,15.5,16.0,16.5,17.0,17.5,18.0,18.5,19.5,20.0]
-            sampleingtime=[10.0]
+            sampleingtime=[7.0,9.0,10.0,10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,14.5,15.0,15.5,16.0,16.5,17.0,17.5,18.0,18.5,19.5,20.0]
+            # sampleingtime=[10.0]
             # sampleingtime = np.linspace(7.0,40.0,10)
             # sampleingtime=[7.0,9.0,10.0]
             y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,eps,t,gamma)
@@ -2532,8 +2532,8 @@ def plot_numerical_only(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, 
 def man_div_path_and_fine_tuning(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta,case_to_run,epsilon,lam):
     lin_combo,r,shot_angle,path=man_find_best_div_path(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta)
     lin_combo=man_find_fine_tuning(shot_angle, r, t0, lin_combo, one_shot_dt, q_star, J, shot_dq_dt,beta)
-    # plot_all_var(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt,beta,case_to_run,t0)
-    plot_numerical_only(shot_angle, lin_combo, one_shot_dt, r, t0, q_star, J, shot_dq_dt, beta, case_to_run,epsilon,lam)
+    plot_all_var(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt,beta,case_to_run,t0)
+    # plot_numerical_only(shot_angle, lin_combo, one_shot_dt, r, t0, q_star, J, shot_dq_dt, beta, case_to_run,epsilon,lam)
 
 
 def plot_all_var(shot_angle,lin_combo,one_shot_dt,radius,final_time_path,q_star,J,shot_dq_dt,beta,case_to_run,tf):
@@ -2645,7 +2645,7 @@ def plot_all_var(shot_angle,lin_combo,one_shot_dt,radius,final_time_path,q_star,
     numerical_correction = w_integration_numerical - (1 / lam - 1 + np.log(lam))+I_addition_to_path
     xlabel('w')
     ylabel('pw')
-    title('pw vs w eps='+str(epsilon)+' Lam='+str(beta)+ ' Int='+str(round(numerical_correction,5)))
+    title('pw vs w eps='+str(epsilon)+' Lam='+str(round(lam,1))+ ' Int='+str(round(numerical_correction,5)))
     plt.legend()
     plt.savefig('pw_vs_w' + '.png', dpi=500)
     plt.show()
@@ -2801,10 +2801,10 @@ def plot_z(shot_angle, lin_combo,radius,final_time_path,one_shot_dt,beta,q_star,
 
 if __name__=='__main__':
     #Network Parameters
-    # beta, gamma = 6.0, 1.0
+    beta, gamma = 1.6, 1.0
 
     # beta=[1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3.0]
-    beta=[1.6,1.8,2.0,2.4,2.8,3.0,3.3]
+    # beta=[1.6,1.8,2.0,2.4,2.8,3.0,3.3]
     gamma=1.0
 
     abserr,relerr = 1.0e-20,1.0e-13
@@ -2813,14 +2813,14 @@ if __name__=='__main__':
     # list_of_epsilons=[(0.002,0.1)]
     # list_of_epsilons = [(0.5, 0.05)]
     # list_of_epsilons=0.1
-    sim='x'
+    sim='la'
 
     # A way to confirm the hamiltion's numericaly
     # Jacobian_H = ndft.Jacobian(H)
     # dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
 
     # ODE parameters
-    stoptime=5.0
+    stoptime=20.0
     numpoints = 10000
 
 
@@ -2836,7 +2836,7 @@ if __name__=='__main__':
     r=1.6384e-06
     angle=0.04239816339744822
 
-    epsilon=(0.5,0.1)
+    epsilon=(0.15,0.10)
     #lin002=0.9999930516412242
     #int_lin_combo001=0.9999658209936237
     # int_lin_combolam5=0.9999658419290037
@@ -2849,12 +2849,12 @@ if __name__=='__main__':
     # int_lin_combo=1.000040262472682
 
     # int_lin_combo=1.001321728340301
-    # y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
-    # q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
+    y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
+    q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.000040262472682,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
-    # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.0456797315726813,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
+    # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.0002086171538216,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
 
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.000280636141402,dt,q_star,J,dq_dt_sus_inf,beta/(1-epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
 
@@ -2878,34 +2878,34 @@ if __name__=='__main__':
     # plot_eps_mu_sub(temp,beta,gamma,list_of_epsilons,sim,t)
     # plot_eps_lam_sub(temp,beta,gamma,list_of_epsilons,sim,t)
 
-    # sim=['al','la']
+    sim=['al','la']
     # sim=['x','x']
-    # epsilon_matrix=[[(0.8,0.03),(0.8,0.06),(0.8,0.1),(0.8,0.13),(0.8,0.16)],[(0.03,0.8),(0.06,0.8),(0.1,0.8),(0.13,0.8),(0.16,0.8)]]
-    # # epsilon_matrix = [[(0.1, 0.02)],
-    # #                   [(0.02, 0.1)]]
-    # sim_paths=[]
-    # for case,epsilons in zip(sim,epsilon_matrix):
-    #     sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo))
-    # plot_multi_sim_path(sim_paths, beta, gamma, epsilon_matrix, sim, t)
+    epsilon_matrix=[[(0.8,0.03),(0.8,0.06),(0.8,0.1),(0.8,0.13),(0.8,0.16)],[(0.03,0.8),(0.06,0.8),(0.1,0.8),(0.13,0.8),(0.16,0.8)]]
+    # epsilon_matrix = [[(0.1, 0.02)],
+    #                   [(0.02, 0.1)]]
+    sim_paths=[]
+    for case,epsilons in zip(sim,epsilon_matrix):
+        sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo))
+    plot_multi_sim_path(sim_paths, beta, gamma, epsilon_matrix, sim, t)
     # eq_points_exact(epsilon,beta,gamma)
 
     #
-    sim=['x']
+    # sim=['x','x','x','x','x','x']
     # epsilon_matrix=[[(0.02,0.05),(0.04,0.05),(0.06,0.05),(0.08,0.05),(0.1,0.05),(0.14,0.05),(0.18,0.05),(0.22,0.05),(0.26,0.05),(0.3,0.05),(0.36,0.05),(0.4,0.05),(0.45,0.05),(0.5,0.05),(0.55,0.05),(0.6,0.05),(0.65,0.05),(0.7,0.05),(0.75,0.05),(0.8,0.05),(0.85,0.05),(0.9,0.05),(0.93,0.05),(0.94,0.05),(0.98,0.05)]]
     # epsilon_matrix=[[(0.5,0.1),(0.1,0.1)],[(0.5,0.05),(0.1,0.05)]]
     # epsilon_matrix=[[(0.5,0.1),(0.5,0.1)]]
     # epsilon_matrix = [[(0.5,0.05)]]
-    # epsilon_matrix = [[(e,0.1) for e in np.linspace(0.1,0.9,3)]]
+    epsilon_matrix = [[(e,0.02) for e in np.linspace(0.02,0.85,20)],[(e,0.04) for e in np.linspace(0.02,0.85,20)],[(e,0.06) for e in np.linspace(0.02,0.85,20)],[(e,0.08) for e in np.linspace(0.02,0.85,20)],[(e,0.1) for e in np.linspace(0.02,0.85,20)],[(e,0.12) for e in np.linspace(0.02,0.85,20)]]
     # epsilon_matrix = [[(0.1, 0.02)],
     #                   [(0.02, 0.1)]]
 
-    sim_paths=[]
+    # sim_paths=[]
     # for case,epsilons in zip(sim,epsilon_matrix):
     #     sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
-    # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]/(1-eps[1])] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[1]),lambda p,eps,l:p[:,2]],'dem',['p2','p1'],
-    #              ['y2','y1/delta_mu'],['(p2-p2(0))/delta_mu','p1'],beta/gamma,['(p2-p2(0))/delta_mu vs y2','p1 vs y1/delta'],['p2_norm_v_y2','p1_norm_v_y1'],labeladdon=lambda x,y:'')
-    # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[0]),lambda p,eps,l:p[:,2]/(1-eps[0])],'del',['pl2','pl1'],
-    #              ['y2','y1'],['(p2-p2(0))/delta_mu','p1/delta_lam'],beta/gamma,['(p2-p2(0))/delta_mu vs y2','p1/delta_lam vs y1'],['pl2_norm_v_y2','pl1_norm_v_y1'],labeladdon=lambda x,y:'')
+    # # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]/(1-eps[1])] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[1]),lambda p,eps,l:p[:,2]],'dem',['p2','p1'],
+    # #              ['y2','y1/delta_mu'],['(p2-p2(0))/delta_mu','p1'],beta/gamma,['(p2-p2(0))/delta_mu vs y2','p1 vs y1/delta'],['p2_norm_v_y2','p1_norm_v_y1'],labeladdon=lambda x,y:'')
+    # # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[0]),lambda p,eps,l:p[:,2]/(1-eps[0])],'del',['pl2','pl1'],
+    # #              ['y2','y1'],['(p2-p2(0))/delta_mu','p1/delta_lam'],beta/gamma,['(p2-p2(0))/delta_mu vs y2','p1/delta_lam vs y1'],['pl2_norm_v_y2','pl1_norm_v_y1'],labeladdon=lambda x,y:'')
     # plot_integation(sim_paths, epsilon_matrix,beta/gamma,'del')
     # plot_integration_theory_z(sim_paths, epsilon_matrix,sim ,beta, gamma,'s')
 
@@ -2913,6 +2913,6 @@ if __name__=='__main__':
     # plot_eq_points(sim,beta,epsilon_matrix,t,gamma)
     # print('This no love song')
 
-    beta_epsilon=(0.3,0.05)
-    sim_paths.append(multi_eps_normalized_path('x', beta_epsilon, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
-    plot_integration_theory_z(sim_paths, beta_epsilon, sim, beta, gamma, 'b')
+    # beta_epsilon=(0.3,0.05)
+    # sim_paths.append(multi_eps_normalized_path('x', beta_epsilon, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
+    # plot_integration_theory_z(sim_paths, beta_epsilon, sim, beta, gamma, 'b')
