@@ -299,7 +299,8 @@ def plot_integration_theory_epslamsamll(guessed_paths, list_of_epsilons,sim,beta
                 D = (-1 + f_of_d + np.sqrt(epsilon_mu ** 2 + f_of_d ** 2)) / (1 - epsilon_mu ** 2)
                 A_theory_clancy = (1 / 2) * (np.log(1+(1-epsilon_mu)*D) + np.log(1+(1+epsilon_mu)*D)) - (gamma / sim_beta) * D
                 A_integration = simps(path[:, 2], path[:, 0]) + simps(path[:, 3], path[:, 1]) + I_addition_to_path
-                action_numerical_correction = A_integration - A_theory_clancy
+                # action_numerical_correction = A_integration - A_theory_clancy
+                action_numerical_correction = A_integration - A_theory_clancy - (action_clancy(epsilon_lam,sim_beta,gamma)-shomo(sim_beta))
                 action_numeric.append(A_integration)
                 action_numeric_correction.append(action_numerical_correction)
     else:
@@ -324,7 +325,8 @@ def plot_integration_theory_epslamsamll(guessed_paths, list_of_epsilons,sim,beta
                 D = (-1 + f_of_d + np.sqrt(epsilon_mu ** 2 + f_of_d ** 2)) / (1 - epsilon_mu ** 2)
                 A_theory_clancy = (1 / 2) * (np.log(1+(1-epsilon_mu)*D) + np.log(1+(1+epsilon_mu)*D)) - (gamma / beta) * D
                 A_integration = simps(path[:, 2], path[:, 0]) + simps(path[:, 3], path[:, 1]) + I_addition_to_path
-                action_numerical_correction = A_integration - A_theory_clancy
+                # action_numerical_correction = A_integration - A_theory_clancy
+                action_numerical_correction = A_integration - A_theory_clancy - (action_clancy(epsilon_lam,beta,gamma)-shomo(lam))
                 action_numeric.append(A_integration)
                 action_numeric_correction.append(action_numerical_correction)
             if graph_type is 's':
@@ -372,9 +374,6 @@ def plot_integration_theory_epslamsamll(guessed_paths, list_of_epsilons,sim,beta
                            Marker='o', label='Numeric')
         ax_correction.plot(eps_lam_theory, action_theory, linewidth=4,
                            label='Theory')
-
-        # ax_tot.plot(delta_theory,action_theory,linewidth=4,linestyle='--',label='Theory')
-
         ax_tot.set_xlabel('eps_lam')
         ax_tot.set_ylabel('A')
         ax_tot.set_title('Total action vs eps_lam' + ' lam=' + str(lam) + ' epsilon_mu= ' + str(epsilon_mu))
@@ -394,10 +393,11 @@ def plot_integration_theory_epslamsamll(guessed_paths, list_of_epsilons,sim,beta
         eps_lam_array = np.array(eps_lam_array)
         eps_mu_theory = np.linspace(0.0, 1.0, 1000)
         action_theory = np.array([action_o1_epsmu_norm(eps_mu, lam) for eps_mu in eps_mu_theory])
+        # action_theory = np.array([action_o1_epsmu_clancy_plus_clancy_norm(eps_lam_array[-1],eps_mu, lam) for eps_mu in eps_mu_theory])
         ax_correction.plot(eps_mu_theory, action_theory, linewidth=4, label='Theory')
         ax_tot.set_xlabel('eps_mu')
         ax_tot.set_ylabel('A')
-        ax_tot.set_title('Total action vs eps_lam' + ' lam=' + str(lam))
+        ax_tot.set_title('Total action vs eps_mu' + ' lam=' + str(lam))
         ax_tot.legend()
         plt.tight_layout()
         fig_tot.savefig('action_total_with_clancy' + '.png', dpi=200)
@@ -467,7 +467,11 @@ def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,gra
                 D = (-1 + f_of_d + np.sqrt(epsilon_lam ** 2 + f_of_d ** 2)) / (1 - epsilon_lam ** 2)
                 A_theory_clancy = -(1 / 2) * (q_star[2] + q_star[3]) - (gamma / sim_beta) * D
                 A_integration = simps(path[:, 2], path[:, 0]) + simps(path[:, 3], path[:, 1]) + I_addition_to_path
-                action_numerical_correction = A_integration - A_theory_clancy
+
+                action_numerical_correction = A_integration - shomo(sim_beta)
+
+                # action_numerical_correction = A_integration - A_theory_clancy
+
                 action_numeric.append(A_integration)
                 action_numeric_correction.append(action_numerical_correction)
     else:
@@ -591,13 +595,24 @@ def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,gra
     elif graph_type is 'b':
         beta_theory = np.linspace(min(beta),max(beta),1000)
         action_numeric_correction=np.array(action_numeric_correction)
-        action_theory = np.array([action_o1_epslam_norm(epsilon_lam, l) for l in beta_theory])
+        # action_theory = np.array([action_o1_epslam_norm(epsilon_lam, l) for l in beta_theory])
+
+        action_theory_mj = np.array([action_miki_jason_correction_norm(l) for l in beta_theory])
+        action_theory_correction = np.array([action_o2_small_eps_lam_small_eps_mu_sqr_norm(l) for l in beta_theory])
 
         ax_tot.plot(beta, action_numeric, linewidth=4, linestyle='None', markersize=10, Marker='o',
                     label='Numeric')
-        ax_correction.plot(beta, action_numeric_correction/epsilon_mu, linewidth=4, linestyle='None', markersize=10,
+
+        ax_correction.plot(beta, action_numeric_correction/epsilon_mu**2, linewidth=4, linestyle='None', markersize=10,
                            Marker='o', label='Numeric')
-        ax_correction.plot(beta_theory, action_theory, linewidth=4, label='Theory')
+        ax_correction.plot(beta_theory, action_theory_correction, linewidth=4, label='Theory correction')
+        ax_correction.plot(beta_theory, action_theory_mj, linewidth=4, label='Theory MJ', linestyle='--')
+
+        # ax_correction.plot(beta, action_numeric_correction/epsilon_mu, linewidth=4, linestyle='None', markersize=10,
+        #                    Marker='o', label='Numeric')
+        # ax_correction.plot(beta_theory, action_theory, linewidth=4, label='Theory')
+
+
         ax_tot.set_xlabel('Lambda')
         ax_tot.set_ylabel('A')
         ax_tot.set_title('Total action vs Lambda epslion= ' + str(list_of_epsilons))
@@ -606,8 +621,11 @@ def plot_integration_theory_z(guessed_paths, list_of_epsilons,sim,beta,gamma,gra
         fig_tot.savefig('action_total_with_clancy_epslam'+str(epsilon_lam).replace('.','')+'_epsmu'+str(epsilon_mu).replace('.','') + '.png', dpi=200)
 
         ax_correction.set_xlabel('Lambda')
-        ax_correction.set_ylabel('S(1)\epsilon_mu')
-        ax_correction.set_title('S(1)\epsilon_mu vs Lambda epsilon=' + str(list_of_epsilons))
+        # ax_correction.set_ylabel('S(1)\epsilon_mu')
+        # ax_correction.set_title('S(1)\epsilon_mu vs Lambda epsilon=' + str(list_of_epsilons))
+        ax_correction.set_ylabel('S(1)\epsilon^2')
+        ax_correction.set_title('S(1)\epsilon^2 vs Lambda epsilon=' + str(list_of_epsilons))
+
         ax_correction.legend()
         plt.tight_layout()
         fig_correction.savefig('action_correction_epsmu_multi_mu_lam' + str(epsilon_lam).replace('.','')+'_epsmu'+str(epsilon_mu).replace('.','') + '.png', dpi=200)
@@ -672,10 +690,30 @@ action_o1_epslam = lambda epsilon_lam,epsilon_mu,lam: (epsilon_lam*(-2 + lam + n
 
 action_o1_epslam_norm = lambda epsilon_lam,lam: (epsilon_lam*(-2 + lam + np.log(4) - 2*np.log(lam - lam*epsilon_lam**2 + np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 + lam**2*epsilon_lam**4)) - lam*epsilon_lam**2+ np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 + lam**2*epsilon_lam**4)))/(2*lam*(-1 + epsilon_lam**2))
 
-
 action_o1_epsmu = lambda epsilon_lam,epsilon_mu,lam: -(epsilon_lam*((1 + np.log((2*epsilon_mu**2)/lam))*(-1 + epsilon_mu**2) + (lam*np.log(-lam + lam*epsilon_mu**2 + np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_mu**2 + lam**2*epsilon_mu**4)) - (2 + lam*np.log(-lam + lam*epsilon_mu**2 + np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_mu**2 + lam**2*epsilon_mu**4)))*epsilon_mu**2 + np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_mu**2 + lam**2*epsilon_mu**4))/lam))/(2*epsilon_mu)
 
 action_o1_epsmu_norm = lambda epsilon_mu,lam: -(((1 + np.log((2*epsilon_mu**2)/lam))*(-1 + epsilon_mu**2) + (lam*np.log(-lam + lam*epsilon_mu**2 + np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_mu**2 + lam**2*epsilon_mu**4)) - (2 + lam*np.log(-lam + lam*epsilon_mu**2 + np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_mu**2 + lam**2*epsilon_mu**4)))*epsilon_mu**2 + np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_mu**2 + lam**2*epsilon_mu**4))/lam))/(2*epsilon_mu)
+
+shomo = lambda lam: 1/lam +np.log(lam)-1
+
+action_o1_epsmu_clancy_plus_clancy =  lambda epsilon_lam,epsilon_mu,lam,gamma: action_o1_epsmu(epsilon_lam,epsilon_mu,lam)+action_clancy(epsilon_lam,beta,gamma)-shomo(lam)
+
+action_o1_epsmu_clancy_plus_clancy_norm = lambda epsilon_lam,epsilon_mu,lam,gamma: action_o1_epsmu_norm(epsilon_mu,lam) + (action_clancy(epsilon_lam,beta,gamma)-shomo(lam))/epsilon_lam
+
+action_o2_small_eps_lam_small_eps_mu= lambda epsilon_lam,epsilon_mu,lam: (-(lam-1)**2/(2*lam**2))*(epsilon_lam**2+epsilon_lam*epsilon_mu+epsilon_mu**2)
+
+action_o2_small_eps_lam_small_eps_mu_sqr_norm= lambda lam: -3*((lam-1)**2)/(2*lam**2)
+
+action_miki_jason_correction = lambda epsilon,lam:-(( (lam-1)*(1-12*lam+3*lam**2)+8*(lam**2)*np.log(lam) )/(4*lam^3))*epsilon**2
+
+action_miki_jason_correction_norm = lambda lam:-(( (lam-1)*(1-12*lam+3*lam**2)+8*(lam**2)*np.log(lam) )/(4*lam**3))
+
+
+def action_clancy(eps,beta,gamma):
+    f_of_d = (1 / 2) * (beta / gamma) * (1 - eps ** 2)
+    D = (-1 + f_of_d + np.sqrt(eps ** 2 + f_of_d ** 2)) / (1 - eps ** 2)
+    return (1 / 2) * (np.log(1 + (1 - eps) * D) + np.log(1 + (1 + eps) * D)) - (gamma / beta) * D
+
 
 def eq_point_alpha(epsilon,beta,gamma):
     # what I need to return y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy
@@ -2314,21 +2352,21 @@ def plot_numerical_only(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, 
     delta_mu,delta_lam = 1 - epsilon_mu,1-epsilon_lam
 
     plt.plot(y1, p1, linewidth=4, label='Numerical, I= ' + str(round(I1, 4)))
-    plt.xlabel('x1')
+    plt.xlabel('y1')
     plt.ylabel('p1')
     plt.scatter((q_star[0], 0), (0, q_star[2]), c=('g', 'r'), s=(100, 100))
-    plt.title('p1 vs x1, lam=' + str(round(lam, 2)))
+    plt.title('p1 vs y1, lam=' + str(round(lam, 2)))
     plt.legend()
-    plt.savefig('p1_v_x1_' + case_to_run + '.png', dpi=500)
+    plt.savefig('p1_v_y1_' + case_to_run + '.png', dpi=500)
     plt.show()
 
     plt.plot(y2, p2, linewidth=4, label='Numerical')
     plt.scatter((q_star[1], 0), (0, q_star[3]), c=('g', 'r'), s=(100, 100))
-    plt.xlabel('x2')
+    plt.xlabel('y2')
     plt.ylabel('p2')
-    plt.title('p2 vs x2, lam=' + str(round(lam, 2)))
+    plt.title('p2 vs y2, lam=' + str(round(lam, 2)))
     plt.legend()
-    plt.savefig('p2_v_x2_' + case_to_run + '.png', dpi=500)
+    plt.savefig('p2_v_y2_' + case_to_run + '.png', dpi=500)
     plt.show()
 
     w, u, pw, pu = (y1 + y2) / 2, (y1 - y2) / 2, p1 + p2, p1 - p2
@@ -2352,6 +2390,13 @@ def plot_numerical_only(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, 
     plt.title('pu vs u, lam=' + str(lam))
     plt.legend()
     plt.savefig('pu_v_u_' + case_to_run + '.png', dpi=500)
+    plt.show()
+
+    plt.plot(w,u,linewidth=4, label='Numerical')
+    plt.xlabel('w')
+    plt.ylabel('u')
+    plt.title('w vs u, lam=' + str(round(lam, 2)))
+    plt.savefig('w_v_u_' + case_to_run + '.png', dpi=500)
     plt.show()
 
     # m=y1-y2
@@ -2722,7 +2767,7 @@ def man_div_path_and_fine_tuning(shot_angle,radius,t0,org_lin_combo,one_shot_dt,
     lin_combo,r,shot_angle,path=man_find_best_div_path(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta)
     lin_combo=man_find_fine_tuning(shot_angle, r, t0, lin_combo, one_shot_dt, q_star, J, shot_dq_dt,beta)
     # plot_all_var(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, J, shot_dq_dt,beta,case_to_run,t0)
-    # plot_numerical_only(shot_angle, lin_combo, one_shot_dt, r, t0, q_star, J, shot_dq_dt, beta, case_to_run,epsilon,lam)
+    plot_numerical_only(shot_angle, lin_combo, one_shot_dt, r, t0, q_star, J, shot_dq_dt, beta, case_to_run,epsilon,lam)
 
 
 def plot_all_var(shot_angle,lin_combo,one_shot_dt,radius,final_time_path,q_star,J,shot_dq_dt,beta,case_to_run,tf):
@@ -3011,7 +3056,7 @@ if __name__=='__main__':
     # dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
 
     # ODE parameters
-    stoptime=10.0
+    stoptime=20.0
     numpoints = 10000
 
 
@@ -3086,9 +3131,10 @@ if __name__=='__main__':
     #
     sim=['x','x']
     # epsilon_matrix=[[(0.02,0.05),(0.04,0.05),(0.06,0.05),(0.08,0.05),(0.1,0.05),(0.14,0.05),(0.18,0.05),(0.22,0.05),(0.26,0.05),(0.3,0.05),(0.36,0.05),(0.4,0.05),(0.45,0.05),(0.5,0.05),(0.55,0.05),(0.6,0.05),(0.65,0.05),(0.7,0.05),(0.75,0.05),(0.8,0.05),(0.85,0.05),(0.9,0.05),(0.93,0.05),(0.94,0.05),(0.98,0.05)]]
-    # epsilon_matrix = [[(e,0.02) for e in np.linspace(0.02,0.85,20)],[(e,0.04) for e in np.linspace(0.02,0.85,20)],[(e,0.06) for e in np.linspace(0.02,0.85,20)],[(e,0.08) for e in np.linspace(0.02,0.85,20)],[(e,0.1) for e in np.linspace(0.02,0.85,20)],[(e,0.12) for e in np.linspace(0.02,0.85,20)]]
+    # epsilon_matrix = [[(e,0.02) for e in np.linspace(0.02,0.98,20)],[(e,0.04) for e in np.linspace(0.02,0.98,20)],[(e,0.06) for e in np.linspace(0.02,0.98,20)],[(e,0.08) for e in np.linspace(0.02,0.98,20)],[(e,0.1) for e in np.linspace(0.02,0.98,20)],[(e,0.12) for e in np.linspace(0.02,0.98,20)]]
     # epsilon_matrix = [[(e,0.06) for e in np.linspace(-0.92,0.92,20)]]
     # epsilon_matrix = [[(0.02,e) for e in np.linspace(0.02,0.9,20)],[(0.04,e) for e in np.linspace(0.02,0.9,20)],[(0.06,e) for e in np.linspace(0.02,0.9,20)],[(0.08,e) for e in np.linspace(0.02,0.9,20)],[(0.1,e) for e in np.linspace(0.02,0.9,20)],[(0.12,e) for e in np.linspace(0.02,0.9,20)]]
+    # epsilon_matrix = [[(0.02,e) for e in np.linspace(0.02,0.98,10)],[(0.12,e) for e in np.linspace(0.02,0.98,10)]]
 
     # temp_array_to_matrix = [-0.98,-0.96,-0.94,-0.92,-0.9,-0.88,-0.86,-0.84,-0.82,-0.8,-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.002,0.002,0.006,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.82,0.84,0.86,0.88,0.9,0.92,0.94,0.96,0.98]
     # epsilon_matrix = [[(e, 0.3) for e in temp_array_to_matrix]]
@@ -3098,7 +3144,7 @@ if __name__=='__main__':
 
     sim_paths=[]
     for case,epsilons in zip(sim,epsilon_matrix):
-        sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
+        # sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
     # # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]/(1-eps[1])] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[1]),lambda p,eps,l:p[:,2]],'dem',['p2','p1'],
     # #              ['y2','y1/delta_mu'],['(p2-p2(0))/delta_mu','p1'],beta/gamma,['(p2-p2(0))/delta_mu vs y2','p1 vs y1/delta'],['p2_norm_v_y2','p1_norm_v_y1'],labeladdon=lambda x,y:'')
     # # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[0]),lambda p,eps,l:p[:,2]/(1-eps[0])],'del',['pl2','pl1'],
@@ -3106,12 +3152,12 @@ if __name__=='__main__':
     # plot_integation(sim_paths, epsilon_matrix,beta/gamma,'del')
     # plot_integration_theory_z(sim_paths, epsilon_matrix,sim ,beta, gamma,'s')
     # plot_integration_theory_epslamsamll(sim_paths,epsilon_matrix,sim,beta,gamma,'b')
-    plot_integration_theory_epslamsamll(sim_paths,epsilon,sim,beta,gamma,'b')
+    # plot_integration_theory_epslamsamll(sim_paths,epsilon_matrix,sim,beta,gamma,'s')
 
 
     # plot_eq_points(sim,beta,epsilon_matrix,t,gamma)
 
-    # beta_epsilon=(0.3,0.05)
-    # sim_paths.append(multi_eps_normalized_path('x', beta_epsilon, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
-    # plot_integration_theory_z(sim_paths, beta_epsilon, sim, beta, gamma, 'b')
+        beta_epsilon=(0.2,0.2)
+        sim_paths.append(multi_eps_normalized_path('x', beta_epsilon, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
+    plot_integration_theory_z(sim_paths, beta_epsilon, sim, beta, gamma, 'b')
     # export_action_paths(sim_paths, epsilon_matrix,beta,gamma,t)
