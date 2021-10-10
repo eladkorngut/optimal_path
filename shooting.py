@@ -8,6 +8,10 @@ from pylab import figure, plot, xlabel, grid, legend, title,savefig,ylabel
 import numdifftools as ndft
 from itertools import cycle
 import csv
+
+from scipy import interpolate
+
+
 from decimal import Decimal
 
 
@@ -339,19 +343,19 @@ def plot_integration_theory_epslamsamll(guessed_paths, list_of_epsilons,sim,beta
                 action_numeric_correction_o2 = np.array(action_numeric_correction_o2)
                 ax_tot.plot(eps_mu_array, action_numeric, linewidth=4, linestyle='None', markersize=10, Marker='o',
                             label='epsilon=' + str(epsilon_lam))
-                ax_correction.plot(eps_mu_array, action_numeric_correction / epsilon_lam, linewidth=4, linestyle='None',
-                                   markersize=10,
-                                   Marker='o', label='epsilon=' + str(epsilon_lam))
-                # ax_correction.plot(eps_mu_array, action_numeric_correction, linewidth=4, linestyle='None',
+                # ax_correction.plot(eps_mu_array, action_numeric_correction / epsilon_lam, linewidth=4, linestyle='None',
                 #                    markersize=10,
                 #                    Marker='o', label='epsilon=' + str(epsilon_lam))
+                ax_correction.plot(eps_mu_array, action_numeric_correction, linewidth=4, linestyle='None',
+                                   markersize=10,
+                                   Marker='o', label='epsilon=' + str(epsilon_lam))
 
-                ax_correction_o2.plot(eps_mu_array, action_numeric_correction_o2 / epsilon_lam**2, linewidth=4, linestyle='None',
-                                   markersize=10,
-                                   Marker='o', label='epsilon=' + str(epsilon_lam))
-                # ax_correction_o2.plot(eps_mu_array, action_numeric_correction_o2, linewidth=4, linestyle='None',
+                # ax_correction_o2.plot(eps_mu_array, action_numeric_correction_o2 / epsilon_lam**2, linewidth=4, linestyle='None',
                 #                    markersize=10,
                 #                    Marker='o', label='epsilon=' + str(epsilon_lam))
+                ax_correction_o2.plot(eps_mu_array, action_numeric_correction_o2, linewidth=4, linestyle='None',
+                                   markersize=10,
+                                   Marker='o', label='epsilon=' + str(epsilon_lam))
 
                 ax_correction_o1_non_norm.plot(eps_mu_array, action_numeric_correction, linewidth=4, linestyle='None',
                                    markersize=10,
@@ -410,8 +414,8 @@ def plot_integration_theory_epslamsamll(guessed_paths, list_of_epsilons,sim,beta
     elif graph_type is 's':
         eps_mu_array = np.array(eps_mu_array)
         eps_lam_array = np.array(eps_lam_array)
-        eps_mu_theory = np.linspace(0.0, 1.0, 1000)
-        # eps_mu_theory = np.linspace(-1.0, 1.0, 1000)
+        # eps_mu_theory = np.linspace(0.0, 1.0, 1000)
+        eps_mu_theory = np.linspace(-1.0, 1.0, 1000)
         action_theory = np.array([action_o1_epsmu_norm(eps_mu, lam) for eps_mu in eps_mu_theory])
         # action_theory = np.array([action_o1_epsmu_clancy_plus_clancy_norm(eps_lam_array[-1],eps_mu, lam) for eps_mu in eps_mu_theory])
         ax_correction.plot(eps_mu_theory, action_theory, linewidth=4, label='Theory')
@@ -716,6 +720,19 @@ z_eps_mu = lambda y1, y2,epsilon_lam,epsilon_mu,lam:(2 +2*epsilon_lam*epsilon_mu
 y1_path_clancy = lambda p1,p2,epsilon_mu,lam: (np.exp(p1) *(-1 +epsilon_mu)+ np.exp(2*p1)*lam *(-1 +epsilon_mu)** 2 +np.exp(p2)*(1 +epsilon_mu) - np.sqrt(np.exp(2*p1) *(-1 +epsilon_mu) ** 2 +2 *np.exp(p1 +p2)*(-1 +epsilon_mu ** 2) +np.exp(2 *p2)*((1 +epsilon_mu) ** 2 +np.exp(2 *p1) * lam ** 2 *(-1 +epsilon_mu ** 2) ** 2))) /(2 * np.exp(p1) *lam * (np.exp(p1) *(-1 +epsilon_mu) ** 2 +np.exp(p2)*(-1 +epsilon_mu ** 2)))
 
 y2_path_clancy = lambda p1,p2,epsilon_mu,lam: (-(np.exp(p1)*(-1 + epsilon_mu)) + np.exp(p2)*(1 + epsilon_mu)*(-1 + np.exp(p2)*lam*(1 + epsilon_mu)) - np.sqrt(np.exp(2*p1)*(-1 + epsilon_mu)**2 + 2*np.exp(p1 + p2)*(-1 + epsilon_mu**2) + np.exp(2*p2)*((1 + epsilon_mu)**2 + np.exp(2*p1)*lam**2*(-1 + epsilon_mu**2)**2)))/(2*np.exp(p2)*lam*(np.exp(p2)*(1 + epsilon_mu)**2 + np.exp(p1)*(-1 + epsilon_mu**2)))
+
+p1_path_clancy = lambda y1,y2,epsilon_mu,lam: np.log(y1/(lam*(1-epsilon_mu)*(1/2-y1)*(y1+y2)))
+
+p2_path_clancy = lambda y1,y2,epsilon_mu,lam: np.log(y2/(lam*(1+epsilon_mu)*(1/2-y2)*(y1+y2)))
+
+w_path_clancy = lambda p1,p2,epsilon_mu,lam: (y1_path_clancy(p1,p2,epsilon_mu,lam)+y2_path_clancy(p1,p2,epsilon_mu,lam))/2
+
+
+u_path_clancy = lambda y1,y2,epsilon_mu,lam: (y1_path_clancy(y1,y2,epsilon_mu,lam)-y2_path_clancy(y1,y2,epsilon_mu,lam))/2
+
+# w_clancy_correction = lambda p1,p2,epsilon_mu,lam: (np.exp((-p1-p2)/2)*(-2*np.exp((p1+p2)/4)*epsilon_mu**2+np.exp((p1+p2)/2)*lam*(-1+epsilon_mu**2) +np.sqrt(4*np.exp((p1+p2)/2)*epsilon_mu**2+np.exp(p1+p2)*lam**2*(-1+epsilon_mu**2)**2)))/(4*lam*epsilon_mu)
+
+w_clancy_correction= lambda p1,p2,epsilon_mu,lam: (np.exp(-p1-p2)*(-2*np.exp((p1 + p2)/2)*epsilon_mu**2 + np.exp(p1+p2)*lam*(-1 + epsilon_mu**2) + np.sqrt(np.exp(p1 + p2)*(4*epsilon_mu**2 + np.exp(p1 + p2)*lam**2*(-1 + epsilon_mu**2)**2))))/(4*lam*epsilon_mu)
 
 y1_path_clancy_z = lambda z,epsilon_mu,epsilon_lam,lam: ((1 + z - z*epsilon_lam)*((-1 + epsilon_mu)/(1 + z - z*epsilon_lam) + (lam*(-1 + epsilon_mu)**2)/(1 + z - z*epsilon_lam)**2 + (1 + epsilon_mu)/(1 + z + z*epsilon_lam) - np.sqrt((lam**2 + 4*z**2*epsilon_lam**2 - 8*z*(1 + z)*epsilon_lam*epsilon_mu + (4*(1 + z)**2 - 2*lam**2)*epsilon_mu**2 + lam**2*epsilon_mu**4)/((1 + z)**2 - z**2*epsilon_lam**2)**2)))/(2*lam*((-1 + epsilon_mu)**2/(1 + z - z*epsilon_lam) + (-1 + epsilon_mu**2)/(1 + z + z*epsilon_lam)))
 
@@ -1086,7 +1103,9 @@ def best_diverge_path(shot_angle,radius,org_lin_combo,one_shot_dt,q_star,final_t
     return lin_combo,radius,shot_angle
 
 def fine_tuning(shot_angle,org_lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt):
-    min_accurecy,dl=0.001,1e-4
+    # min_accurecy,dl=0.001,1e-4
+    min_accurecy,dl=1e-6,1e-4
+    # min_accurecy,dl=1e-14,1e-2
     path = one_shot(shot_angle,org_lin_combo,q_star,radius,final_time_path,one_shot_dt,J,shot_dq_dt)
     distance_from_theory = lambda p:np.sqrt(((p[:,0][-1]-p[:,1][-1])/2)**2+(q_star[2]-q_star[3]-(p[:,2][-1]-p[:,3][-1]))**2)
     lin_combo = org_lin_combo
@@ -1104,9 +1123,12 @@ def fine_tuning(shot_angle,org_lin_combo,q_star,radius,final_time_path,one_shot_
                 current_distance=distance_from_theory(path_down)
                 lin_combo=lin_combo-dl
             elif dl<1e-16:
+            # elif dl < 1e-25:
                 break
             else:
-                dl=dl/10
+                # dl=dl/10
+                # dl=dl/1.1
+                dl=dl/2
     return lin_combo
 
 def guess_path(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,org_radius,sample_size,J,shot_dq_dt):
@@ -1392,6 +1414,19 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         plt.show()
 
 
+        for path, epsilon in zip(guessed_paths, list_of_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            pu_for_path = path[:, 2] - path[:, 3]
+            u_for_path = (path[:, 0] - path[:, 1]) / 2
+            plt.plot(u_for_path, pu_for_path / epsilon_lam, linewidth=4,
+                     label='Numerical eps=' + str(epsilon))
+        plt.xlabel('u')
+        plt.ylabel('pu/eps')
+        plt.title('pu/eps vs u, lam=' + str(lam)+ ' '+ sim_label)
+        plt.legend()
+        plt.savefig('pu_v_u_numerical_only_pu_div_eps' + save_label + '.png', dpi=500)
+        plt.show()
+
         A_numerical, A_theory, alpha_list_w, A_numerical_norm = [], [], [], []
         for path, epsilon in zip(guessed_paths, list_of_epsilons):
             epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
@@ -1580,11 +1615,11 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
             epsilon_numerical = epsilon_mu if case_to_run is 'la' else epsilon_lam
             plt.plot(path[:, 0], path[:, 2], linewidth=4,
                      label='Numerical eps=' + str(epsilon))
-        plt.xlabel('x1')
+        plt.xlabel('y1')
         plt.ylabel('p1')
-        plt.title('p1 vs x1, lam=' + str(lam) + ' ' + sim_label)
+        plt.title('p1 vs y1, lam=' + str(lam) + ' ' + sim_label)
         plt.legend()
-        plt.savefig('p1_v_x1_' + save_label + '.png', dpi=500)
+        plt.savefig('p1_v_y1_' + save_label + '.png', dpi=500)
         plt.show()
 
         for path, epsilon in zip(guessed_paths, list_of_epsilons):
@@ -1592,11 +1627,11 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
             epsilon_numerical = epsilon_mu if case_to_run is 'la' else epsilon_lam
             plt.plot(path[:, 1], path[:, 3], linewidth=4,
                      label='Numerical eps=' + str(epsilon))
-        plt.xlabel('x2')
+        plt.xlabel('y2')
         plt.ylabel('p2')
-        plt.title('p2 vs x2, lam=' + str(lam) + ' ' + sim_label)
+        plt.title('p2 vs y2, lam=' + str(lam) + ' ' + sim_label)
         plt.legend()
-        plt.savefig('p2_v_x2_' + save_label + '.png', dpi=500)
+        plt.savefig('p2_v_y2_' + save_label + '.png', dpi=500)
         plt.show()
         count=count+1
 
@@ -1812,7 +1847,8 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
         I_addition_to_path = simps(py1_linear, y1_for_linear) +simps(py2_linear, y2_for_linear)
         integral_numeric = simps(path[:, 2], path[:, 0]) + simps(path[:, 3],path[:, 1])
         integral_numeric_o2 = integral_numeric + I_addition_to_path -action_clancy(epsilon_mu,lam,1.0) - action_o1_epsmu(epsilon_lam,epsilon_mu,lam)
-        A_numerical.append(integral_numeric_o2)
+        # A_numerical.append(integral_numeric_o2)
+        A_numerical.append(integral_numeric)
         A_numerical_o1.append(integral_numeric + I_addition_to_path -action_clancy(epsilon_mu,lam,1.0))
         A_numerical_norm.append(integral_numeric_o2/epsilon_lam**2)
     A_o2.append(A_numerical_norm)
@@ -1857,6 +1893,27 @@ def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
     plt.savefig('so2_v_eps_lam_' + save_label + '.png', dpi=500)
     plt.show()
 
+    plt.plot(np.array(epsilon_list_numerical_epslam), A_numerical, linewidth=4, linestyle='None', Marker='o',
+             label='Numerical',markersize=10)
+    fit_linear_eps_lam=np.polyfit(np.array(epsilon_list_numerical_epslam),A_numerical,1)
+    ang_coeff = fit_linear_eps_lam[0]
+    intercept = fit_linear_eps_lam[1]
+    fit_eq = ang_coeff * np.array(epsilon_list_numerical_epslam) + intercept
+    plt.plot(np.array(epsilon_list_numerical_epslam), fit_eq, linewidth=4, linestyle='-',
+             label='Fit m= '+str(round(ang_coeff,4))+' , b=' + str(round(intercept,4)))
+    # fit_theory = action_o1_epsmu_norm(epsilon_mu,lam)*np.array(epsilon_list_numerical_epslam)
+    # plt.plot(np.array(epsilon_list_numerical_epslam), fit_theory, linewidth=4, linestyle='--',
+    #          label='Theory m='+str(round(action_o1_epsmu_norm(epsilon_mu,lam),4)))
+    plt.xlabel('epsilon_lam')
+    plt.ylabel('s1')
+    plt.title('s1 vs epsilon_lam, lam=' + str(lam) + ' ')
+    plt.legend()
+    plt.savefig('so1_v_eps_lam_epsmu_const' + save_label + '.png', dpi=500)
+    plt.show()
+
+
+
+
     eps_mu_theory = np.linspace(min(epsilon_list_numerical), max(epsilon_list_numerical), 1000)
     eps_lam_theory = np.linspace(min(epsilon_list_numerical_epslam), max(epsilon_list_numerical_epslam), 1000)
     action_o1_theory=np.array([action_o1_epsmu(eps_lam,eps_mu,lam) for eps_lam,eps_mu in zip(eps_lam_theory,eps_mu_theory)])
@@ -1875,18 +1932,63 @@ def plot_sim_path_special_case(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf)
     lam = beta / gamma
     x0,s0 = (lam - 1) / lam, 1 / lam + np.log(lam) - 1
     A_w,A_u,alpha_list_w,alpha_list_u,path_list,A_o2=[],[],[],[],[],[]
+
+
+    for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
+        epsilon=list_of_epsilons[0]
+        epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+        path_clancy=guessed_paths[0]
+        y1_clancy = path_clancy[:, 0]
+        y2_clancy = path_clancy[:, 1]
+        p1_clancy= path_clancy[:, 2]
+        p2_clancy=path_clancy[:, 3]
+        connection_w_u_clancy = interpolate.interp1d((y1_clancy - y2_clancy) / 2, (y1_clancy + y2_clancy) / 2, axis=0, fill_value="extrapolate")
+        connection_u_w_clancy=interpolate.interp1d((y1_clancy + y2_clancy) / 2, (y1_clancy - y2_clancy) / 2, axis=0, fill_value="extrapolate")
+        connection_y1_y2_clancy=interpolate.interp1d(y1_clancy, y2_clancy, axis=0, fill_value="extrapolate")
+        connection_y2_y1_clancy=interpolate.interp1d(y2_clancy, y1_clancy, axis=0, fill_value="extrapolate")
+
+        connection_pw_w_clancy = interpolate.interp1d(p1_clancy + p2_clancy, (y1_clancy + y2_clancy) / 2, axis=0,
+                                                      fill_value="extrapolate")
+
+        connection_pw_p2_clancy = interpolate.interp1d(p1_clancy + p2_clancy, p2_clancy, axis=0,
+                                                       fill_value="extrapolate")
+
+        connection_pw_p1_clancy = interpolate.interp1d(p1_clancy + p2_clancy, p1_clancy, axis=0,
+                                                       fill_value="extrapolate")
+        connection_u_y1_clancy = interpolate.interp1d((y1_clancy-y2_clancy)/2,y1_clancy, axis=0,
+                                                      fill_value="extrapolate")
+
+        y1_0_clancy, y2_0_clancy, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt, J = eq_hamilton_J(case_to_run, beta,
+                                                                                              (0.0, epsilon_mu), t,
+                                                                                              gamma)
+        y1_path_clancy_theorm, y2_path_clancy_theorm = np.linspace(y1_0_clancy, 0.0, 10000), np.linspace(y2_0_clancy, 0.0, 10000)
+
+    for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
+        guessed_paths.pop(0)
+        list_of_epsilons.pop(0)
+
+
     for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
         path_list.append(guessed_paths)
+        z1_v_y1= lambda y1,epsilon_mu: (2*y1)/((-1+2*y1)*(-1+epsilon_mu))
+        z2_v_y1= lambda y2,epsilon_mu: (-2*y2)/((-1+2*y2)*(1+epsilon_mu))
         for path, epsilon in zip(guessed_paths, list_of_epsilons):
             epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
-            y1=path[:, 0]
-            p1=path[:, 2]
-            plt.plot(y1, p1, linewidth=4,
-                     label='Numerical eps=' + str(epsilon))
+            # y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,(0.0,epsilon_mu),t,gamma)
+            # y1_path_clancy_theorm,y2_path_clancy_theorm=np.linspace(y1_0,0.0,10000),np.linspace(y2_0,0.0,10000)
+            y2_for_theory=connection_y1_y2_clancy(path[:, 0])
+            plt.plot(path[:, 0], path[:, 2], linewidth=4,label='Numerical eps=' + str(epsilon))
+            # p1_clancy_theory=[p1_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:,0],path[:,1])]
+            # p1_clancy_theory=[p1_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(y1_path_clancy_theorm,y2_path_clancy_theorm)]
+            p1_clancy_theory=[p1_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:, 0],y2_for_theory)]
+            # plt.plot(path[:, 0], p1_clancy_theory, linewidth=4,linestyle='--',label='Theory clancy eps=' + str(epsilon))
+            # plt.plot(y1_path_clancy_theorm, p1_clancy_theory, linewidth=4,linestyle='--',label='Theory clancy eps=' + str(epsilon))
+            plt.plot(path[:, 0], p1_clancy_theory, linewidth=4,linestyle='--',label='Theory clancy eps=' + str(epsilon))
+
         plt.xlabel('y1')
         plt.ylabel('p1')
         plt.title('p1 vs y1, lam=' + str(lam) )
-        plt.legend()
+        # plt.legend()
         plt.savefig('p1_v_y1_norm' + '.png', dpi=500)
         plt.show()
 
@@ -1900,13 +2002,21 @@ def plot_sim_path_special_case(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf)
             # plt.plot(y2,
             #          [np.log(gamma / (beta * (1 - 2*i))) for i in y2],
             #          linewidth=4, linestyle='--', color='y', label='Theory 1d homo')
-        plt.plot(y2,
-                 [np.log(gamma / (beta * (1 - 2*i))) for i in y2],
-                 linewidth=4, linestyle='--',label='Theory 1d homo')
+        # plt.plot(y2,
+        #          [np.log(gamma / (beta * (1 - 2*i))) for i in y2],
+        #          linewidth=4, linestyle='--',label='Theory 1d homo')
+
+            # y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,(0.0,epsilon_mu),t,gamma)
+            # y1_path_clancy_theorm,y2_path_clancy_theorm=np.linspace(y1_0,0.0,10000),np.linspace(y2_0,0.0,10000)
+            y1_for_theory = connection_y2_y1_clancy(path[:, 1])
+            # p2_clancy_theory = [p2_path_clancy(y1, y2, epsilon_mu, lam) for y1, y2 in zip(path[:, 0], path[:, 1])]
+            p2_clancy_theory = [p2_path_clancy(y1, y2, epsilon_mu, lam) for y1, y2 in zip(y1_for_theory, path[:, 1])]
+            # plt.plot(y2_path_clancy_theorm, p2_clancy_theory, linewidth=4,linestyle='--', label='Theory clancy eps=' + str(epsilon))
+            plt.plot(path[:, 1], p2_clancy_theory, linewidth=4,linestyle='--', label='Theory clancy eps=' + str(epsilon))
         plt.xlabel('y2')
         plt.ylabel('p2')
         plt.title('p2 vs y2, lam=' + str(lam))
-        plt.legend()
+        # plt.legend()
         plt.savefig('p2_v_y2' + '.png', dpi=500)
         plt.show()
 
@@ -1923,6 +2033,21 @@ def plot_sim_path_special_case(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf)
         plt.savefig('y1_v_y2' + '.png', dpi=500)
         plt.show()
 
+
+        for path, epsilon in zip(guessed_paths, list_of_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            y2=path[:, 1]
+            y1divy1star=path[:, 0]*(lam-(-2+lam)*epsilon_mu)/(lam-lam*epsilon_mu)
+            plt.plot(y1divy1star, y2, linewidth=4,
+                     label='Numerical eps=' + str(epsilon))
+        plt.xlabel('y2star *y1/y1star')
+        plt.ylabel('y2')
+        plt.title('y2 vs y2star*y1/y1star, lam=' + str(lam))
+        plt.legend()
+        plt.savefig('y1stardiv_v_y2' + '.png', dpi=500)
+        plt.show()
+
+
         for path, epsilon in zip(guessed_paths, list_of_epsilons):
             epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
             y1=path[:, 0]
@@ -1936,6 +2061,356 @@ def plot_sim_path_special_case(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf)
         plt.savefig('y1_v_p2' + '.png', dpi=500)
         plt.show()
 
+    for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
+        path_list.append(guessed_paths)
+        for path, epsilon in zip(guessed_paths, list_of_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            # y1=path[:, 0]
+            # p1=path[:, 2]
+            # y2=path[:, 1]
+            # p2=path[:, 3]
+            u_path,pu_path=(path[:, 0]-path[:, 1])/2,path[:, 2]-path[:, 3]
+            y2_for_theory=connection_y1_y2_clancy(path[:, 0])
+            plt.plot(u_path, pu_path, linewidth=4,label='Numerical eps=' + str(epsilon))
+            u_path_theory=(path[:, 0]-y2_for_theory)/2
+
+            # y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,(0.0,epsilon_mu),t,gamma)
+            # y1_path_clancy_theorm,y2_path_clancy_theorm=np.linspace(y1_0,0.0,10000),np.linspace(y2_0,0.0,10000)
+
+            p1_clancy_theory=np.array([p1_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:, 0],y2_for_theory)])
+            p2_clancy_theory=np.array([p2_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:, 0],y2_for_theory)])
+            # p1_clancy_theory=np.array([p1_path_clancy(y1,y2,epsilon_mu,lam/(1+epsilon_mu*epsilon_lam)) for y1,y2 in zip(path[:,0],path[:,1])])
+            # p2_clancy_theory=np.array([p2_path_clancy(y1,y2,epsilon_mu,lam/(1+epsilon_mu*epsilon_lam)) for y1,y2 in zip(path[:,0],path[:,1])])
+            # plt.plot((y1_path_clancy_theorm-y2_path_clancy_theorm)/2, p1_clancy_theory-p2_clancy_theory, linewidth=4,linestyle='--',
+            #          label='Theory clancy eps=' + str(epsilon))
+            plt.plot(u_path_theory, p1_clancy_theory-p2_clancy_theory, linewidth=4,linestyle='--',
+                     label='Theory clancy eps=' + str(epsilon))
+
+        plt.xlabel('u')
+        plt.ylabel('pu')
+        plt.title('pu vs u, lam=' + str(lam) )
+        # plt.legend()
+        plt.savefig('pu_v_u' + '.png', dpi=500)
+        plt.show()
+
+
+    for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
+        path_list.append(guessed_paths)
+        for path, epsilon in zip(guessed_paths, list_of_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            u_path,pu_path=(path[:, 0]-path[:, 1])/2,path[:, 2]-path[:, 3]
+            y2_for_theory=connection_y1_y2_clancy(path[:, 0])
+            u_path_theory=(path[:, 0]-y2_for_theory)/2
+            p1_clancy_theory=np.array([p1_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:, 0],y2_for_theory)])
+            p2_clancy_theory=np.array([p2_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:, 0],y2_for_theory)])
+            plt.plot(u_path_theory,np.array((pu_path - (p1_clancy_theory-p2_clancy_theory))/epsilon_lam), linewidth=4,linestyle='-',
+                     label='Sub=' + str(epsilon))
+
+        plt.xlabel('u')
+        plt.ylabel('(pu-pu_clancy)/eps_lam')
+        plt.title('(pu-pu_clancy)/eps_lam vs u, lam=' + str(lam) )
+        # plt.legend()
+        plt.savefig('pu_sub_v_u' + '.png', dpi=500)
+        plt.show()
+
+
+    for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
+        path_list.append(guessed_paths)
+        for path, epsilon in zip(guessed_paths, list_of_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            # y1=path[:, 0]
+            # p1=path[:, 2]
+            # y2=path[:, 1]
+            # p2=path[:, 3]
+            w_path,pw_path=(path[:, 0]+path[:, 1])/2,path[:, 2]+path[:, 3]
+            y2_for_theory=connection_y1_y2_clancy(path[:, 0])
+            w_path_theory=(path[:, 0]+y2_for_theory)/2
+            # plt.plot((y1+y2)/2, p1+p2, linewidth=4,label='Numerical eps=' + str(epsilon))
+            plt.plot(w_path, pw_path, linewidth=4,label='Numerical eps=' + str(epsilon))
+
+
+            # y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,(0.0,epsilon_mu),t,gamma)
+            # y1_path_clancy_theorm,y2_path_clancy_theorm=np.linspace(y1_0,0.0,10000),np.linspace(y2_0,0.0,10000)
+
+            # p1_clancy_theory=np.array([p1_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:,0],path[:,1])])
+            # p2_clancy_theory=np.array([p2_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:,0],path[:,1])])
+            p1_clancy_theory=np.array([p1_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:, 0],y2_for_theory)])
+            p2_clancy_theory=np.array([p2_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:, 0],y2_for_theory)])
+
+            # p1_clancy_theory=np.array([p1_path_clancy(y1,y2,epsilon_mu,lam/(1+epsilon_mu*epsilon_lam)) for y1,y2 in zip(path[:,0],path[:,1])])
+            # p2_clancy_theory=np.array([p2_path_clancy(y1,y2,epsilon_mu,lam/(1+epsilon_mu*epsilon_lam)) for y1,y2 in zip(path[:,0],path[:,1])])
+            # plt.plot((y1+y2)/2, p1_clancy_theory+p2_clancy_theory, linewidth=4,linestyle='--',
+            #          label='Theory clancy eps=' + str(epsilon))
+            plt.plot(w_path_theory, p1_clancy_theory+p2_clancy_theory, linewidth=4,linestyle='--',
+                     label='Theory clancy eps=' + str(epsilon))
+        plt.xlabel('w')
+        plt.ylabel('pw')
+        plt.title('pw vs w, lam=' + str(lam) )
+        # plt.legend()
+        plt.savefig('pw_v_w' + '.png', dpi=500)
+        plt.show()
+
+        for guessed_paths, case_to_run, list_of_epsilons in zip(sim_paths, list_sims, epsilon_matrix):
+            path_list.append(guessed_paths)
+            for path, epsilon in zip(guessed_paths, list_of_epsilons):
+                epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+                # y1 = path[:, 0]
+                # p1 = path[:, 2]
+                # y2 = path[:, 1]
+                # p2 = path[:, 3]
+                plt.plot((y1 - y2) / 2, (y1 + y2) / 2, linewidth=4, label='Numerical eps=' + str(epsilon))
+                f = interpolate.interp1d((y1 - y2) / 2, (y1 + y2) / 2,axis=0, fill_value="extrapolate")
+                temp_theory=np.linspace(0,(y1[-1] - y2[-1]) / 2)
+                w_theory_interplot=f(temp_theory)
+                plt.plot(temp_theory, w_theory_interplot,linestyle=':', linewidth=4, label='Extra=' + str(epsilon))
+            plt.xlabel('u')
+            plt.ylabel('w')
+            plt.title('w vs u, lam=' + str(lam))
+            plt.legend()
+            plt.savefig('w_v_u' + '.png', dpi=500)
+            plt.show()
+
+        for guessed_paths, case_to_run, list_of_epsilons in zip(sim_paths, list_sims, epsilon_matrix):
+            path_list.append(guessed_paths)
+            for path, epsilon in zip(guessed_paths, list_of_epsilons):
+                epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+                y1 = path[:, 0]
+                p1 = path[:, 2]
+                y2 = path[:, 1]
+                p2 = path[:, 3]
+                plt.plot(p1+p2, p1-p2, linewidth=4, label='Numerical eps=' + str(epsilon))
+            plt.xlabel('pw')
+            plt.ylabel('pu')
+            plt.title('pw vs pu, lam=' + str(lam))
+            # plt.legend()
+            plt.savefig('pw_v_pu' + '.png', dpi=500)
+            plt.show()
+
+            for guessed_paths, case_to_run, list_of_epsilons in zip(sim_paths, list_sims, epsilon_matrix):
+                path_list.append(guessed_paths)
+                for path, epsilon in zip(guessed_paths, list_of_epsilons):
+                    epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+                    y1 = path[:, 0]
+                    p1 = path[:, 2]
+                    y2 = path[:, 1]
+                    p2 = path[:, 3]
+
+                    pw_for_theory = connection_pw_w_clancy((path[:, 0]+path[:, 1])/2)
+                    # p2_clancy_theory = [p2_path_clancy(y1, y2, epsilon_mu, lam) for y1, y2 in zip(path[:, 0], path[:, 1])]
+                    p2_clancy_theory = [w_path_clancy(y1, y2, epsilon_mu, lam) for y1, y2 in
+                                        zip(y1_for_theory, path[:, 1])]
+
+                    plt.plot(p1 + p2, (y1+y2)/2, linewidth=4, label='Numerical eps=' + str(epsilon))
+                    connection_pw_w_clancy = interpolate.interp1d(p1 + p2, (y1+y2)/2, axis=0,
+                                                                   fill_value="extrapolate")
+                    temp_theory = np.linspace(0,p1[-1]+p2[-1])
+                    w_theory_interplot = connection_pw_w_clancy(temp_theory)
+                    plt.plot(temp_theory, w_theory_interplot, linestyle=':', linewidth=4, label='Extra=' + str(epsilon))
+
+                plt.xlabel('pw')
+                plt.ylabel('w')
+                plt.title('w vs pw, lam=' + str(lam))
+                # plt.legend()
+                plt.savefig('w_v_pw' + '.png', dpi=500)
+                plt.show()
+
+
+    for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
+        path_list.append(guessed_paths)
+        for path, epsilon in zip(guessed_paths, list_of_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            w_path,pw_path=(path[:, 0]+path[:, 1])/2,path[:, 2]+path[:, 3]
+            connection_pw_p1_clancy = interpolate.interp1d(p1 + p2, path[:, 0], axis=0,
+                                                          fill_value="extrapolate")
+            plt.plot(pw_path, path[:,0], linewidth=4,label='Numerical eps=' + str(epsilon))
+            temp_theory = np.linspace(0, p1[-1] + p2[-1])
+            p1_theory_interplot = connection_pw_p1_clancy(temp_theory)
+            plt.plot(temp_theory, p1_theory_interplot, linestyle=':', linewidth=4, label='Extra=' + str(epsilon))
+        plt.xlabel('pw')
+        plt.ylabel('p1')
+        plt.title('p1 vs pw, lam=' + str(lam) )
+        # plt.legend()
+        plt.savefig('p1_v_pw' + '.png', dpi=500)
+        plt.show()
+
+
+    for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
+        path_list.append(guessed_paths)
+        for path, epsilon in zip(guessed_paths, list_of_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            u_path=(path[:, 0]-path[:, 1])/2
+            connection_u_y1_clancy = interpolate.interp1d(u_path, path[:, 0], axis=0,
+                                                          fill_value="extrapolate")
+            plt.plot(u_path, path[:,0], linewidth=4,label='Numerical eps=' + str(epsilon))
+            temp_theory = np.linspace(0,u_path[-1])
+            u_theory_interplot = connection_u_y1_clancy(temp_theory)
+            plt.plot(temp_theory, u_theory_interplot, linestyle=':', linewidth=4, label='Extra=' + str(epsilon))
+        plt.xlabel('u')
+        plt.ylabel('y1')
+        plt.title('u vs y1, lam=' + str(lam) )
+        plt.legend()
+        plt.savefig('u_v_y1' + '.png', dpi=500)
+        plt.show()
+
+
+    for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
+        path_list.append(guessed_paths)
+        for path, epsilon in zip(guessed_paths, list_of_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            w_path,pw_path=(path[:, 0]+path[:, 1])/2,path[:, 2]+path[:, 3]
+            p1_for_theory_clancy=connection_pw_p1_clancy(pw_path)
+            p2_for_theory_clancy=connection_pw_p2_clancy(pw_path)
+
+            w_clancy_theory=np.array([w_path_clancy(p1,p2,epsilon_mu,lam) for p1,p2 in zip(p1_for_theory_clancy,p2_for_theory_clancy)])
+
+            plt.plot(pw_path, w_path-w_clancy_theory, linewidth=4,label='Numerical eps=' + str(epsilon))
+        plt.xlabel('pw')
+        plt.ylabel('w-w_clancy')
+        plt.title('w-w_clancy vs pw, lam=' + str(lam) )
+        # plt.legend()
+        plt.savefig('wsub_clancy_v_pw' + '.png', dpi=500)
+        plt.show()
+
+
+
+    # for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
+    #     path_list.append(guessed_paths)
+    #     for path, epsilon in zip(guessed_paths, list_of_epsilons):
+    #         epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+    #         y1=path[:, 0]
+    #         p1=path[:, 2]
+    #         y2=path[:, 1]
+    #         p2=path[:, 3]
+    #
+    #         y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,(0.0,epsilon_mu),t,gamma)
+    #         y1_path_clancy_theorm,y2_path_clancy_theorm=np.linspace(y1_0,0.0,10000),np.linspace(y2_0,0.0,10000)
+    #
+    #         # p1_clancy_theory=np.array([p1_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:,0],path[:,1])])
+    #         # p2_clancy_theory=np.array([p2_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:,0],path[:,1])])
+    #         p1_clancy_theory=np.array([p1_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(y1_path_clancy_theorm,y2_path_clancy_theorm)])
+    #         p2_clancy_theory=np.array([p2_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(y1_path_clancy_theorm,y2_path_clancy_theorm)])
+    #
+    #         # p1_clancy_theory=np.array([p1_path_clancy(y1,y2,epsilon_mu,lam/(1+epsilon_mu*epsilon_lam)) for y1,y2 in zip(path[:,0],path[:,1])])
+    #         # p2_clancy_theory=np.array([p2_path_clancy(y1,y2,epsilon_mu,lam/(1+epsilon_mu*epsilon_lam)) for y1,y2 in zip(path[:,0],path[:,1])])
+    #         pw_minus_pwclancy=p1+p2-p1_clancy_theory-p2_clancy_theory
+    #         plt.plot((y1+y2)/2, pw_minus_pwclancy, linewidth=4,linestyle='-',label='epsilon=' + str(epsilon))
+    #     plt.xlabel('w')
+    #     plt.ylabel('pw-pw_clancy')
+    #     plt.title('pw-pw_clancy vs w, lam=' + str(lam) )
+    #     plt.legend()
+    #     plt.savefig('pw_v_w_minus_o0' + '.png', dpi=500)
+    #     plt.show()
+    #
+    # for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
+    #     path_list.append(guessed_paths)
+    #     for path, epsilon in zip(guessed_paths, list_of_epsilons):
+    #         epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+    #         y1=path[:, 0]
+    #         p1=path[:, 2]
+    #         y2=path[:, 1]
+    #         p2=path[:, 3]
+    #
+    #         y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,(0.0,epsilon_mu),t,gamma)
+    #         y1_path_clancy_theorm,y2_path_clancy_theorm=np.linspace(y1_0,0.0,10000),np.linspace(y2_0,0.0,10000)
+    #
+    #         # p1_clancy_theory=np.array([p1_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:,0],path[:,1])])
+    #         # p2_clancy_theory=np.array([p2_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:,0],path[:,1])])
+    #         p1_clancy_theory=np.array([p1_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(y1_path_clancy_theorm,y2_path_clancy_theorm)])
+    #         p2_clancy_theory=np.array([p2_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(y1_path_clancy_theorm,y2_path_clancy_theorm)])
+    #         # p1_clancy_theory=np.array([p1_path_clancy(y1,y2,epsilon_mu,lam/(1+epsilon_mu*epsilon_lam)) for y1,y2 in zip(path[:,0],path[:,1])])
+    #         # p2_clancy_theory=np.array([p2_path_clancy(y1,y2,epsilon_mu,lam/(1+epsilon_mu*epsilon_lam)) for y1,y2 in zip(path[:,0],path[:,1])])
+    #         pu_minus_puclancy=p1-p2-(p1_clancy_theory-p2_clancy_theory)
+    #         plt.plot((y1-y2)/2, pu_minus_puclancy, linewidth=4,linestyle='-',label='epsilon=' + str(epsilon))
+    #     plt.xlabel('u')
+    #     plt.ylabel('pu-pu_clancy')
+    #     plt.title('pu-pu_clancy vs u, lam=' + str(lam) )
+    #     # plt.legend()
+    #     plt.savefig('pu_v_u_minus_o0' + '.png', dpi=500)
+    #     plt.show()
+    #
+    # for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
+    #     path_list.append(guessed_paths)
+    #     for path, epsilon in zip(guessed_paths, list_of_epsilons):
+    #         epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+    #         y1=path[:, 0]
+    #         p1=path[:, 2]
+    #         y2=path[:, 1]
+    #         p2=path[:, 3]
+    #
+    #         y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,(0.0,epsilon_mu),t,gamma)
+    #         y1_path_clancy_theorm,y2_path_clancy_theorm=np.linspace(y1_0,0.0,10000),np.linspace(y2_0,0.0,10000)
+    #
+    #         # p1_clancy_theory=np.array([p1_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:,0],path[:,1])])
+    #         # p2_clancy_theory=np.array([p2_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:,0],path[:,1])])
+    #         p1_clancy_theory=np.array([p1_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(path[:,0],y2_path_clancy_theorm)])
+    #         p2_clancy_theory=np.array([p2_path_clancy(y1,y2,epsilon_mu,lam) for y1,y2 in zip(y1_path_clancy_theorm,path[:,1])])
+    #
+    #         # p1_clancy_theory=np.array([p1_path_clancy(y1,y2,epsilon_mu,lam/(1+epsilon_mu*epsilon_lam)) for y1,y2 in zip(path[:,0],path[:,1])])
+    #         # p2_clancy_theory=np.array([p2_path_clancy(y1,y2,epsilon_mu,lam/(1+epsilon_mu*epsilon_lam)) for y1,y2 in zip(path[:,0],path[:,1])])
+    #         pw_minus_pwclancy=p1+p2-p1_clancy_theory-p2_clancy_theory
+    #         plt.plot((y1+y2)/2, pw_minus_pwclancy, linewidth=4,linestyle='-',label='epsilon=' + str(epsilon))
+    #     plt.xlabel('w')
+    #     plt.ylabel('pw-pw_clancy')
+    #     plt.title('pw-pw_clancy vs w, lam=' + str(lam) )
+    #     plt.legend()
+    #     plt.savefig('pw_v_w_minus_o0' + '.png', dpi=500)
+    #     plt.show()
+    #
+    # for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
+    #     path_list.append(guessed_paths)
+    #     for path, epsilon in zip(guessed_paths, list_of_epsilons):
+    #         epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+    #
+    #         y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,(0.0,epsilon_mu),t,gamma)
+    #         p1_path_clancy_theorm,p2_path_clancy_theorm=np.linspace(0.0,p1_star_clancy,10000),np.linspace(0.0,p2_star_clancy,10000)
+    #
+    #
+    #         # w_clacny_theory = np.array([w_path_clancy(p1, p2, epsilon_mu, lam) for p1, p2 in zip(path[:, 2], path[:, 3])])
+    #         w_clacny_theory = np.array([w_path_clancy(p1, p2, epsilon_mu, lam) for p1, p2 in zip(p1_path_clancy_theorm, p2_path_clancy_theorm)])
+    #         # w_clacny_theory = np.array([w_path_clancy(p1, p2, epsilon_mu, lam/(1+epsilon_lam*epsilon_mu)) for p1, p2 in zip(path[:, 2], path[:, 3])])
+    #         pw_numeric = path[:, 2] + path[:, 3]
+    #         plt.plot(pw_numeric, (path[:, 0] + path[:, 1])/2 , linewidth=4,linestyle='-',label='epsilon=' + str(epsilon))
+    #         plt.plot(p1_path_clancy_theorm+p2_path_clancy_theorm, w_clacny_theory, linewidth=4,linestyle='--',label='epsilon=' + str(epsilon))
+    #     plt.xlabel('pw')
+    #     plt.ylabel('w-w_clancy')
+    #     plt.title('w-w_clancy vs pw, lam=' + str(lam) )
+    #     plt.legend()
+    #     plt.savefig('w_v_pw_clancy' + '.png', dpi=500)
+    #     plt.show()
+    #
+    # for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
+    #     path_list.append(guessed_paths)
+    #     for path, epsilon in zip(guessed_paths, list_of_epsilons):
+    #         epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+    #         w_clacny_theory = np.array([w_path_clancy(p1, p2, epsilon_mu, lam) for p1, p2 in zip(path[:, 2], path[:, 3])])
+    #         # w_clacny_theory = np.array([w_path_clancy(p1, p2, epsilon_mu, lam/(1+epsilon_lam*epsilon_mu)) for p1, p2 in zip(path[:, 2], path[:, 3])])
+    #         pw_numeric = path[:, 2] + path[:, 3]
+    #         plt.plot(pw_numeric, (path[:, 0] + path[:, 1])/2 -w_clacny_theory, linewidth=4,linestyle='-',label='epsilon=' + str(epsilon))
+    #     plt.xlabel('pw')
+    #     plt.ylabel('w-w_clancy')
+    #     plt.title('w-w_clancy vs pw, lam=' + str(lam) )
+    #     plt.legend()
+    #     plt.savefig('w_v_pw_minus_o0_clancy' + '.png', dpi=500)
+    #     plt.show()
+    #
+    # for guessed_paths,case_to_run,list_of_epsilons in zip(sim_paths,list_sims,epsilon_matrix):
+    #     path_list.append(guessed_paths)
+    #     for path, epsilon in zip(guessed_paths, list_of_epsilons):
+    #         epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+    #         w_clacny_theory = np.array([w_path_clancy(p1,p2,epsilon_mu,lam) for p1,p2 in zip(path[:, 2],path[:, 3])])
+    #         # w_clacny_theory = np.array([w_path_clancy(p1,p2,epsilon_mu,lam/(1+epsilon_mu*epsilon_lam)) for p1,p2 in zip(path[:, 2],path[:, 3])])
+    #         w_minus_clancy_theory = (path[:, 0]+path[:, 1])/2-w_clacny_theory
+    #         pw_numeric=path[:, 2]+path[:, 3]
+    #         # w_theortical_correction=[w_clancy_correction(p1,p2,epsilon_mu,lam) for p1,p2 in zip(path[:, 2],path[:, 3])]
+    #         w_theortical_correction=[w_clancy_correction(p1,p2,epsilon_mu,lam/(1+epsilon_mu*epsilon_lam)) for p1,p2 in zip(path[:, 2],path[:, 3])]
+    #         plt.plot(pw_numeric,w_minus_clancy_theory/epsilon_lam , linewidth=4,linestyle='-',label='Sim epsilon=' + str(epsilon))
+    #         plt.plot(pw_numeric,w_theortical_correction , linewidth=4,linestyle='--',label='Theory epsilon=' + str(epsilon))
+    #     plt.xlabel('pw')
+    #     plt.ylabel('(w-w_clacny)/eps_lam')
+    #     plt.title('first order w vs pw, lam=' + str(lam) )
+    #     plt.legend()
+    #     plt.savefig('pw_v_w_minus_o1_theory_correction' + '.png', dpi=500)
+    #     plt.show()
 
 
 p1_clancy_epsmu = lambda path,lam,epsilon:np.array([np.log(y1/(lam*(1-epsilon)*(1/2-y1)*(y1+y2))) for y1,y2 in zip(path[:,0],path[:,1])])
@@ -3216,6 +3691,9 @@ def plot_z(shot_angle, lin_combo,radius,final_time_path,one_shot_dt,beta,q_star,
     plt.savefig('z_vs_u' + '.png', dpi=500)
     plt.show()
 
+
+
+
 # def plot_eq_points(sim,beta,epsilon_matrix,t,gamma):
 #
 #     for case,epsilons in zip(sim,epsilon_matrix):
@@ -3236,11 +3714,11 @@ if __name__=='__main__':
 
     abserr,relerr = 1.0e-20,1.0e-13
     # list_of_epsilons=[(0.9,0.02),(0.9,0.04),(0.9,0.06),(0.9,0.08),(0.9,0.1)]
-    list_of_epsilons=[(0.5,0.1),(0.6,0.1),(0.7,0.1),(0.8,0.1),(0.9,0.1)]
+    # list_of_epsilons=[(0.5,0.1),(0.6,0.1),(0.7,0.1),(0.8,0.1),(0.9,0.1)]
     # list_of_epsilons=[(0.002,0.1)]
     # list_of_epsilons = [(0.5, 0.05)]
     # list_of_epsilons=0.1
-    sim='x'
+    sim='el1'
 
     # A way to confirm the hamiltion's numericaly
     # Jacobian_H = ndft.Jacobian(H)
@@ -3261,10 +3739,11 @@ if __name__=='__main__':
     # r001=4e-7
     # r=2.56e-06
     # r=1.6384e-06
-    r=1.6384e-05
+    # r=1.6384e-05
+    r = 1.6384e-08
     angle=0.04239816339744822
 
-    epsilon=(0.1,-0.5)
+    epsilon=(1.0,0.5)
     #lin002=0.9999930516412242
     #int_lin_combo001=0.9999658209936237
     # int_lin_combolam5=0.9999658419290037
@@ -3279,11 +3758,14 @@ if __name__=='__main__':
     int_lin_combo=1.002167567308141
     # int_lin_combo=0.999381981145
     # int_lin_combo=1.0007560306459402
+    # int_lin_combo=0.9987084914577944
+    # int_lin_combo=0.99999938448
+    # int_lin_combo=0.9999994244804999
 
 
     # int_lin_combo=1.001321728340301
-    # y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
-    # q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
+    y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
+    q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.000040262472682,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
@@ -3296,6 +3778,7 @@ if __name__=='__main__':
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.999446100281335,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
 
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.9993800670968565,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
+    # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.999381981145,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
 
     # plot_one_shot(0.04239816339744822, 0.99938586737087754, r, t, dt, q_star, J, dq_dt_sus_inf, beta/(1+epsilon[0]*epsilon[1]))
     # plot_one_shot(0.04239816339744754635,0.9993858673708775895, r, t, dt, q_star, J, dq_dt_sus_inf, beta/(1+epsilon[0]*epsilon[1]))
@@ -3313,6 +3796,8 @@ if __name__=='__main__':
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.002167567308141,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
 
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.999446100281335,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
+
+    # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.9999994550365001,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
 
 
     # plot_one_shot(np.pi/4-0.62, 1.0081923932, r, t, dt, q_star, J, dq_dt_sus_inf, beta)
@@ -3334,7 +3819,17 @@ if __name__=='__main__':
     # good for eps=(0.1,-0.5) lam=2.4
     # plot_one_shot(1.3, 0.99787930438, r, t, dt, q_star, J, dq_dt_sus_inf, beta)
 
+    # good for eps=(1.0,0.1) lam=1.6 r=1.6384e-08
+    # plot_one_shot(0.04239816339744822,0.99999938448, r, t, dt, q_star, J, dq_dt_sus_inf, beta)
 
+    # good for eps=(1.0,0.1) lam=1.6 r=1.6384e-08 time=24.0
+    # plot_one_shot(0.04239816339744822,0.9999993844804999, r, t, dt, q_star, J, dq_dt_sus_inf, beta)
+
+    # good for eps=(1.0,0.5) lam=1.6 r=1.6384e-08 time=20.0
+    # plot_one_shot(0.04239816339744822,0.9999994244804999, r, t, dt, q_star, J, dq_dt_sus_inf, beta)
+
+    # good for eps=(1.0,0.5) lam=1.6 r=1.6384e-08 time=24.0
+    # plot_one_shot(0.04239816339744822,0.9999994550365001, r, t, dt, q_star, J, dq_dt_sus_inf, beta)
 
     # man_div_path_and_fine_tuning(np.pi/4-0.785084,r,t,1.0001758373880196,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(np.pi/4-0.785084,r,t,0.9999758373880197,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
@@ -3351,6 +3846,7 @@ if __name__=='__main__':
     # sim=['al','la']
     # sim=['la','la']
     # sim=['x','x','x','x']
+    sim = ['x','x']
     # sim = ['el1']
     # epsilon_matrix=[[(0.8,0.03),(0.8,0.06),(0.8,0.1),(0.8,0.13),(0.8,0.16)],[(0.03,0.8),(0.06,0.8),(0.1,0.8),(0.13,0.8),(0.16,0.8)]]
     # epsilon_matrix = [[(-0.1, 0.0),(-0.1, 0.03),(-0.1, 0.06),(-0.1, 0.1),(-0.1, 0.13),(-0.1, 0.16)],
@@ -3364,20 +3860,27 @@ if __name__=='__main__':
     # epsilon_matrix = [[(0.0,-0.1),(0.0,-0.5),(0.0,-0.6)]]
     # epsilon_matrix = [[(1.0,0.02),(1.0,0.1),(1.0,0.2),(1.0,0.3),(1.0,0.4),(1.0,0.5),(1.0,0.6),(1.0,0.7),(1.0,0.8)]]
 
-    # epsilon_matrix = [[(1.0,-0.1)]]
+    # epsilon_matrix = [[(1.0,-0.5)]]
     # epsilon_matrix = [[(0.0,0.02),(0.0,0.5),(0.0,0.9)]]
+    # epsilon_matrix = [[(1.0,-0.5)]]
+
+    # epsilon_matrix = [[(0.02,0.96),(0.1,0.96),(0.2,0.96),(0.3,0.96),(0.4,0.96),(0.5,0.96),(0.6,0.96),(0.7,0.96),(0.8,0.96),(0.9,0.96)]]
+    # epsilon_matrix = [[(0.96,0.02),(0.96,0.1),(0.96,0.2),(0.96,0.3),(0.96,0.4),(0.96,0.5)]]
+    # epsilon_matrix = [[(0.0,0.5)]]
+    epsilon_matrix = [[(0.0,0.5),(-0.14,0.5),(-0.1,0.5),(-0.06,0.5),(-0.02,0.5),(0.02,0.5),(0.06,0.5),(0.1,0.5),(0.14,0.5)]]
 
 
-    # sim_paths=[]
-    # for case,epsilons in zip(sim,epsilon_matrix):
-    #     sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo))
+
+    sim_paths=[]
+    for case,epsilons in zip(sim,epsilon_matrix):
+        sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo))
     # plot_multi_sim_path(sim_paths, beta, gamma, epsilon_matrix, sim, t)
-    # plot_sim_path_special_case(sim_paths, beta, gamma, epsilon_matrix, sim, t)
+    plot_sim_path_special_case(sim_paths, beta, gamma, epsilon_matrix, sim, t)
     # eq_points_exact(epsilon,beta,gamma)
 
     #
     # sim=['x','x','x','x','x']
-    sim=['x','x','x']
+    # sim=['x','x','x']
     # sim=['x']
     # epsilon_matrix=[[(0.02,0.05),(0.04,0.05),(0.06,0.05),(0.08,0.05),(0.1,0.05),(0.14,0.05),(0.18,0.05),(0.22,0.05),(0.26,0.05),(0.3,0.05),(0.36,0.05),(0.4,0.05),(0.45,0.05),(0.5,0.05),(0.55,0.05),(0.6,0.05),(0.65,0.05),(0.7,0.05),(0.75,0.05),(0.8,0.05),(0.85,0.05),(0.9,0.05),(0.93,0.05),(0.94,0.05),(0.98,0.05)]]
     # epsilon_matrix = [[(e,0.02) for e in np.linspace(0.02,0.98,20)],[(e,0.04) for e in np.linspace(0.02,0.98,20)],[(e,0.06) for e in np.linspace(0.02,0.98,20)],[(e,0.08) for e in np.linspace(0.02,0.98,20)],[(e,0.1) for e in np.linspace(0.02,0.98,20)],[(e,0.12) for e in np.linspace(0.02,0.98,20)]]
@@ -3397,12 +3900,13 @@ if __name__=='__main__':
     # epsilon_matrix = [[(0.02,e) for e in np.linspace(0.0001,0.999,20)],[(0.06,e) for e in np.linspace(0.0001,0.999,20)],[(0.1,e) for e in np.linspace(0.0001,0.999,20)],[(0.14,e) for e in np.linspace(0.0001,0.999,20)]]
     # epsilon_matrix = [[(0.1,e) for e in np.linspace(-0.9999,-0.0001,5)]]
     # epsilon_matrix = [[(0.02,e) for e in np.linspace(-0.9999,0.9999,20)],[(0.04,e) for e in np.linspace(-0.9999,0.9999,20)],[(0.06,e) for e in np.linspace(-0.9999,0.9999,20)]]
-    epsilon_matrix = [[(1e-9,e) for e in np.linspace(-0.5,0.5,20)],[(1e-8,e) for e in np.linspace(-0.5,0.5,20)],[(1e-7,e) for e in np.linspace(-0.5,0.5,20)],[(1e-6,e) for e in np.linspace(-0.5,0.5,20)]]
+    # epsilon_matrix = [[(1e-9,e) for e in np.linspace(-0.5,0.5,20)],[(1e-8,e) for e in np.linspace(-0.5,0.5,20)],[(1e-7,e) for e in np.linspace(-0.5,0.5,20)],[(1e-6,e) for e in np.linspace(-0.5,0.5,20)]]
+    # epsilon_matrix = [[(0.0,e) for e in np.linspace(-0.9999,0.9999,20)]]
 
 
-    sim_paths=[]
-    for case,epsilons in zip(sim,epsilon_matrix):
-        sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
+    # sim_paths=[]
+    # for case,epsilons in zip(sim,epsilon_matrix):
+    #     sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
     # # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]/(1-eps[1])] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[1]),lambda p,eps,l:p[:,2]],'dem',['p2','p1'],
     # #              ['y2','y1/delta_mu'],['(p2-p2(0))/delta_mu','p1'],beta/gamma,['(p2-p2(0))/delta_mu vs y2','p1 vs y1/delta'],['p2_norm_v_y2','p1_norm_v_y1'],labeladdon=lambda x,y:'')
     # # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[0]),lambda p,eps,l:p[:,2]/(1-eps[0])],'del',['pl2','pl1'],
@@ -3411,7 +3915,7 @@ if __name__=='__main__':
     # plot_integration_theory_z(sim_paths, epsilon_matrix,sim ,beta, gamma,'s')
     # plot_integration_theory_epslamsamll(sim_paths,epsilon_matrix,sim,beta,gamma,'b')
     # plot_integration_theory_epslamsamll(sim_paths,epsilon_matrix,sim,beta,gamma,'s')
-    plot_integration_theory_epslamsamll(sim_paths,epsilon_matrix,sim,beta,gamma,'s')
+    # plot_integration_theory_epslamsamll(sim_paths,epsilon_matrix,sim,beta,gamma,'s')
 
 
 
