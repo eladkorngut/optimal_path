@@ -8,6 +8,7 @@ from pylab import figure, plot, xlabel, grid, legend, title,savefig,ylabel
 import numdifftools as ndft
 from itertools import cycle
 import csv
+import pickle
 
 from scipy import interpolate
 
@@ -477,9 +478,6 @@ def plot_integration_theory_epslamsamll(guessed_paths, list_of_epsilons,sim,beta
         plt.show()
 
 
-
-
-
 def plot_integration_lm_clancy(guessed_paths, list_of_epsilons,sim,beta,gamma):
     fig_tot, fig_correction = plt.figure(), plt.figure()
     ax_tot, ax_correction = fig_tot.add_subplot(1, 1, 1), fig_correction.add_subplot(1, 1, 1)
@@ -524,6 +522,263 @@ def plot_integration_lm_clancy(guessed_paths, list_of_epsilons,sim,beta,gamma):
     ax_correction.legend()
     plt.tight_layout()
     fig_correction.savefig('action_correction_epslam_' +  '.png', dpi=200)
+    plt.show()
+
+
+def plot_integration_clancy_action_partial(guessed_paths, list_of_epsilons,sim,beta,gamma,times):
+    fig_tot_y1, fig_tot_y2, fig_correction_y1, fig_correction_y2, fig_tot_p1, fig_tot_p2,fig_action_along_path,fig_action_v_time = plt.figure(), plt.figure(), plt.figure(), plt.figure(),plt.figure(),plt.figure(),plt.figure(),plt.figure()
+    ax_tot_y1, ax_tot_y2, ax_correction_y1,ax_correction_y2,ax_tot_p1,ax_tot_p2,ax_action_along_path,ax_action_v_time = fig_tot_y1.add_subplot(1, 1, 1),fig_tot_y2.add_subplot(1, 1, 1),fig_correction_y1.add_subplot(1, 1, 1), fig_correction_y2.add_subplot(1, 1, 1),fig_tot_p1.add_subplot(1, 1, 1),fig_tot_p2.add_subplot(1, 1, 1),fig_action_along_path.add_subplot(1, 1, 1),fig_action_v_time.add_subplot(1, 1, 1)
+    lam = beta / gamma
+    epsilon_list,action_along_path,theory_v_valong_path,theory_u_valong_path=[],[],[],[]
+    for sim_paths, sim_epsilons, s in zip(guessed_paths, list_of_epsilons, sim):
+        action_numeric, action_numeric_correction,action_theory,action_theory_u_mom_space = [], [], [],[]
+        for paths_for_eps, epsilon in zip(sim_paths, sim_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            y1_0,y2_0=y1star_epslam0(epsilon_mu,lam),y2star_epslam0(epsilon_mu,lam)
+            vstar=v_clancy_epslam0(y1_0,y2_0,epsilon_mu,lam)
+            # u0_clancy=u_clancy_epslam0(-np.log(lam),-np.log(lam),epsilon_mu,lam)
+            u0_clancy = u_clancy_epslam0(0, 0, epsilon_mu, lam)
+            y1_final_array,y2_final_array,p1_final_array,p2_final_array=[],[],[],[]
+            action_numeric, action_numeric_correction, action_theory,action_theory_u_mom_space = [], [], [],[]
+            action_along_path.append(simps(paths_for_eps[-1][:, 2], paths_for_eps[-1][:, 0]) + simps(paths_for_eps[-1][:, 3], paths_for_eps[-1][:, 1]))
+            epsilon_list.append(epsilon_mu)
+            theory_v_valong_path.append( v_clancy_epslam0(paths_for_eps[-1][:, 0][-1], paths_for_eps[-1][:, 1][-1], epsilon_mu, lam) - vstar)
+            theory_u_valong_path.append( u0_clancy- u_clancy_epslam0(paths_for_eps[-1][:,2][-1],paths_for_eps[-1][:,3][-1],epsilon_mu,lam))
+            for path,eval_time in zip(paths_for_eps,times):
+                A_integration = simps(path[:, 2], path[:, 0]) + simps(path[:, 3], path[:, 1])
+                y1_final_array.append(path[:,0][-1])
+                y2_final_array.append(path[:,1][-1])
+                p1_final_array.append(path[:,2][-1])
+                p2_final_array.append(path[:,3][-1])
+                A_theory_clancy=v_clancy_epslam0(path[:,0][-1],path[:,1][-1],epsilon_mu,lam)-vstar
+                A_theory_clancy_u_monentum=u0_clancy- u_clancy_epslam0(path[:,2][-1],path[:,3][-1],epsilon_mu,lam)
+                action_theory.append(A_theory_clancy)
+                action_theory_u_mom_space.append(A_theory_clancy_u_monentum)
+                action_numeric_correction_float = A_integration - A_theory_clancy
+                action_numeric.append(A_integration)
+                action_numeric_correction.append(action_numeric_correction_float)
+            # ax_correction_y1.plot(y1_final_array, action_numeric_correction, linewidth=4, linestyle='None',
+            #                    markersize=10,
+            #                    Marker='o', label='epsilon=' + str(epsilon_mu))
+            # ax_correction_y2.plot(y2_final_array, action_numeric_correction, linewidth=4, linestyle='None',
+            #                    markersize=10,
+            #                    Marker='o', label='epsilon=' + str(epsilon_mu))
+            # ax_tot_y1.plot(y1_final_array, action_numeric, linewidth=4, linestyle='None',
+            #                    markersize=10,
+            #                    Marker='o', label='Sim epsilon=' + str(epsilon_mu))
+            # ax_tot_y1.plot(y1_final_array, action_theory, linewidth=4, linestyle='None',
+            #                    markersize=10,
+            #                    Marker='v', label='Theory epsilon=' + str(epsilon_mu))
+            #
+            # ax_tot_y2.plot(y2_final_array, action_numeric, linewidth=4, linestyle='None',
+            #                    markersize=10,
+            #                    Marker='o', label='Sim epsilon=' + str(epsilon_mu))
+            # ax_tot_y2.plot(y2_final_array, action_theory, linewidth=4, linestyle='None',
+            #                    markersize=10,
+            #                    Marker='v', label='Theory epsilon=' + str(epsilon_mu))
+            # ax_tot_p1.plot(p1_final_array, action_numeric, linewidth=4, linestyle='None',
+            #                    markersize=10,
+            #                    Marker='o', label='Theory epsilon=' + str(epsilon_mu))
+            # ax_tot_p1.plot(p1_final_array, action_theory_u_mom_space, linewidth=4, linestyle='None',
+            #                    markersize=10,
+            #                    Marker='v', label='Theory epsilon=' + str(epsilon_mu))
+            # ax_tot_p2.plot(p2_final_array, action_numeric, linewidth=4, linestyle='None',
+            #                    markersize=10,
+            #                    Marker='o', label='Sim epsilon=' + str(epsilon_mu))
+            # ax_tot_p2.plot(p2_final_array, action_theory_u_mom_space, linewidth=4, linestyle='None',
+            #                    markersize=10,
+            #                    Marker='v', label='Theory epsilon=' + str(epsilon_mu))
+
+
+            ax_correction_y1.plot(y1_final_array, action_numeric_correction, linewidth=4, linestyle='-',
+                               label='epsilon=' + str(epsilon_mu))
+            ax_correction_y2.plot(y2_final_array, action_numeric_correction, linewidth=4, linestyle='-',
+                               label='epsilon=' + str(epsilon_mu))
+            ax_tot_y1.plot(y1_final_array, action_numeric, linewidth=4, linestyle='-',
+                               label='Sim epsilon=' + str(epsilon_mu))
+            ax_tot_y1.plot(y1_final_array, action_theory, linewidth=4, linestyle='--',
+                               label='Theory epsilon=' + str(epsilon_mu))
+
+            ax_tot_y2.plot(y2_final_array, action_numeric, linewidth=4, linestyle='-',
+                               label='Sim epsilon=' + str(epsilon_mu))
+            ax_tot_y2.plot(y2_final_array, action_theory, linewidth=4, linestyle='--',
+                               label='Theory epsilon=' + str(epsilon_mu))
+            ax_tot_p1.plot(p1_final_array, action_numeric, linewidth=4, linestyle='-',
+                           label='Sim epsilon=' + str(epsilon_mu))
+            ax_tot_p1.plot(p1_final_array, action_theory_u_mom_space, linewidth=4, linestyle='--',
+                           label='Theory epsilon=' + str(epsilon_mu))
+            ax_tot_p2.plot(p2_final_array, action_numeric, linewidth=4, linestyle='-'
+                           , label='Sim epsilon=' + str(epsilon_mu))
+            ax_tot_p2.plot(p2_final_array, action_theory_u_mom_space, linewidth=4, linestyle='--',
+                           label='Theory epsilon=' + str(epsilon_mu))
+            ax_action_v_time.plot(times, action_numeric, linewidth=4, linestyle='-', label='Sim epsilon=' + str(epsilon))
+            ax_action_v_time.plot(times, action_theory, linewidth=4, linestyle='--', label='Theory V epsilon=' + str(epsilon))
+            ax_action_v_time.plot(times, action_theory_u_mom_space, linewidth=4, linestyle='--', label='Theory U epsilon=' + str(epsilon))
+
+    ax_tot_y1.set_xlabel('y1')
+    ax_tot_y1.set_ylabel('V')
+    ax_tot_y1.set_title('Action vs y1' + ' lam=' + str(lam))
+    ax_tot_y1.legend()
+    plt.tight_layout()
+    fig_tot_y1.savefig('action_total_with_clancy_y1' + '.png', dpi=200)
+    ax_tot_y2.set_xlabel('y2')
+    ax_tot_y2.set_ylabel('V')
+    ax_tot_y2.set_title('Action vs y2' + ' lam=' + str(lam))
+    ax_tot_y2.legend()
+    plt.tight_layout()
+    fig_tot_y2.savefig('action_total_with_clancy_y2' + '.png', dpi=200)
+    ax_correction_y1.set_xlabel('y1')
+    ax_correction_y1.set_ylabel('V-V_theory')
+    ax_correction_y1.set_title('Sim minus theory vs y1' + ' lam=' + str(lam))
+    plt.tight_layout()
+    fig_correction_y1.savefig('action_v_y1_correction_V' +  '.png', dpi=200)
+    ax_correction_y2.set_xlabel('y2')
+    ax_correction_y2.set_ylabel('V-V_theory')
+    ax_correction_y2.set_title('Sim minus theory vs y2' + ' lam=' + str(lam))
+    plt.tight_layout()
+    fig_correction_y2.savefig('action_v_y2_correction_V' +  '.png', dpi=200)
+    ax_tot_p1.set_xlabel('p1')
+    ax_tot_p1.set_ylabel('U')
+    ax_tot_p1.set_title('Action vs p1' + ' lam=' + str(lam))
+    ax_tot_p1.legend()
+    plt.tight_layout()
+    fig_tot_p1.savefig('action_v_p1_correction_U' +  '.png', dpi=200)
+    ax_tot_p2.set_xlabel('p2')
+    ax_tot_p2.set_ylabel('U')
+    ax_tot_p2.set_title('Action vs p2' + ' lam=' + str(lam))
+    ax_tot_p2.legend()
+    plt.tight_layout()
+    fig_tot_p2.savefig('action_v_p2_correction_U' +  '.png', dpi=200)
+
+    ax_action_along_path.plot(epsilon_list, action_along_path, linewidth=4, linestyle='None',
+                               markersize=10,Marker='o',label='Sim epsilon')
+    ax_action_along_path.plot(epsilon_list, theory_u_valong_path, linewidth=4, linestyle='None',
+                               markersize=10,Marker='v',label='Theory p space')
+    ax_action_along_path.plot(epsilon_list, theory_v_valong_path, linewidth=10, linestyle='None',
+                               markersize=10,Marker='^',label='Theory y space')
+    ax_action_along_path.set_xlabel('epsilon_mu')
+    ax_action_along_path.set_ylabel('A')
+    ax_action_along_path.set_title('Action vs epsilon_mu' + ' lam=' + str(lam))
+    ax_action_along_path.legend()
+    plt.tight_layout()
+    fig_action_along_path.savefig('action_vs_epsilon_mu' +  '.png', dpi=200)
+
+    ax_action_v_time.set_xlabel('time')
+    ax_action_v_time.set_ylabel('action')
+    ax_action_v_time.set_title('Action vs time' + ' lam=' + str(lam))
+    ax_action_v_time.legend()
+    plt.tight_layout()
+    fig_action_v_time.savefig('action_v_time' +  '.png', dpi=200)
+
+    plt.show()
+
+    return action_numeric,action_theory,action_theory_u_mom_space
+
+def plot_integration_clancy_action_partial_epsmu0(guessed_paths, list_of_epsilons,sim,beta,gamma,times):
+    fig_tot_z,fig_action_along_path,fig_action_v_time,fig_action_v_y1,fig_action_v_y2 = plt.figure(),plt.figure(),plt.figure(),plt.figure(),plt.figure()
+    ax_tot_z,ax_action_along_path,ax_action_v_time,ax_action_v_y1,ax_action_v_y2 = fig_tot_z.add_subplot(1, 1, 1),fig_action_along_path.add_subplot(1, 1, 1),fig_action_v_time.add_subplot(1, 1, 1),fig_action_v_y1.add_subplot(1, 1, 1),fig_action_v_y2.add_subplot(1, 1, 1)
+    lam = beta / gamma
+    action_along_path,epsilon_list,theory_u_along_path=[],[],[]
+    for sim_paths, sim_epsilons, s in zip(guessed_paths, list_of_epsilons, sim):
+        action_numeric, action_theory, action_theory_v_space = [], [], []
+        for paths_for_eps, epsilon in zip(sim_paths, sim_epsilons):
+            # y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy = eq_points_inf_only(epsilon, beta, gamma)
+            # u0_clancy = 0
+            z_final_array,y1_final_array,y2_final_array=[],[],[]
+            action_numeric, action_theory,action_theory_v_space = [], [], []
+            action_along_path.append(simps(paths_for_eps[-1][:, 2], paths_for_eps[-1][:, 0]) + simps(paths_for_eps[-1][:, 3], paths_for_eps[-1][:, 1]))
+            epsilon_list.append(epsilon)
+            theory_u_along_path.append(u_clancy_epsmu0(paths_for_eps[-1][:,0][-1],paths_for_eps[-1][:,1][-1],epsilon,beta,gamma))
+            for path,eval_time in zip(paths_for_eps,times):
+                A_integration = simps(path[:, 2], path[:, 0]) + simps(path[:, 3], path[:, 1])
+                # p1_final_array.append(path[:,2][-1])
+                # p2_final_array.append(path[:,3][-1])
+                z_final_array.append(z_y1_y2(path[:,0][-1],path[:,1][-1],epsilon,beta,gamma))
+                y1_final_array.append(path[:,0][-1])
+                y2_final_array.append(path[:,1][-1])
+                A_theory_clancy=u_clancy_epsmu0(path[:,0][-1],path[:,1][-1],epsilon,beta,gamma)
+                A_theory_clancy_v_space= 0-v_clancy_epsmu0(path[:,0][-1],path[:,1][-1],epsilon,beta,gamma)
+                action_theory.append(A_theory_clancy)
+                action_theory_v_space.append(A_theory_clancy_v_space)
+                action_numeric.append(A_integration)
+            # ax_tot_z.plot(z_final_array, action_numeric, linewidth=4, linestyle='None',
+            #                    markersize=10,
+            #                    Marker='o', label='Sim epsilon=' + str(epsilon))
+            # ax_tot_z.plot(z_final_array, action_theory, linewidth=4, linestyle='None',
+            #                    markersize=10,
+            #                    Marker='v', label='Theory epsilon=' + str(epsilon))
+            ax_tot_z.plot(z_final_array, action_numeric, linewidth=4, linestyle='-', label='Sim epsilon=' + str(epsilon))
+            ax_tot_z.plot(z_final_array, action_theory, linewidth=4, linestyle='--', label='Theory epsilon=' + str(epsilon))
+            ax_tot_z.plot(z_final_array, action_theory_v_space, linewidth=4, linestyle=':', label='Theory v space epsilon=' + str(epsilon))
+
+            ax_action_v_time.plot(times, action_numeric, linewidth=4, linestyle='-', label='Sim epsilon=' + str(epsilon))
+            ax_action_v_time.plot(times, action_theory, linewidth=4, linestyle='--', label='Theory epsilon=' + str(epsilon))
+
+            ax_action_v_y1.plot(y1_final_array, action_numeric, linewidth=4, linestyle='-', label='Sim eps=' + str(epsilon))
+            ax_action_v_y1.plot(y1_final_array, action_theory_v_space, linewidth=4, linestyle='--', label='Theory v space epsilon=' + str(epsilon))
+
+            ax_action_v_y2.plot(y2_final_array, action_numeric, linewidth=4, linestyle='-', label='Sim eps=' + str(epsilon))
+            ax_action_v_y2.plot(y2_final_array, action_theory_v_space, linewidth=4, linestyle='--', label='Theory v space epsilon=' + str(epsilon))
+
+    ax_tot_z.set_xlabel('z')
+    ax_tot_z.set_ylabel('action')
+    ax_tot_z.set_title('Action vs z' + ' lam=' + str(lam))
+    ax_tot_z.legend()
+    plt.tight_layout()
+    fig_tot_z.savefig('action_total_with_clancy_z' + '.png', dpi=200)
+
+    ax_action_along_path.plot(epsilon_list, action_along_path, linewidth=4, linestyle='None',
+                               markersize=10,Marker='o',label='Sim epsilon')
+    ax_action_along_path.plot(epsilon_list, theory_u_along_path, linewidth=4, linestyle='None',
+                               markersize=10,Marker='v',label='Theory p space')
+    ax_action_along_path.set_xlabel('epsilon_lam')
+    ax_action_along_path.set_ylabel('A')
+    ax_action_along_path.set_title('Action vs epsilon_lam' + ' lam=' + str(lam))
+    ax_action_along_path.legend()
+    plt.tight_layout()
+    fig_action_along_path.savefig('action_vs_epsilon_lam' +  '.png', dpi=200)
+
+    ax_action_v_time.set_xlabel('time')
+    ax_action_v_time.set_ylabel('Action')
+    ax_action_v_time.set_title('Action vs time' + ' lam=' + str(lam))
+    ax_action_v_time.legend()
+    plt.tight_layout()
+    fig_action_v_time.savefig('action_total_with_clancy_time' + '.png', dpi=200)
+
+    ax_action_v_y1.set_xlabel('y1')
+    ax_action_v_y1.set_ylabel('Action')
+    ax_action_v_y1.set_title('Action vs y1' + ' lam=' + str(lam))
+    ax_action_v_y1.legend()
+    plt.tight_layout()
+    fig_action_v_y1.savefig('action_v_y1_epsmu0_v_space' + '.png', dpi=200)
+
+
+    ax_action_v_y2.set_xlabel('y2')
+    ax_action_v_y2.set_ylabel('Action')
+    ax_action_v_y2.set_title('Action vs y2' + ' lam=' + str(lam))
+    ax_action_v_y2.legend()
+    plt.tight_layout()
+    fig_action_v_y2.savefig('action_v_y2_epsmu0_v_space' + '.png', dpi=200)
+    plt.show()
+    return action_numeric,action_theory
+
+
+def plot_time_v_action_one_eps_0(sim_paths,epsilon_matrix,sim,beta,gamma,times,):
+    action_numeric_mu,action_theory_mu,action_theory_u_mom_space=plot_integration_clancy_action_partial([sim_paths[0]],epsilon_matrix,sim,beta,gamma,times)
+    action_numeric_lm,action_theory_lm=plot_integration_clancy_action_partial_epsmu0([sim_paths[1]],[epsilon_matrix[1]],[sim[1]],beta,gamma,times)
+    fig_action_v_time = plt.figure()
+    ax_action_v_time = fig_action_v_time.add_subplot(1, 1, 1)
+    ax_action_v_time.plot(times, action_numeric_lm, linewidth=4, linestyle='-', label='Sim eps_mu=0, eps_lam')
+    ax_action_v_time.plot(times, action_theory_lm, linewidth=4, linestyle='--', label='Theory eps_mu=0, eps_lam')
+    ax_action_v_time.plot(times, action_numeric_mu, linewidth=4, linestyle='-', label='Sim eps_lam=0, eps_mu')
+    ax_action_v_time.plot(times, action_theory_mu, linewidth=4, linestyle='-.', label='Theory V eps_lam=0, eps_mu')
+    ax_action_v_time.plot(times, action_theory_u_mom_space, linewidth=4, linestyle=':', label='Theory U eps_lam=0, eps_mu' )
+    ax_action_v_time.set_xlabel('time')
+    ax_action_v_time.set_ylabel('Action')
+    ax_action_v_time.set_title('Action vs time' + ' lam=' + str(beta/gamma))
+    ax_action_v_time.legend()
+    plt.tight_layout()
+    fig_action_v_time.savefig('action_compare_epsmu0_epslam0' + '.png', dpi=200)
     plt.show()
 
 
@@ -824,6 +1079,25 @@ y2_path_clancy_epsmu0 = lambda p2,epsilon_lam,lam: (1/2)*(1 - (2*np.exp(-p2))/(l
 Y1_big_path_clancy_epsmu0= lambda P1,epsilon_lam,lam:(P1 + (P1*(1 + epsilon_lam))/(1 + (1 - 2*P1)*epsilon_lam)- 2/(lam - lam*epsilon_lam))/(2*P1**2)
 
 Y2_big_path_clancy_epsmu0= lambda P2,epsilon_lam,lam:(-1 + P2*lam + epsilon_lam*(1 + P2*(-2 + P2*lam) + (-1 + P2)*P2*lam*epsilon_lam))/(P2**2*lam*(1 + epsilon_lam)*(1 + (-1 + 2*P2)*epsilon_lam))
+
+v_clancy_epslam0= lambda y1,y2,eps_mu,lam: y1*(1+np.log(y1)-np.log(lam*(1-eps_mu)))+y2*(1+np.log(y2)-np.log(lam*(1+eps_mu)))-(y1+y2)*np.log(y1+y2)+(1/2-y1)*np.log(1/2-y1)+(1/2-y2)*np.log(1/2-y2)
+
+y1star_epslam0= lambda eps_mu,lam: (lam*(-1 + eps_mu)**2 + 2*eps_mu - np.sqrt(lam**2 - 2*(-2 + lam**2)*eps_mu**2+ lam**2*eps_mu**4))/(4*lam*(-1 + eps_mu)*eps_mu)
+
+y2star_epslam0= lambda eps_mu,lam: -(2*eps_mu - lam*(1 + eps_mu)**2 + np.sqrt(lam**2 - 2*(-2 + lam**2)*eps_mu**2 + lam**2*eps_mu**4))/(4*lam*eps_mu*(1 + eps_mu))
+
+Qclancy= lambda p1,p2,eps_mu,lam: (np.exp(-p1 -p2)*(np.exp(p2)*(1 +eps_mu)+ np.exp(p1)*(-1 +eps_mu)*(-1 +np.exp(p2)*lam*(1 +eps_mu)) -np.sqrt(np.exp(2*p1)*(-1 +eps_mu)**2 +2*np.exp(p1 +p2)*(-1 +eps_mu**2) +np.exp(2*p2)*((1 +eps_mu)**2 +np.exp(2*p1)*lam**2*(-1 +eps_mu**2)**2))))/(2*(-1 +eps_mu**2))
+
+u_clancy_epslam0= lambda p1,p2,eps_mu,lam: (1/2)*(np.log(1+(1-eps_mu)*np.exp(p1)*Qclancy(p1,p2,eps_mu,lam))+np.log(1+(1+eps_mu)*np.exp(p2)*Qclancy(p1,p2,eps_mu,lam)))-(1/lam)*Qclancy(p1,p2,eps_mu,lam)
+
+y1_path_clancy_epslam0= lambda p1,p2,eps_mu,lam: ((1-eps_mu)*(1/2)*np.exp(p1)*Qclancy(p1,p2,eps_mu,lam))/(1+(1-eps_mu)*np.exp(p1)*Qclancy(p1,p2,eps_mu,lam))
+
+y2_path_clancy_epslam0= lambda p1,p2,eps_mu,lam: ((1+eps_mu)*(1/2)*np.exp(p2)*Qclancy(p1,p2,eps_mu,lam))/(1+(1+eps_mu)*np.exp(p2)*Qclancy(p1,p2,eps_mu,lam))
+
+u_clancy_epsmu0= lambda y1,y2,eps_lam,beta,gamma:(1/2)*(np.log(1+(1-eps_lam)*z_y1_y2(y1,y2,eps_lam,beta,gamma))+np.log(1+(1+eps_lam)*z_y1_y2(y1,y2,eps_lam,beta,gamma)))-(gamma/beta)*z_y1_y2(y1,y2,eps_lam,beta,gamma)
+
+v_clancy_epsmu0=lambda y1,y2,eps_lam,beta,gamma: -y1*np.log(1+(1-eps_lam)*z_y1_y2(y1,y2,eps_lam,beta,gamma))-y2*np.log(1+(1+eps_lam)*z_y1_y2(y1,y2,eps_lam,beta,gamma))-u_clancy_epsmu0(y1,y2,eps_lam,beta,gamma)
+
 
 def action_clancy(eps,beta,gamma):
     f_of_d = (1 / 2) * (beta / gamma) * (1 - eps ** 2)
@@ -1220,7 +1494,7 @@ def guess_path_lam(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,org_rad
     return lin_combo,radius, one_shot(shot_angle, lin_combo,q_star,radius,np.linspace(0.0,s,sample_size),one_shot_dt,J,shot_dq_dt)
 
 
-def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,one_shot_dt,radius,lin_combo=1.00008204478397,org_shot_angle=np.pi/4-0.785084):
+def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,one_shot_dt,radius,lin_combo=1.00008204478397,org_shot_angle=np.pi/4-0.785084,action_times=None):
     guessed_paths=[]
     shot_angle=org_shot_angle
     if type(beta) is list:
@@ -1251,7 +1525,7 @@ def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,
             # sampleingtime=[7.0,9.0,10.0]
             # sampleingtime=[3.0,4.0,7.0,8.0,10.0]
             # sampleingtime=[20.0]
-            sampleingtime=[20.0]
+            sampleingtime=[24.0]
             # sampleingtime=[11.0]
 
 
@@ -1259,6 +1533,14 @@ def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,
             q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
             # lam=beta if type(beta) is float else beta/(1+eps[0]*eps[1])
             lin_combo,temp_radius,shot_angle,path=guess_path(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,radius,numpoints,J,shot_dq_dt)
+
+            if action_times is not None:
+                path=[]
+                for time in action_times:
+                    path_current_eps=one_shot(shot_angle, lin_combo, q_star, radius, np.linspace(0.0, time, numpoints), one_shot_dt, J,
+                             shot_dq_dt)
+                    path.append(path_current_eps)
+
             # lin_combo,temp_radius,path=guess_path(sampleingtime,np.pi/4-0.74,lin_combo,q_star,one_shot_dt,radius,numpoints,J,shot_dq_dt)
             guessed_paths.append(path)
 
@@ -2175,7 +2457,31 @@ def plot_sim_path_special_case(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf)
         plt.savefig('p1_v_y1' + '.png', dpi=500)
         plt.show()
 
-        # for path, epsilon in zip(guessed_paths, list_of_epsilons):
+        for path, epsilon in zip(guessed_paths, list_of_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            plt.plot(path[:, 2], path[:, 0], linewidth=4, linestyle='-', label='Numerical eps=' + str(epsilon))
+            y1_clancy_theory=[y1_path_clancy_epslam0(p1,p2,epsilon_mu,lam) for p1,p2 in zip(path[:, 2],path[:,3])]
+            plt.plot(path[:, 2], y1_clancy_theory, linewidth=4, linestyle='--', label='Theory eps=' + str(epsilon))
+        plt.xlabel('p1')
+        plt.ylabel('y1')
+        plt.title('y1 vs p1, lam=' + str(lam))
+        # plt.legend()
+        plt.savefig('y1_v_p1_with_theory_epslam0' + '.png', dpi=500)
+        plt.show()
+
+        for path, epsilon in zip(guessed_paths, list_of_epsilons):
+            epsilon_lam, epsilon_mu = epsilon[0], epsilon[1]
+            plt.plot(path[:, 3], path[:, 1], linewidth=4, linestyle='-', label='Numerical eps=' + str(epsilon))
+            y2_clancy_theory = [y2_path_clancy_epslam0(p1, p2, epsilon_mu, lam) for p1, p2 in zip(path[:, 2], path[:, 3])]
+            plt.plot(path[:, 3], y2_clancy_theory, linewidth=4, linestyle='--', label='Theory eps=' + str(epsilon))
+        plt.xlabel('p2')
+        plt.ylabel('y2')
+        plt.title('y2 vs p2, lam=' + str(lam))
+        # plt.legend()
+        plt.savefig('y2_v_p2_with_theory_epslam0' + '.png', dpi=500)
+        plt.show()
+
+    # for path, epsilon in zip(guessed_paths, list_of_epsilons):
         #     plt.plot(path[:, 2], path[:, 0], linewidth=4, linestyle='-', label='Numerical eps=' + str(epsilon))
         #     y1_clancy_theory=[y1_path_clancy_epsmu0(p1,epsilon,lam) for p1 in path[:, 2]]
         #     plt.plot(path[:, 2], y1_clancy_theory, linewidth=4, linestyle='--', label='Theory eps=' + str(epsilon))
@@ -4301,7 +4607,7 @@ if __name__=='__main__':
     # beta=[1.6,1.8,2.0,2.4,2.8,3.0,3.3]
     # beta=[1.6,3.3]
 
-    gamma=1.0
+    # gamma=1.0
 
     abserr,relerr = 1.0e-20,1.0e-13
     # list_of_epsilons=[(0.9,0.02),(0.9,0.04),(0.9,0.06),(0.9,0.08),(0.9,0.1)]
@@ -4309,14 +4615,14 @@ if __name__=='__main__':
     # list_of_epsilons=[(0.002,0.1)]
     # list_of_epsilons = [(0.5, 0.05)]
     # list_of_epsilons=0.1
-    sim='el1'
+    sim='x'
 
     # A way to confirm the hamiltion's numericaly
     # Jacobian_H = ndft.Jacobian(H)
     # dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
 
     # ODE parameters
-    stoptime=20.0
+    stoptime=15.0
     numpoints = 10000
 
 
@@ -4334,7 +4640,7 @@ if __name__=='__main__':
     r = 1.6384e-08
     angle=0.04239816339744822
 
-    epsilon=(1.0,0.5)
+    epsilon=(0.0,0.5)
     #lin002=0.9999930516412242
     #int_lin_combo001=0.9999658209936237
     # int_lin_combolam5=0.9999658419290037
@@ -4367,6 +4673,7 @@ if __name__=='__main__':
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.9993739697589015,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.9993858673708775895,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.999446100281335,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
+    # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.0011298699711286,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
 
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.9993800670968565,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.999381981145,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
@@ -4395,7 +4702,7 @@ if __name__=='__main__':
     # plot_one_shot(0.04239816339744822, 0.9993800670968565, r, t, dt, q_star, J, dq_dt_sus_inf, beta)
     # plot_one_shot(0.04239816339744822, 0.9993806427068563, r, t, dt, q_star, J, dq_dt_sus_inf, beta)
 
-    #good for eps=(1.0,-0.02)
+    # good for eps=(1.0,-0.02)
     # plot_one_shot(0.04239816339744822, 0.99938013438, r, t, dt, q_star, J, dq_dt_sus_inf, beta)
 
     #good for eps=(1.0,-0.1)
@@ -4437,7 +4744,7 @@ if __name__=='__main__':
     # sim=['al','la']
     # sim=['la','la']
     # sim=['x','x','x','x']
-    sim = ['x']
+    # sim = ['x']
     # sim = ['lm']
     # sim = ['el1']
     # epsilon_matrix=[[(0.8,0.03),(0.8,0.06),(0.8,0.1),(0.8,0.13),(0.8,0.16)],[(0.03,0.8),(0.06,0.8),(0.1,0.8),(0.13,0.8),(0.16,0.8)]]
@@ -4460,30 +4767,30 @@ if __name__=='__main__':
     # epsilon_matrix = [[(0.96,0.02),(0.96,0.1),(0.96,0.2),(0.96,0.3),(0.96,0.4),(0.96,0.5)]]
     # epsilon_matrix = [[(0.0,0.5)]]
     # epsilon_matrix = [[(0.02,0.0),(0.1,0.0),(0.2,0.0),(0.3,0.0),(0.4,0.0),(0.5,0.0),(0.6,0.0)]]
-    # epsilon_matrix = [[(0.0,0.1)]]
+    # epsilon_matrix = [[(0.0,0.02),(0.0,0.1),(0.0,0.2),(0.0,0.3),(0.0,0.4),(0.0,0.5),(0.0,0.6),(0.0,0.9)]]
     # # epsilon_matrix = [[0.02,0.1,0.2,0.3,0.4,0.5,0.6]]
     # epsilon_matrix = [[0.5]]
     # epsilon_matrix = [[(0.0,0.1),(0.0,0.2),(0.0,0.3),(0.0,0.4),(0.0,0.5),(0.0,0.6),(0.0,0.7),(0.0,0.98)]]
     # epsilon_matrix = [[(0.0,0.1),(0.0,0.2),(0.0,0.3),(0.0,0.4),(0.0,0.5),(0.0,0.6),(0.0,0.9),(0.0,0.98)]]
     # epsilon_matrix = [[(0.0,0.5),(-0.14,0.5),(-0.1,0.5),(-0.06,0.5),(-0.02,0.5),(0.02,0.5),(0.06,0.5),(0.1,0.5),(0.14,0.5)]]
     # epsilon_matrix = [[0.5]]
-    epsilon_matrix = [[(-0.14,0.5),(-0.1,0.5),(-0.06,0.5),(-0.02,0.5),(0.0,0.5),(0.02,0.5),(0.06,0.5),(0.1,0.5),(0.14,0.5)]]
+    # epsilon_matrix = [[(-0.14,0.5),(-0.1,0.5),(-0.06,0.5),(-0.02,0.5),(0.0,0.5),(0.02,0.5),(0.06,0.5),(0.1,0.5),(0.14,0.5)]]
 
 
 
-    sim_paths=[]
-    for case,epsilons in zip(sim,epsilon_matrix):
-        sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo))
+    # sim_paths=[]
+    # for case,epsilons in zip(sim,epsilon_matrix):
+    #     sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo))
     # plot_multi_sim_path(sim_paths, beta, gamma, epsilon_matrix, sim, t)
-    plot_sim_path_special_case(sim_paths, beta, gamma, epsilon_matrix, sim, t)
+    # plot_sim_path_special_case(sim_paths, beta, gamma, epsilon_matrix, sim, t)
     # eq_points_exact(epsilon,beta,gamma)
 
     #
     # sim=['x','x','x','x','x']
     # sim=['x','x','x']
     # sim=['x']
-    # sim=['x']
-    # sim=['lm']
+    # sim=['x','lm']
+    sim=['lm']
 
     # epsilon_matrix=[[(0.02,0.05),(0.04,0.05),(0.06,0.05),(0.08,0.05),(0.1,0.05),(0.14,0.05),(0.18,0.05),(0.22,0.05),(0.26,0.05),(0.3,0.05),(0.36,0.05),(0.4,0.05),(0.45,0.05),(0.5,0.05),(0.55,0.05),(0.6,0.05),(0.65,0.05),(0.7,0.05),(0.75,0.05),(0.8,0.05),(0.85,0.05),(0.9,0.05),(0.93,0.05),(0.94,0.05),(0.98,0.05)]]
     # epsilon_matrix = [[(e,0.02) for e in np.linspace(0.02,0.98,20)],[(e,0.04) for e in np.linspace(0.02,0.98,20)],[(e,0.06) for e in np.linspace(0.02,0.98,20)],[(e,0.08) for e in np.linspace(0.02,0.98,20)],[(e,0.1) for e in np.linspace(0.02,0.98,20)],[(e,0.12) for e in np.linspace(0.02,0.98,20)]]
@@ -4497,6 +4804,9 @@ if __name__=='__main__':
     # temp_array_to_matrix = [-0.98,-0.96,-0.94,-0.92,-0.9,-0.88,-0.86,-0.84,-0.82,-0.8,-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.002,0.002,0.006,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.82,0.84,0.86,0.88,0.9,0.92,0.94,0.96,0.98]
     # epsilon_matrix = [[(e, 0.3) for e in temp_array_to_matrix]]
     # epsilon_matrix = [[(0.1, 0.02),(0.1,0.1)]]
+    # epsilon_matrix = [[(0.0,0.02),(0.0,0.5),(0.0,0.98)]]
+    # epsilon_matrix = [[(0.0,0.5)]]
+
     # epsilon_matrix = [[(1e-9,e) for e in np.linspace(-0.999,0.999,20)],[(1e-8,e) for e in np.linspace(-0.999,0.999,20)],[(1e-7,e) for e in np.linspace(-0.999,0.999,20)],[(1e-6,e) for e in np.linspace(-0.999,0.999,20)]]
     # epsilon_matrix = [[(0.1,-0.9),(0.1,-0.5),(0.1,-0.02),(0.1,0.02),(0.1,0.5),(0.1,0.9)]]
     # epsilon_matrix = [[(0.02,e) for e in np.linspace(0.0001,0.999,20)],[(0.06,e) for e in np.linspace(0.0001,0.999,20)],[(0.1,e) for e in np.linspace(0.0001,0.999,20)],[(0.14,e) for e in np.linspace(0.0001,0.999,20)]]
@@ -4505,11 +4815,21 @@ if __name__=='__main__':
     # epsilon_matrix = [[(1e-9,e) for e in np.linspace(-0.5,0.5,20)],[(1e-8,e) for e in np.linspace(-0.5,0.5,20)],[(1e-7,e) for e in np.linspace(-0.5,0.5,20)],[(1e-6,e) for e in np.linspace(-0.5,0.5,20)]]
     # epsilon_matrix = [[(0.0,e) for e in np.linspace(-0.9999,0.9999,20)]]
     # epsilon_matrix = [np.linspace(0.01,0.98,15)]
+    # epsilon_matrix = [[0.1]]
+    # epsilon_matrix = [[(0.0,0.02),(0.0,0.1),(0.0,0.2),(0.0,0.3),(0.0,0.4),(0.0,0.5)]]
+    # epsilon_matrix = [[0.02,0.1,0.2,0.3,0.4,0.5]]
+    epsilon_matrix = [[0.1]]
+    # epsilon_matrix = [[(0.0,0.5)],[0.5]]
 
 
-    # sim_paths=[]
-    # for case,epsilons in zip(sim,epsilon_matrix):
-    #     sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
+
+    sim_paths=[]
+    times=np.linspace(0.0000001,24.0,1000)
+    # times=[0.01,10,15,20]
+    for case,epsilons in zip(sim,epsilon_matrix):
+        # sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
+        sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times))
+
     # # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]/(1-eps[1])] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[1]),lambda p,eps,l:p[:,2]],'dem',['p2','p1'],
     # #              ['y2','y1/delta_mu'],['(p2-p2(0))/delta_mu','p1'],beta/gamma,['(p2-p2(0))/delta_mu vs y2','p1 vs y1/delta'],['p2_norm_v_y2','p1_norm_v_y1'],labeladdon=lambda x,y:'')
     # # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[0]),lambda p,eps,l:p[:,2]/(1-eps[0])],'del',['pl2','pl1'],
@@ -4520,7 +4840,11 @@ if __name__=='__main__':
     # plot_integration_theory_epslamsamll(sim_paths,epsilon_matrix,sim,beta,gamma,'s')
     # plot_integration_theory_epslamsamll(sim_paths,epsilon_matrix,sim,beta,gamma,'s')
     # plot_integration_lm_clancy(sim_paths,epsilon_matrix,sim,beta,gamma)
+    # action_numeric_mu,action_theory_mu,action_theory_u_mom_space=plot_integration_clancy_action_partial([sim_paths[0]],epsilon_matrix,sim,beta,gamma,times)
+    # action_numeric_lm,action_theory_lm=plot_integration_clancy_action_partial_epsmu0([sim_paths[1]],[epsilon_matrix[1]],[sim[1]],beta,gamma,times)
+    action_numeric_lm,action_theory_lm=plot_integration_clancy_action_partial_epsmu0(sim_paths,epsilon_matrix,sim,beta,gamma,times)
 
+    # plot_time_v_action_one_eps_0(sim_paths,epsilon_matrix,sim,beta,gamma,times)
 
 
 
