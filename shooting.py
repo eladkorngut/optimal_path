@@ -9,6 +9,7 @@ import numdifftools as ndft
 from itertools import cycle
 import csv
 import pickle
+import os
 
 from scipy import interpolate
 
@@ -1495,7 +1496,7 @@ def guess_path_lam(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,org_rad
 
 
 def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,one_shot_dt,radius,lin_combo=1.00008204478397,org_shot_angle=np.pi/4-0.785084,action_times=None):
-    guessed_paths=[]
+    guessed_paths,guessed_lin_combo,guessed_qstar,guessed_action=[],[],[],[]
     shot_angle=org_shot_angle
     if type(beta) is list:
         for l in beta:
@@ -1525,7 +1526,7 @@ def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,
             # sampleingtime=[7.0,9.0,10.0]
             # sampleingtime=[3.0,4.0,7.0,8.0,10.0]
             # sampleingtime=[20.0]
-            sampleingtime=[24.0]
+            sampleingtime=[20.0]
             # sampleingtime=[11.0]
 
 
@@ -1543,10 +1544,19 @@ def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,
 
             # lin_combo,temp_radius,path=guess_path(sampleingtime,np.pi/4-0.74,lin_combo,q_star,one_shot_dt,radius,numpoints,J,shot_dq_dt)
             guessed_paths.append(path)
-
+            guessed_lin_combo.append(lin_combo)
+            guessed_qstar.append(q_star)
+            guessed_action.append(simulation_action(path,q_star))
     # print('lin combo=' + str(lin_combo) + ' r=' + str(radius))
     # plot_multi_guessed_paths(guessed_paths,beta,gamma,list_of_epsilons,case_to_run,np.linspace(0,sampleingtime[-1],numpoints))
-    return guessed_paths
+    return guessed_paths,sampleingtime[-1],guessed_lin_combo,guessed_qstar,guessed_action
+
+
+def simulation_action(path,q_star):
+    y1_for_linear,y2_for_linear = np.linspace(path[:, 0][-1], 0, 1000),np.linspace(path[:, 1][-1], 0, 1000)
+    py1_linear = q_star[2] - ((q_star[2] - path[:, 2][-1]) / path[:, 0][-1]) * y1_for_linear
+    py2_linear = q_star[3] - ((q_star[3] - path[:, 3][-1]) / path[:, 1][-1]) * y2_for_linear
+    return simps(path[:, 2], path[:, 0]) + simps(path[:, 3], path[:, 1]) + simps(py1_linear, y1_for_linear) + simps(py2_linear, y2_for_linear)
 
 
 def plot_multi_sim_path(sim_paths,beta,gamma,epsilon_matrix,list_sims,tf):
@@ -4597,7 +4607,22 @@ def plot_z(shot_angle, lin_combo,radius,final_time_path,one_shot_dt,beta,q_star,
 #         for eps in list_of_epsilons:
 #             y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case,beta,eps,t,gamma)
 
-
+def record_data(folder_name,beta,gamma,sim,stoptime,int_lin_combo,numpoints,epsilon_matrix,guessed_paths,guessed_action,qstar):
+    dir_path= os.path.dirname(os.path.realpath(__file__))
+    os.chdir(dir_path+'/Data')
+    os.mkdir(folder_name)
+    os.chdir(dir_path+'/Data/'+folder_name)
+    pickle.dump(beta,open('beta.pkl','wb'))
+    pickle.dump(gamma,open('gamma.pkl','wb'))
+    pickle.dump(sim,open('sim.pkl','wb'))
+    pickle.dump(stoptime,open('stoptime.pkl','wb'))
+    pickle.dump(int_lin_combo,open('lin_combo.pkl','wb'))
+    pickle.dump(numpoints,open('numpoints.pkl','wb'))
+    pickle.dump(epsilon_matrix,open('epsilon_matrix.pkl','wb'))
+    pickle.dump(guessed_paths,open('guessed_paths.pkl','wb'))
+    pickle.dump(np.linspace(0.0, stoptime, numpoints),open('time_series.pkl','wb'))
+    pickle.dump(guessed_action,open('action_paths.pkl','wb'))
+    pickle.dump(qstar,open('qstar.pkl','wb'))
 
 if __name__=='__main__':
     #Network Parameters
@@ -4788,9 +4813,9 @@ if __name__=='__main__':
     #
     # sim=['x','x','x','x','x']
     # sim=['x','x','x']
-    # sim=['x']
+    sim=['x']
     # sim=['x','lm']
-    sim=['lm']
+    # sim=['lm']
 
     # epsilon_matrix=[[(0.02,0.05),(0.04,0.05),(0.06,0.05),(0.08,0.05),(0.1,0.05),(0.14,0.05),(0.18,0.05),(0.22,0.05),(0.26,0.05),(0.3,0.05),(0.36,0.05),(0.4,0.05),(0.45,0.05),(0.5,0.05),(0.55,0.05),(0.6,0.05),(0.65,0.05),(0.7,0.05),(0.75,0.05),(0.8,0.05),(0.85,0.05),(0.9,0.05),(0.93,0.05),(0.94,0.05),(0.98,0.05)]]
     # epsilon_matrix = [[(e,0.02) for e in np.linspace(0.02,0.98,20)],[(e,0.04) for e in np.linspace(0.02,0.98,20)],[(e,0.06) for e in np.linspace(0.02,0.98,20)],[(e,0.08) for e in np.linspace(0.02,0.98,20)],[(e,0.1) for e in np.linspace(0.02,0.98,20)],[(e,0.12) for e in np.linspace(0.02,0.98,20)]]
@@ -4818,17 +4843,24 @@ if __name__=='__main__':
     # epsilon_matrix = [[0.1]]
     # epsilon_matrix = [[(0.0,0.02),(0.0,0.1),(0.0,0.2),(0.0,0.3),(0.0,0.4),(0.0,0.5)]]
     # epsilon_matrix = [[0.02,0.1,0.2,0.3,0.4,0.5]]
-    epsilon_matrix = [[0.1]]
+    # epsilon_matrix = [[0.1,0.5]]
     # epsilon_matrix = [[(0.0,0.5)],[0.5]]
+    # epsilon_matrix = [[(0.5,-0.14),(0.5,-0.1),(0.5,-0.06),(0.5,-0.02),(0.5,0.02),(0.5,0.06),(0.5,0.1),(0.5,0.14)]]
+    epsilon_matrix = [[(-0.14,0.3),(-0.1,0.3),(-0.06,0.3),(-0.02,0.3),(0.0,0.3),(0.02,0.3),(0.06,0.3),(0.1,0.3),(0.14,0.3)]]
 
 
 
-    sim_paths=[]
+    sim_paths,sim_sampletime,sim_lin_combo,sim_action,sim_qstar=[],[],[],[],[]
     times=np.linspace(0.0000001,24.0,1000)
     # times=[0.01,10,15,20]
     for case,epsilons in zip(sim,epsilon_matrix):
-        # sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle))
-        sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times))
+        path,sampletime,lin_combo,qstar,path_action=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
+        sim_paths.append(path)
+        sim_sampletime.append(sampletime)
+        sim_lin_combo.append(lin_combo)
+        sim_action.append(path_action)
+        sim_qstar.append(qstar)
+        # sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times))
 
     # # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]/(1-eps[1])] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[1]),lambda p,eps,l:p[:,2]],'dem',['p2','p1'],
     # #              ['y2','y1/delta_mu'],['(p2-p2(0))/delta_mu','p1'],beta/gamma,['(p2-p2(0))/delta_mu vs y2','p1 vs y1/delta'],['p2_norm_v_y2','p1_norm_v_y1'],labeladdon=lambda x,y:'')
@@ -4842,7 +4874,11 @@ if __name__=='__main__':
     # plot_integration_lm_clancy(sim_paths,epsilon_matrix,sim,beta,gamma)
     # action_numeric_mu,action_theory_mu,action_theory_u_mom_space=plot_integration_clancy_action_partial([sim_paths[0]],epsilon_matrix,sim,beta,gamma,times)
     # action_numeric_lm,action_theory_lm=plot_integration_clancy_action_partial_epsmu0([sim_paths[1]],[epsilon_matrix[1]],[sim[1]],beta,gamma,times)
-    action_numeric_lm,action_theory_lm=plot_integration_clancy_action_partial_epsmu0(sim_paths,epsilon_matrix,sim,beta,gamma,times)
+    # action_numeric_lm,action_theory_lm=plot_integration_clancy_action_partial_epsmu0(sim_paths,epsilon_matrix,sim,beta,gamma,times)
+
+
+    folder_name='eps_mu03_epslam_change_small_stoptime20'
+    record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar)
 
     # plot_time_v_action_one_eps_0(sim_paths,epsilon_matrix,sim,beta,gamma,times)
 
