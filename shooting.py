@@ -1155,10 +1155,17 @@ p1_linear_approx_dy_deps_epslam_small = lambda y1,y2,eps_mu,lam: dp1_dy1_clancy(
 
 p2_linear_approx_dy_deps_epslam_small = lambda y1,y2,eps_mu,lam: dp2_dy1_clancy(y1,y2)*dy1_desplam_o0(y1,eps_mu,lam)+dp2_dy2_clancy(y1,y2)*dy2_desplam_o0(y2,eps_mu,lam)
 
-
-class Sqrt:
-    pass
-
+epslam_crit_regim_lin_sqr = lambda eps_mu,lam: -((-1 + lam)**2*lam**2 -eps_mu*(lam*((-1 + lam)*(1 + lam**2) -2*lam*np.log(lam))\
+                        + eps_mu*(4 - 5*lam +lam**3 +2*lam**2*np.log(lam) -2*(-2 + lam)*(-1 + lam)**2*eps_mu)) +
+                        np.sqrt((-1 + lam)**2*lam**3*(8 + lam -10*lam**2 +lam**3 +16*lam*np.log(lam))+ eps_mu*
+                        (2*(-1 + lam)**2*lam**2*(-((-1 + lam)*(12 +lam*(17 +(-4 + lam)*lam)))+ 2*lam*(12 + lam)*
+                        np.log(lam)) +eps_mu*(lam*((-1 + lam)**2*(16 +lam*(65 +lam*(-94 +lam*(10 +lam*(6 + lam)))))
+                        + 4*lam*np.log(lam)*(8 +lam*(5 +lam*(-42 +(39 - 10*lam)*lam)) +lam**2*np.log(lam)))+ eps_mu*
+                        (-2*lam*(-1 + lam**2 -2*lam*np.log(lam))*((-1 + lam)*(-28 +lam*(43 +(-14 + lam)*lam))- 2*lam**2*
+                        np.log(lam)) +eps_mu*(-((-1 + lam)**2*(48 +lam*(-160 +lam*(115 +lam*(10 +lam*(-21 + 4*lam)))))) +
+                        4*lam**2*np.log(lam)*((-1 + lam)*(-24 +lam*(39 +lam*(-21 + 4*lam))) +lam**2*np.log(lam))\
+                        + 4*(-2 + lam)*(-1 + lam)**2*eps_mu*(-((-1 + lam)*(12 +(-15 + lam)*lam))- 2*lam**2*np.log(lam) -
+                        3*(-2 + lam)*(-1 + lam)**2*eps_mu)))))))/(4*(-1 + lam)**2*(1 +eps_mu)*(-lam +(-2 + lam)*eps_mu))
 
 y1_linear_approx_dy_deps_epslam_small = lambda p1,p2,eps_mu,lam:(np.exp(p1 + p2)*(-1 + lam)*(-1 + eps_mu)*((p2 - p2*eps_mu**2)/
     (np.exp(p1 + p2)*lam*(-1 + eps_mu**2) -np.sqrt(np.exp(2*p1)*(-1 + eps_mu)**2 +2*np.exp(p1 + p2)*(-1 + eps_mu**2) +
@@ -1171,6 +1178,16 @@ y1_linear_approx_dy_deps_epslam_small = lambda p1,p2,eps_mu,lam:(np.exp(p1 + p2)
     (np.exp(p2)*(1 + eps_mu) -np.exp(p1)*(-1 + eps_mu)*(-1 + np.exp(p2)*lam*(1 + eps_mu)) +np.sqrt(np.exp(2*p1)*(-1 + eps_mu)**2 +
     2*np.exp(p1 + p2)*(-1 + eps_mu**2) +np.exp(2*p2)*((1 + eps_mu)**2 +np.exp(2*p1)*lam**2*(-1 + eps_mu**2)**2)))**2))/(2*lam*np.log(lam)
     *np.sqrt(np.exp(2*p1)*(-1 + eps_mu)**2 +2*np.exp(p1 + p2)*(-1 + eps_mu**2) +np.exp(2*p2)*((1 + eps_mu)**2 + np.exp(2*p1)*lam**2*(-1 + eps_mu**2)**2)))
+
+s2_both_small = lambda eps_lam,eps_mu,lam: (-1/2)*(1-1/lam)**2*(eps_mu**2+eps_mu*eps_lam+eps_lam**2)
+
+s2_both_small_correction_to_clancy = lambda eps_lam,eps_mu,lam: (-1/2)*(1-1/lam)**2*(eps_mu*eps_lam+eps_lam**2)
+
+s1_epslam_large = lambda eps_lam,eps_mu,lam: ((1 - eps_lam)*(-1 + eps_mu)*((-1 + lam)**2*lam + (3 - 4*lam +
+                    lam**2 + 2*lam*np.log(lam))*eps_mu))/(4*lam*(1 + eps_mu)*(-lam + (-2 + lam)*eps_mu))
+s1_epslam_large_minus_clancy = lambda eps_lam,eps_mu,lam: (1/2)*(1/lam-1+np.log(lam)) + ((1 - eps_lam)*(-1 + eps_mu)*((-1 +
+         lam)**2*lam + (3 - 4*lam +lam**2 + 2*lam*np.log(lam))*eps_mu))/(4*lam*(1 + eps_mu)*(-lam + (-2 +
+         lam)*eps_mu)) - action_clancy(eps_mu,lam,1.0)
 
 
 def action_clancy(eps,beta,gamma):
@@ -4942,7 +4959,12 @@ if __name__=='__main__':
     # epsilon_matrix = [[(0.0,0.1)]]
     # epsilon_matrix = [[(-0.5,0.98),(-0.4,0.98),(-0.1,0.98),(0.1,0.98),(0.4,0.98),(0.5,0.98)]]
     # epsilon_matrix = [[(0.0,0.1),(0.0,0.2),(0.0,0.3),(0.0,0.4),(0.0,0.5),(0.0,0.6),(0.0,0.9)]]
-    epsilon_matrix = [[(-0.14,0.4),(-0.1,0.4),(-0.06,0.4),(-0.02,0.4),(0.0,0.4),(0.02,0.4),(0.06,0.4),(0.1,0.4),(0.14,0.4)]]
+    # epsilon_matrix = [[(-0.14,0.4),(-0.1,0.4),(-0.06,0.4),(-0.02,0.4),(0.0,0.4),(0.02,0.4),(0.06,0.4),(0.1,0.4),(0.14,0.4)]]
+    # epsilon_matrix = [[(0.0,0.4),(0.1,0.4),(0.2,0.4),(0.3,0.4),(0.4,0.4),(0.5,0.4),(0.6,0.4),(0.9,0.4)]]
+    # epsilon_matrix = [[(0.1,e) for e in np.linspace(0.00001,0.9999,4)]]
+    # epsilon_matrix = [[(-0.14,0.1),(-0.1,0.1),(-0.06,0.1),(-0.02,0.1),(0.02,0.1),(0.06,0.1),(0.1,0.1),(0.14,0.1)]]
+    epsilon_matrix = [[(0.05,e) for e in np.linspace(0.00001,0.99999,20)]]
+    # epsilon_matrix = [[0.1]]
 
 
 
@@ -4980,7 +5002,7 @@ if __name__=='__main__':
     # action_numeric_lm,action_theory_lm=plot_integration_clancy_action_partial_epsmu0(sim_paths,epsilon_matrix,sim,beta,gamma,times)
 
 
-    folder_name='eps_mu04_epslam_change_small_stoptime20'
+    folder_name='epslam005_epsmu_change_1_to_0_lam16_stoptime20_linspace20'
     # folder_name='temp'
     # record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle,sim_part_paths,sim_part_action)
     record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle)
