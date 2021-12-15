@@ -1591,21 +1591,34 @@ def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,
     if type(beta) is list:
         for l in beta:
             if l<=1.8:
-                sampleingtime=[6.0,7.0, 9.0, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 15.5, 16.0,
-                             16.5, 17.0, 17.5, 18.0, 18.5, 19.5, 20.0]
+                # sampleingtime=[6.0,7.0, 9.0, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 15.5, 16.0,
+                #              16.5, 17.0, 17.5, 18.0, 18.5, 19.5, 20.0]
+                sampleingtime=[20.0]
+
             elif l<=2.4:
-                sampleingtime = [6.0,7.0, 10.0, 15.0]
+                # sampleingtime = [6.0,7.0, 10.0, 15.0]
+                sampleingtime = [15.0]
             elif l<=3.3:
-                sampleingtime = [6.0, 7.0, 10.0]
+                # sampleingtime = [6.0, 7.0, 10.0]
+                sampleingtime = [10.0]
             elif l<=4.4:
-                sampleingtime = [3.0, 7.0]
+                # sampleingtime = [3.0, 7.0]
+                sampleingtime = [7.0]
             else:
-                sampleingtime = [3.0, 5.0]
+                # sampleingtime = [3.0, 5.0]
+                sampleingtime = [5.0]
             y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt, J = eq_hamilton_J(case_to_run, l,
                                                                                                   list_of_epsilons, t, gamma)
             q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
             lin_combo,temp_radius,shot_angle,path=guess_path(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,radius,numpoints,J,shot_dq_dt)
             guessed_paths.append(path)
+
+            guessed_lin_combo.append(lin_combo)
+            guessed_qstar.append(q_star)
+            guessed_action.append(simulation_action(path,q_star))
+            guessed_r.append(temp_radius)
+            guessed_angle.append(shot_angle)
+
     else:
         for eps in list_of_epsilons:
             # sampleingtime=[7.0,9.0,10.0,10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,14.5,15.0]
@@ -4732,7 +4745,7 @@ if __name__=='__main__':
 
     # beta=[1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3.0]
     # beta=[1.6,1.8,2.0,2.4,2.8,3.0,3.3]
-    # beta=[1.6,3.3]
+    beta=[1.6,3.3]
 
     # gamma=1.0
 
@@ -4963,8 +4976,8 @@ if __name__=='__main__':
     # epsilon_matrix = [[(0.0,0.4),(0.1,0.4),(0.2,0.4),(0.3,0.4),(0.4,0.4),(0.5,0.4),(0.6,0.4),(0.9,0.4)]]
     # epsilon_matrix = [[(0.1,e) for e in np.linspace(0.00001,0.9999,4)]]
     # epsilon_matrix = [[(-0.14,0.1),(-0.1,0.1),(-0.06,0.1),(-0.02,0.1),(0.02,0.1),(0.06,0.1),(0.1,0.1),(0.14,0.1)]]
-    epsilon_matrix = [[(0.05,e) for e in np.linspace(0.00001,0.99999,20)]]
-    # epsilon_matrix = [[0.1]]
+    epsilon_matrix = [[(0.15,e) for e in np.linspace(0.00001,0.99999,20)]]
+    epsilon_matrix = (0.1,0.1)
 
 
 
@@ -4973,8 +4986,10 @@ if __name__=='__main__':
 
     times=np.linspace(0.0000001,20.0,1000)
     # times=[0.01,10,15,20]
-    for case,epsilons in zip(sim,epsilon_matrix):
-        path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
+    # for case,epsilons in zip(sim,epsilon_matrix):
+    for case,b in zip(sim,beta):
+        # path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
+        path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilon_matrix, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
         # path, sampletime, lin_combo, qstar, path_action, rad, ang,part_path,part_act=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times)
         # sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times))
         sim_paths.append(path)
@@ -5002,7 +5017,7 @@ if __name__=='__main__':
     # action_numeric_lm,action_theory_lm=plot_integration_clancy_action_partial_epsmu0(sim_paths,epsilon_matrix,sim,beta,gamma,times)
 
 
-    folder_name='epslam005_epsmu_change_1_to_0_lam16_stoptime20_linspace20'
+    folder_name='temp'
     # folder_name='temp'
     # record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle,sim_part_paths,sim_part_action)
     record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle)

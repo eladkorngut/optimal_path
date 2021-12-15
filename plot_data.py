@@ -216,15 +216,6 @@ def plot_one_path(name,xfun=None,yfun=None,paramter=0,ylabel='',xlabel='',title=
 
 
 def plot_action(name,paramter=0,ylabel='',xlabel='',title='',savename='action_plot',divide_by_eps=False,xaxis=None):
-    lam,x0=var[name]['lam'],1-1/var[name]['lam']
-    eps_mu_regime_change =  (-1 + lam - lam**2 + lam**3 - 2*lam*np.log(lam) - 2*var[name]['eps_lam'] +4*lam*var[name]['eps_lam']
-                          - 2*lam**2*var[name]['eps_lam'])/(1 - 3*lam + lam**2 + lam**3 - 2*lam*np.log(lam))
-    epsmu1_epslam0 = lambda lam,eps_lam,eps_mu: ((((-1 + lam)*(1 + lam**2) - 2*lam*np.log(lam))*eps_lam*(-1 + eps_mu))/(4*lam**2))/eps_lam
-    epsmu0_epslam0 = lambda lam,eps_lam,eps_mu:-(1/2)*x0**2*(eps_mu*eps_lam+eps_lam**2)/eps_lam
-    # eps_lam_theory = np.linspace(min(var[name]['eps_lam']),max(var[name]['eps_lam']),1000)
-    eps_lam_theory = min(var[name]['eps_lam'])
-    eps_mu_theory_low = np.linspace(0.0,eps_mu_regime_change,1000)
-    eps_mu_theory_high = np.linspace(eps_mu_regime_change,1.0,1000)
     def plot_regime_change():
         contact_point = shooting.epslam_crit_regim_lin_sqr(var[name]['eps_mu'], var[name]['lam'])
         sqr_range = np.linspace(0.0, contact_point, 1000)
@@ -251,23 +242,38 @@ def plot_action(name,paramter=0,ylabel='',xlabel='',title='',savename='action_pl
 
     fig=plt.figure()
     ax=fig.add_subplot(1, 1, 1)
-    if divide_by_eps is True:
-        # ax.plot(xaxis, (var[name]['action_paths'] - paramter) /var[name]['eps_lam'],
-        #         label='Sim',linewidth=4,linestyle='None',markersize=10, Marker='o',)
-        ax.plot(xaxis, (var[name]['action_paths'] - shooting.action_clancy(xaxis,lam,1.0)) /var[name]['eps_lam'],
-                label='Sim eps_lam='+str(eps_lam_theory),linewidth=4,linestyle='None',markersize=10, Marker='o',)
-    else:
-        # ax.plot(xaxis, (var[name]['action_paths'] - paramter),label='Sim',
-        #         linewidth=4,linestyle='None',markersize=10, Marker='o',)
-        ax.plot(xaxis, (var[name]['action_paths'] - shooting.action_clancy(xaxis,lam,1.0)),label='Sim',
-                linewidth=4,linestyle='None',markersize=10, Marker='o',)
+    for name_current in name:
+        lam,x0=var[name_current]['lam'],1-1/var[name_current]['lam']
+        eps_mu_regime_change =  (-1 + lam - lam**2 + lam**3 - 2*lam*np.log(lam) - 2*var[name_current]['eps_lam'] +4*lam*var[name_current]['eps_lam']
+                              - 2*lam**2*var[name_current]['eps_lam'])/(1 - 3*lam + lam**2 + lam**3 - 2*lam*np.log(lam))
+        epsmu1_epslam0 = lambda lam,eps_lam,eps_mu: ((((-1 + lam)*(1 + lam**2) - 2*lam*np.log(lam))*eps_lam*(-1 + eps_mu))/(4*lam**2))/eps_lam
+        epsmu0_epslam0 = lambda lam,eps_lam,eps_mu:-(1/2)*x0**2*(eps_mu*eps_lam+eps_lam**2)/eps_lam
+        # eps_lam_theory = np.linspace(min(var[name]['eps_lam']),max(var[name]['eps_lam']),1000)
+        eps_lam_theory = min(var[name_current]['eps_lam'])
+        eps_mu_theory_low = np.linspace(0.0,eps_mu_regime_change,1000)
+        eps_mu_theory_high = np.linspace(eps_mu_regime_change,1.0,1000)
 
-    ax.plot(eps_mu_theory_low,epsmu0_epslam0(lam,eps_lam_theory,eps_mu_theory_low),linewidth=4,linestyle='-',color='r')
-    ax.plot(eps_mu_theory_high,epsmu1_epslam0(lam,eps_lam_theory,eps_mu_theory_high),linewidth=4,linestyle='--',color='k')
-    # ax.plot(np.linspace(0.01,0.99,1000),shooting.action_o1_epsmu(eps_lam_theory,np.linspace(0.001,0.99,1000),lam),color='tab:orange',linewidth=4,linestyle=':')
+        if divide_by_eps is True:
+            # ax.plot(xaxis, (var[name]['action_paths'] - paramter) /var[name]['eps_lam'],
+            #         label='Sim',linewidth=4,linestyle='None',markersize=10, Marker='o',)
+            # ax.plot(xaxis, (var[name_current]['action_paths'] - shooting.action_clancy(xaxis,lam,1.0)) /var[name_current]['eps_lam'],
+            #         label='Sim eps_lam='+str(eps_lam_theory),linewidth=4,linestyle='None',markersize=10, Marker='o',)
+            ax.plot(var[name_current]['eps_mu'], (var[name_current]['action_paths'] - shooting.action_clancy(var[name_current]['eps_mu'],lam,1.0)) /var[name_current]['eps_lam'],
+                    label='Sim eps_lam='+str(eps_lam_theory),linewidth=4,linestyle='None',markersize=10, Marker='o',)
+
+        else:
+            # ax.plot(xaxis, (var[name]['action_paths'] - paramter),label='Sim',
+            #         linewidth=4,linestyle='None',markersize=10, Marker='o',)
+            ax.plot(xaxis, (var[name_current]['action_paths'] - shooting.action_clancy(xaxis,lam,1.0)),label='Sim',
+                    linewidth=4,linestyle='None',markersize=10, Marker='o',)
+
+        ax.plot(eps_mu_theory_low,epsmu0_epslam0(lam,eps_lam_theory,eps_mu_theory_low),linewidth=4,linestyle='-',color='r')
+        ax.plot(eps_mu_theory_high,epsmu1_epslam0(lam,eps_lam_theory,eps_mu_theory_high),linewidth=4,linestyle='--',color='k')
+        # ax.plot(np.linspace(0.01,0.99,1000),shooting.action_o1_epsmu(eps_lam_theory,np.linspace(0.001,0.99,1000),lam),color='tab:orange',linewidth=4,linestyle=':')
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    plt.title(title+ ', eps_lam='+str(min(var[name]['eps_lam']))  +', lam='+str(var[name]['lam']))
+    # plt.title(title+ ', lam='+str(var[name]['lam']))
+    plt.title(title)
     plt.legend()
     plt.tight_layout()
     fig.savefig(savename + '.png', dpi=200)
@@ -301,6 +307,7 @@ def import_folder_dict(dict):
     pickle_file.close()
     with open('beta.pkl', 'rb') as pickle_file:
         beta = pickle.load(pickle_file)
+        beta=np.array(beta) if type(beta) is list else beta
         dict['lam']=beta/gamma
     pickle_file.close()
     with open('numpoints.pkl', 'rb') as pickle_file:
@@ -313,18 +320,21 @@ def import_folder_dict(dict):
         dict['stoptime']=pickle.load(pickle_file)[0]
     pickle_file.close()
     with open('epsilon_matrix.pkl', 'rb') as pickle_file:
-        epsilon_matrix=pickle.load(pickle_file)[0]
-        dict['epsilon'] = epsilon_matrix
-        if type(epsilon_matrix[0]) is float:
-            dict['eps_lam'] = epsilon_matrix
-            dict['eps_mu'] = 0
+        if type(dict['lam']) is np.ndarray:
+            dict['epsilon'] = pickle.load(pickle_file)
         else:
-            eps_lam,eps_mu=[],[]
-            for eps in epsilon_matrix:
-                eps_lam.append(eps[0])
-                eps_mu.append(eps[1])
-            dict['eps_lam'] = np.array(eps_lam)
-            dict['eps_mu'] = np.array(eps_mu)
+            epsilon_matrix=pickle.load(pickle_file)[0]
+            dict['epsilon'] = epsilon_matrix
+            if type(epsilon_matrix[0]) is float:
+                dict['eps_lam'] = epsilon_matrix
+                dict['eps_mu'] = 0
+            else:
+                eps_lam,eps_mu=[],[]
+                for eps in epsilon_matrix:
+                    eps_lam.append(eps[0])
+                    eps_mu.append(eps[1])
+                dict['eps_lam'] = np.array(eps_lam)
+                dict['eps_mu'] = np.array(eps_mu)
     pickle_file.close()
     with open('action_paths.pkl', 'rb') as pickle_file:
         dict['action_paths']=np.array(pickle.load(pickle_file)[0])
@@ -363,7 +373,8 @@ def import_all_folders_from_data():
 if __name__=='__main__':
     var,filenames= import_all_folders_from_data()
     # name_of_file='eps_mu05_epslam_change_small_stoptime20_with_rad_angle'
-    name_of_file='epslam_change_const_epsmu_change_0_to_1_lam16_stoptime20_linespace_40'
+    name_of_file='temp'
+    # name_of_file=['epslam005_epsmu_change_1_to_0_lam16_stoptime20_linspace20','epslam01_epsmu_change_0_to_1_lam16_stoptime20_linespace_40','epslam015_epsmu_change_1_to_0_lam16_stoptime20_linspace20']
     # theory=shooting.y1_path_clancy(var[name_of_file]['path'][4][:,2],var[name_of_file]['path'][4][:,3],var[name_of_file]['eps_mu'][4],var[name_of_file]['lam'])
     # plot_one_path(name_of_file,u,pu,pu(var[name_of_file]['path'][4]),'(p1-p1(0))/eps_lam', 'p1', '(p1-p1(0))/eps_lam vs p1','dp1_norm_v_p1',True)
     # plot_one_path(name_of_file,y1,y1,y1(var[name_of_file]['path'][4]),'(p2-p2(0))/eps_lam', 'p2', '(p2-p2(0))/eps_lam vs p2','dp2_v_p2',True)
@@ -376,7 +387,8 @@ if __name__=='__main__':
     # plot_one_path(name_of_file,False,p2,0,'phi(p2,y2)', 'time', 'phi(p2,y2) vs time,','phi_p2_y2_v_time_non_norm',False)
     # plot_action(name_of_file,action_path(var[name_of_file]['path'][0]), 'action', 'eps_lam', 'Action vs eps_lam', 'action_plot_range_change_epsmu02_lam16_stoptime20', False)
     plot_action(name_of_file,0, '(S-S(0))/eps_lam', 'eps_mu', '(S-S(0))/eps_lam vs eps_mu',
-                'temp', True,var[name_of_file]['eps_mu'])
+                'temp', True)
     # plot_diff_times(name_of_file, 0, y1, 'y1', 'action', 'Action vs y1', 'action_v_y1_sub', False)
     # plot_diff_times(name_of_file, 0, y1, 'y1', 'S-S(0)', 'S-S(0) vs y1', 'action_v_y1_epslam_changes_clancy_theory_error', False)
+    # plot_one_path(name_of_file,False,action_path,action_path(var[name_of_file]['path'][0]),'', '', '','temp',True)
     print('this no love song')
