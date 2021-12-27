@@ -1068,7 +1068,7 @@ action_o2_small_eps_lam_small_eps_mu= lambda epsilon_lam,epsilon_mu,lam: (-(lam-
 
 action_o2_small_eps_lam_small_eps_mu_sqr_norm= lambda lam: -3*((lam-1)**2)/(2*lam**2)
 
-action_miki_jason_correction = lambda epsilon,lam:-(( (lam-1)*(1-12*lam+3*lam**2)+8*(lam**2)*np.log(lam) )/(4*lam^3))*epsilon**2
+action_miki_jason_correction = lambda epsilon,lam:-(( (lam-1)*(1-12*lam+3*lam**2)+8*(lam**2)*np.log(lam) )/(4*lam**3))*epsilon**2
 
 action_miki_jason_correction_norm = lambda lam:-(( (lam-1)*(1-12*lam+3*lam**2)+8*(lam**2)*np.log(lam) )/(4*lam**3))
 
@@ -4745,7 +4745,10 @@ if __name__=='__main__':
 
     # beta=[1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3.0]
     # beta=[1.6,1.8,2.0,2.4,2.8,3.0,3.3]
-    beta=[1.6,3.3]
+    beta=[1.6,1.8,2.0,3.0,3.3]
+    # beta=[1.6,3.3]
+    # beta=[2.4]
+
 
     # gamma=1.0
 
@@ -4798,7 +4801,9 @@ if __name__=='__main__':
     # int_lin_combo=0.9987084914577944
     # int_lin_combo=0.99999938448
     # int_lin_combo=0.9999994244804999
-    int_lin_combo = 1.0032283170284608
+    # int_lin_combo = 1.0032283170284608
+    int_lin_combo = 1.0035317699739623
+
 
 
     # int_lin_combo=1.001321728340301
@@ -4976,7 +4981,7 @@ if __name__=='__main__':
     # epsilon_matrix = [[(0.0,0.4),(0.1,0.4),(0.2,0.4),(0.3,0.4),(0.4,0.4),(0.5,0.4),(0.6,0.4),(0.9,0.4)]]
     # epsilon_matrix = [[(0.1,e) for e in np.linspace(0.00001,0.9999,4)]]
     # epsilon_matrix = [[(-0.14,0.1),(-0.1,0.1),(-0.06,0.1),(-0.02,0.1),(0.02,0.1),(0.06,0.1),(0.1,0.1),(0.14,0.1)]]
-    epsilon_matrix = [[(0.15,e) for e in np.linspace(0.00001,0.99999,20)]]
+    # epsilon_matrix = [[(0.15,e) for e in np.linspace(0.00001,0.99999,20)]]
     epsilon_matrix = (0.1,0.1)
 
 
@@ -5017,8 +5022,8 @@ if __name__=='__main__':
     # action_numeric_lm,action_theory_lm=plot_integration_clancy_action_partial_epsmu0(sim_paths,epsilon_matrix,sim,beta,gamma,times)
 
 
-    folder_name='temp'
-    # folder_name='temp'
+    # folder_name='epsmu01_epslam09_difflam_stoptime20_lam16_to33_more2'
+    folder_name='epslam012_epsmu012_diff_lam'
     # record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle,sim_part_paths,sim_part_action)
     record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle)
 

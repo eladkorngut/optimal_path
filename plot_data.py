@@ -216,6 +216,8 @@ def plot_one_path(name,xfun=None,yfun=None,paramter=0,ylabel='',xlabel='',title=
 
 
 def plot_action(name,paramter=0,ylabel='',xlabel='',title='',savename='action_plot',divide_by_eps=False,xaxis=None):
+    fig=plt.figure()
+    ax=fig.add_subplot(1, 1, 1)
     def plot_regime_change():
         contact_point = shooting.epslam_crit_regim_lin_sqr(var[name]['eps_mu'], var[name]['lam'])
         sqr_range = np.linspace(0.0, contact_point, 1000)
@@ -238,41 +240,132 @@ def plot_action(name,paramter=0,ylabel='',xlabel='',title='',savename='action_pl
                        shooting.epslam_crit_regim_lin_sqr(var[name]['eps_mu'], var[name]['lam']),
                        np.array(var[name]['eps_mu']), var[name]['lam']), marker='v', s=100, color='m', zorder=3,
                    label='Regime change')
-        ax.autoscale(False)  # To avoid that the scatter changes limits
-
-    fig=plt.figure()
-    ax=fig.add_subplot(1, 1, 1)
-    for name_current in name:
-        lam,x0=var[name_current]['lam'],1-1/var[name_current]['lam']
-        eps_mu_regime_change =  (-1 + lam - lam**2 + lam**3 - 2*lam*np.log(lam) - 2*var[name_current]['eps_lam'] +4*lam*var[name_current]['eps_lam']
-                              - 2*lam**2*var[name_current]['eps_lam'])/(1 - 3*lam + lam**2 + lam**3 - 2*lam*np.log(lam))
-        epsmu1_epslam0 = lambda lam,eps_lam,eps_mu: ((((-1 + lam)*(1 + lam**2) - 2*lam*np.log(lam))*eps_lam*(-1 + eps_mu))/(4*lam**2))/eps_lam
-        epsmu0_epslam0 = lambda lam,eps_lam,eps_mu:-(1/2)*x0**2*(eps_mu*eps_lam+eps_lam**2)/eps_lam
-        # eps_lam_theory = np.linspace(min(var[name]['eps_lam']),max(var[name]['eps_lam']),1000)
-        eps_lam_theory = min(var[name_current]['eps_lam'])
-        eps_mu_theory_low = np.linspace(0.0,eps_mu_regime_change,1000)
-        eps_mu_theory_high = np.linspace(eps_mu_regime_change,1.0,1000)
-
         if divide_by_eps is True:
-            # ax.plot(xaxis, (var[name]['action_paths'] - paramter) /var[name]['eps_lam'],
-            #         label='Sim',linewidth=4,linestyle='None',markersize=10, Marker='o',)
-            # ax.plot(xaxis, (var[name_current]['action_paths'] - shooting.action_clancy(xaxis,lam,1.0)) /var[name_current]['eps_lam'],
-            #         label='Sim eps_lam='+str(eps_lam_theory),linewidth=4,linestyle='None',markersize=10, Marker='o',)
-            ax.plot(var[name_current]['eps_mu'], (var[name_current]['action_paths'] - shooting.action_clancy(var[name_current]['eps_mu'],lam,1.0)) /var[name_current]['eps_lam'],
-                    label='Sim eps_lam='+str(eps_lam_theory),linewidth=4,linestyle='None',markersize=10, Marker='o',)
-
+            ax.plot(xaxis, (var[name]['action_paths'] - paramter(var[name]['eps_mu'],var[name]['lam'],1.0)) /var[name]['eps_lam'],label='Sim',linewidth=4,
+                    linestyle='None',markersize=10, Marker='o',)
         else:
-            # ax.plot(xaxis, (var[name]['action_paths'] - paramter),label='Sim',
-            #         linewidth=4,linestyle='None',markersize=10, Marker='o',)
-            ax.plot(xaxis, (var[name_current]['action_paths'] - shooting.action_clancy(xaxis,lam,1.0)),label='Sim',
-                    linewidth=4,linestyle='None',markersize=10, Marker='o',)
+            ax.plot(xaxis, (var[name]['action_paths'] - paramter(var[name]['eps_mu'],var[name]['lam'],1.0)),label='Sim',linewidth=4,linestyle='None'
+                    ,markersize=10, Marker='o')
+        ax.autoscale(False)  # To avoid that the scatter changes limits
+    def plot_multi_epslam_const_epsmu_change():
+        for name_current in name:
+            lam, x0 = var[name_current]['lam'], 1 - 1 / var[name_current]['lam']
+            eps_mu_regime_change = (-1 + lam - lam ** 2 + lam ** 3 - 2 * lam * np.log(lam) - 2 * var[name_current][
+                'eps_lam'] + 4 * lam * var[name_current]['eps_lam']- 2 * lam ** 2 * var[name_current]['eps_lam']) / (
+               1 - 3 * lam + lam ** 2 + lam ** 3 - 2 * lam * np.log(lam))
+            epsmu1_epslam0_norm = lambda lam, eps_lam, eps_mu: ((((-1 + lam) * (1 + lam ** 2) - 2 * lam * np.log(
+                lam)) * eps_lam * (-1 + eps_mu)) / (4 * lam ** 2)) / eps_lam
+            epsmu0_epslam0_norm = lambda lam, eps_lam, eps_mu: -(1 / 2) * x0 ** 2 * (
+                        eps_mu * eps_lam + eps_lam ** 2) / eps_lam
+            epsmu1_epslam0 = lambda lam, eps_lam, eps_mu: ((((-1 + lam) * (1 + lam ** 2) - 2 * lam * np.log(
+                lam)) * eps_lam * (-1 + eps_mu)) / (4 * lam ** 2))
+            epsmu0_epslam0 = lambda lam, eps_lam, eps_mu: -(1 / 2) * x0 ** 2 * (
+                        eps_mu * eps_lam + eps_lam ** 2)
+            # eps_lam_theory = np.linspace(min(var[name]['eps_lam']),max(var[name]['eps_lam']),1000)
+            eps_lam_theory = min(var[name_current]['eps_lam'])
+            eps_mu_theory_low = np.linspace(0.0, eps_mu_regime_change, 1000)
+            eps_mu_theory_high = np.linspace(eps_mu_regime_change, 1.0, 1000)
 
-        ax.plot(eps_mu_theory_low,epsmu0_epslam0(lam,eps_lam_theory,eps_mu_theory_low),linewidth=4,linestyle='-',color='r')
-        ax.plot(eps_mu_theory_high,epsmu1_epslam0(lam,eps_lam_theory,eps_mu_theory_high),linewidth=4,linestyle='--',color='k')
-        # ax.plot(np.linspace(0.01,0.99,1000),shooting.action_o1_epsmu(eps_lam_theory,np.linspace(0.001,0.99,1000),lam),color='tab:orange',linewidth=4,linestyle=':')
+            if divide_by_eps is True:
+                # ax.plot(xaxis, (var[name]['action_paths'] - paramter) /var[name]['eps_lam'],
+                #         label='Sim',linewidth=4,linestyle='None',markersize=10, Marker='o',)
+                # ax.plot(xaxis, (var[name_current]['action_paths'] - shooting.action_clancy(xaxis,lam,1.0)) /var[name_current]['eps_lam'],
+                #         label='Sim eps_lam='+str(eps_lam_theory),linewidth=4,linestyle='None',markersize=10, Marker='o',)
+                ax.plot(var[name_current]['eps_mu'], (var[name_current]['action_paths'] - shooting.action_clancy(
+                    var[name_current]['eps_mu'], lam,1.0)) / var[name_current]['eps_lam'],label='Sim eps_lam=' +
+                    str(eps_lam_theory), linewidth=4, linestyle='None', markersize=10,Marker='o')
+            else:
+                # ax.plot(xaxis, (var[name]['action_paths'] - paramter),label='Sim',
+                #         linewidth=4,linestyle='None',markersize=10, Marker='o',)
+                ax.plot(var[name_current]['eps_mu'], (var[name_current]['action_paths'] - shooting.action_clancy(var[name_current]['eps_mu'], lam, 1.0)),
+                        label='Sim'+' eps='+str(eps_lam_theory),linewidth=4, linestyle='None', markersize=10, Marker='o')
+            if divide_by_eps is False:
+                ax.plot(eps_mu_theory_low, epsmu0_epslam0(lam, eps_lam_theory, eps_mu_theory_low), linewidth=4,
+                        linestyle='-', color='r')
+                ax.plot(eps_mu_theory_high, epsmu1_epslam0(lam, eps_lam_theory, eps_mu_theory_high), linewidth=4,
+                        linestyle='--', color='k')
+            else:
+                ax.plot(eps_mu_theory_low, epsmu0_epslam0_norm(lam, eps_lam_theory, eps_mu_theory_low), linewidth=4,
+                        linestyle='-', color='r')
+                ax.plot(eps_mu_theory_high, epsmu1_epslam0_norm(lam, eps_lam_theory, eps_mu_theory_high), linewidth=4,
+                        linestyle='--', color='k')
+
+            # ax.plot(np.linspace(0.01,0.99,1000),shooting.action_o1_epsmu(eps_lam_theory,np.linspace(0.001,0.99,1000),lam),color='tab:orange',linewidth=4,linestyle=':')
+
+    def plot_diff_lam():
+        lam_theory = np.linspace(min(var[name]['lam']),max(var[name]['lam']),1000)
+        if divide_by_eps is True:
+            # ax.plot(var[name]['lam'], (var[name]['action_paths'] - shooting.action_clancy(var[name]['eps_mu'],var[name]['lam'],1.0)) /var[name]['eps_lam'],
+            #         label='Sim',linewidth=4,linestyle='None',markersize=10, Marker='o',)
+            ax.plot(var[name]['lam'], (var[name]['action_paths']-s0(var[name]['lam'])/2)/var[name]['eps_lam'],
+                    label='Sim',linewidth=4,linestyle='None',markersize=10, Marker='o',)
+        else:
+            # ax.plot(var[name]['lam'], (var[name]['action_paths'] - shooting.action_clancy(var[name]['eps_mu'],var[name]['lam'],1.0)),label='Sim',
+            #         linewidth=4,linestyle='None',markersize=10, Marker='o')
+            # ax.plot(var[name]['lam'], var[name]['action_paths']-s0(var[name]['lam'])/2,label='Sim',linewidth=4,linestyle='None',markersize=10, Marker='o')
+            # ax.plot(var[name]['lam'],var[name]['action_paths']-s0(var[name]['lam']),label='Sim',linewidth=4,linestyle='None'
+            #         ,markersize=10, Marker='o')
+            # ax.plot(var[name]['lam'],var[name]['action_paths']-s0(var[name]['lam']) - shooting.s2_both_small
+            # (var[name]['eps_lam'],var[name]['eps_mu'],var[name]['lam']),label='ME',linewidth=4,linestyle='None',markersize=10, Marker='o')
+            # ax.plot(var[name]['lam'],var[name]['action_paths']-s0(var[name]['lam']),label='Sim',linewidth=4,linestyle='None',markersize=10, Marker='o')
+            # ax.plot(var[name]['lam'],np.abs((var[name]['action_paths']-s0(var[name]['lam']) - shooting.action_miki_jason_correction
+            # (var[name]['eps_lam'],var[name]['lam']))/(var[name]['action_paths']-s0(var[name]['lam']))),label='MJ',linewidth=4,linestyle='None',markersize=10, Marker='v')
+            ax.plot(var[name]['lam'],np.abs((var[name]['action_paths']-s0(var[name]['lam']) - shooting.s2_both_small
+            (var[name]['eps_lam'],var[name]['eps_mu'],var[name]['lam']))/(var[name]['action_paths']-s0(var[name]['lam']))),label='ME',linewidth=4,linestyle='None',markersize=10, Marker='v')
+            # ax.plot(var[name]['lam'],var[name]['action_paths']-s0(var[name]['lam']) ,label='ME',linewidth=4,linestyle='None',markersize=10, Marker='v')
+            # ax.plot(var[name]['lam'],var[name]['action_paths']-shooting.action_clancy(var[name]['eps_mu'],var[name]['lam'],1.0) ,label='ME',linewidth=4,linestyle='None',markersize=10, Marker='v')
+        # ax.plot(lam_theory,shooting.s1_epslam_large(var[name]['eps_lam'],var[name]['eps_mu'],lam_theory), linewidth=4,
+        #         linestyle='-', color='r',label='Theory')
+        # ax.plot(lam_theory,shooting.s2_both_small(var[name]['eps_lam'],var[name]['eps_mu'],lam_theory), linewidth=4,
+        #         linestyle='-', color='r',label='ME')
+        # ax.plot(lam_theory,shooting.action_miki_jason_correction(var[name]['eps_lam'],lam_theory), linewidth=4,
+        #         linestyle='--', color='k',label='MJ')
+        # ax.plot(lam_theory, epsmu1_epslam0(lam_theory, var[name]['eps_lam'], var[name]['eps_mu']), linewidth=4,
+        #         linestyle='--', color='k')
+
+    def plot_diff_lam_multi():
+        for name_current in name:
+            lam_theory = np.linspace(min(var[name_current]['lam']), max(var[name_current]['lam']), 1000)
+            if divide_by_eps is True:
+                # ax.plot(var[name_current]['lam'], (var[name_current]['action_paths'] - shooting.action_clancy(var[name_current]['eps_mu'],var[name]['lam'],1.0)) /var[name]['eps_lam'],
+                #         label='Sim',linewidth=4,linestyle='None',markersize=10, Marker='o',)
+                ax.plot(var[name_current]['lam'], (var[name_current]['action_paths'] - s0(var[name_current]['lam']) / 2) / var[name]['eps_lam'],
+                        label='Sim', linewidth=4, linestyle='None', markersize=10, Marker='o', )
+            else:
+                # ax.plot(var[name_current]['lam'], (var[name_current]['action_paths'] - shooting.action_clancy(var[name_current]['eps_mu'],var[name_current]['lam'],1.0)),label='Sim',
+                #         linewidth=4,linestyle='None',markersize=10, Marker='o')
+                # ax.plot(var[name_current]['lam'], var[name_current]['action_paths']-s0(var[name_current]['lam'])/2,label='Sim',linewidth=4,linestyle='None',markersize=10, Marker='o')
+                # ax.plot(var[name_current]['lam'],var[name_current]['action_paths']-s0(var[name_current]['lam']),label='Sim',linewidth=4,linestyle='None'
+                #         ,markersize=10, Marker='o')
+                # ax.plot(var[name_current]['lam'],var[name_current]['action_paths']-s0(var[name_current]['lam']) - shooting.s2_both_small
+                # (var[name_current]['eps_lam'],var[name_current]['eps_mu'],var[name_current]['lam']),label='ME',linewidth=4,linestyle='None',markersize=10, Marker='o')
+                # ax.plot(var[name_current]['lam'],var[name_current]['action_paths']-s0(var[name_current]['lam']),label='Sim',linewidth=4,linestyle='None',markersize=10, Marker='o')
+                # ax.plot(var[name_current]['lam'],np.abs((var[name_current]['action_paths']-s0(var[name_current]['lam']) - shooting.action_miki_jason_correction
+                # (var[name_current]['eps_lam'],var[name_current]['lam']))/(var[name_current]['action_paths']-s0(var[name_current]['lam']))),label='MJ',linewidth=4,linestyle='None',markersize=10, Marker='v')
+                # ax.plot(var[name_current]['lam'],
+                #         np.abs((var[name_current]['action_paths'] - s0(var[name_current]['lam']) - shooting.s2_both_small
+                #         (var[name_current]['eps_lam'], var[name_current]['eps_mu'], var[name_current]['lam'])) / (
+                #                            var[name_current]['action_paths'] - s0(var[name_current]['lam']))), linewidth=4,
+                #         linestyle='None', markersize=10, Marker='v')
+                ax.plot(var[name_current]['lam'],-(var[name_current]['action_paths'] - s0(var[name_current]['lam'])), linewidth=4,
+                        linestyle='None', markersize=10, Marker='o')
+                # ax.plot(var[name]['lam'],var[name]['action_paths']-s0(var[name]['lam']) ,label='ME',linewidth=4,linestyle='None',markersize=10, Marker='v')
+                # ax.plot(var[name]['lam'],var[name]['action_paths']-shooting.action_clancy(var[name]['eps_mu'],var[name]['lam'],1.0) ,label='ME',linewidth=4,linestyle='None',markersize=10, Marker='v')
+            # ax.plot(lam_theory,shooting.s1_epslam_large(var[name]['eps_lam'],var[name]['eps_mu'],lam_theory), linewidth=4,
+            #         linestyle='-', color='r',label='Theory')
+            ax.plot(lam_theory,-shooting.s2_both_small(var[name_current]['eps_lam'],var[name_current]['eps_mu'],lam_theory), linewidth=4,
+                    linestyle='-',label='Theory eps_lam='+str(var[name_current]['eps_lam']))
+            # ax.plot(lam_theory,shooting.action_miki_jason_correction(var[name]['eps_lam'],lam_theory), linewidth=4,
+            #         linestyle='--', color='k',label='MJ')
+            # ax.plot(lam_theory, epsmu1_epslam0(lam_theory, var[name]['eps_lam'], var[name]['eps_mu']), linewidth=4,
+            #         linestyle='--', color='k')
+
+    # plot_diff_lam()
+    plot_diff_lam_multi()
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     # plt.title(title+ ', lam='+str(var[name]['lam']))
+    # plt.title(title+ ', eps_lam='+str(var[name]['eps_lam'])+ ', eps_mu='+str(var[name]['eps_mu']))
     plt.title(title)
     plt.legend()
     plt.tight_layout()
@@ -322,6 +415,8 @@ def import_folder_dict(dict):
     with open('epsilon_matrix.pkl', 'rb') as pickle_file:
         if type(dict['lam']) is np.ndarray:
             dict['epsilon'] = pickle.load(pickle_file)
+            dict['eps_lam'] = dict['epsilon'][0]
+            dict['eps_mu'] = dict['epsilon'][1]
         else:
             epsilon_matrix=pickle.load(pickle_file)[0]
             dict['epsilon'] = epsilon_matrix
@@ -373,8 +468,10 @@ def import_all_folders_from_data():
 if __name__=='__main__':
     var,filenames= import_all_folders_from_data()
     # name_of_file='eps_mu05_epslam_change_small_stoptime20_with_rad_angle'
-    name_of_file='temp'
+    # name_of_file='epslam006_epsmu01_diff_lam'
     # name_of_file=['epslam005_epsmu_change_1_to_0_lam16_stoptime20_linspace20','epslam01_epsmu_change_0_to_1_lam16_stoptime20_linespace_40','epslam015_epsmu_change_1_to_0_lam16_stoptime20_linspace20']
+    name_of_file=['epslam002_epsmu01_diff_lam','epslam004_epsmu01_diff_lam','epslam006_epsmu01_diff_lam','epslam008_epsmu01_diff_lam','epslam012_epsmu01_diff_lam','epslam014_epsmu01_diff_lam','epslam016_epsmu01_diff_lam']
+
     # theory=shooting.y1_path_clancy(var[name_of_file]['path'][4][:,2],var[name_of_file]['path'][4][:,3],var[name_of_file]['eps_mu'][4],var[name_of_file]['lam'])
     # plot_one_path(name_of_file,u,pu,pu(var[name_of_file]['path'][4]),'(p1-p1(0))/eps_lam', 'p1', '(p1-p1(0))/eps_lam vs p1','dp1_norm_v_p1',True)
     # plot_one_path(name_of_file,y1,y1,y1(var[name_of_file]['path'][4]),'(p2-p2(0))/eps_lam', 'p2', '(p2-p2(0))/eps_lam vs p2','dp2_v_p2',True)
@@ -386,8 +483,7 @@ if __name__=='__main__':
     # plot_one_path(name_of_file,False,p1,0,'phi(p1,y1)/eps_lam', 'time', 'phi(p1,y1) vs time,','phi1_v_time_epsmu05_epslam_changes',False)
     # plot_one_path(name_of_file,False,p2,0,'phi(p2,y2)', 'time', 'phi(p2,y2) vs time,','phi_p2_y2_v_time_non_norm',False)
     # plot_action(name_of_file,action_path(var[name_of_file]['path'][0]), 'action', 'eps_lam', 'Action vs eps_lam', 'action_plot_range_change_epsmu02_lam16_stoptime20', False)
-    plot_action(name_of_file,0, '(S-S(0))/eps_lam', 'eps_mu', '(S-S(0))/eps_lam vs eps_mu',
-                'temp', True)
+    plot_action(name_of_file,0, 'S-S0', 'lam', '(S-S0) vs lam','temp', False,0)
     # plot_diff_times(name_of_file, 0, y1, 'y1', 'action', 'Action vs y1', 'action_v_y1_sub', False)
     # plot_diff_times(name_of_file, 0, y1, 'y1', 'S-S(0)', 'S-S(0) vs y1', 'action_v_y1_epslam_changes_clancy_theory_error', False)
     # plot_one_path(name_of_file,False,action_path,action_path(var[name_of_file]['path'][0]),'', '', '','temp',True)
