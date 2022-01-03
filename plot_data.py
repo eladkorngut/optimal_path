@@ -347,14 +347,18 @@ def plot_action(name,paramter=0,ylabel='',xlabel='',title='',savename='action_pl
                 #         (var[name_current]['eps_lam'], var[name_current]['eps_mu'], var[name_current]['lam'])) / (
                 #                            var[name_current]['action_paths'] - s0(var[name_current]['lam']))), linewidth=4,
                 #         linestyle='None', markersize=10, Marker='v')
-                ax.plot(var[name_current]['lam'],-(var[name_current]['action_paths'] - s0(var[name_current]['lam'])), linewidth=4,
-                        linestyle='None', markersize=10, Marker='o')
+                # ax.plot(var[name_current]['lam'],-(var[name_current]['action_paths'] - s0(var[name_current]['lam'])), linewidth=4,
+                #         linestyle='None', markersize=10, Marker='o')
+                ax.plot(var[name_current]['lam'],(var[name_current]['action_paths'] - s0(var[name_current]['lam']))/shooting.s2_both_small(var[name_current]['eps_lam'],var[name_current]['eps_mu'],var[name_current]['lam']), linewidth=4,
+                        linestyle='None', markersize=10, Marker='o',label='ME eps='+str(var[name_current]['eps_lam']))
+                # ax.plot(var[name_current]['lam'],(var[name_current]['action_paths'] - s0(var[name_current]['lam']))/np.array(shooting.action_miki_jason_correction(var[name_current]['eps_lam'],np.array(var[name_current]['lam']))), linewidth=4,
+                #         linestyle='None', markersize=10, Marker='v',label='MJ eps='+str(var[name_current]['eps_lam']))
                 # ax.plot(var[name]['lam'],var[name]['action_paths']-s0(var[name]['lam']) ,label='ME',linewidth=4,linestyle='None',markersize=10, Marker='v')
                 # ax.plot(var[name]['lam'],var[name]['action_paths']-shooting.action_clancy(var[name]['eps_mu'],var[name]['lam'],1.0) ,label='ME',linewidth=4,linestyle='None',markersize=10, Marker='v')
             # ax.plot(lam_theory,shooting.s1_epslam_large(var[name]['eps_lam'],var[name]['eps_mu'],lam_theory), linewidth=4,
             #         linestyle='-', color='r',label='Theory')
-            ax.plot(lam_theory,-shooting.s2_both_small(var[name_current]['eps_lam'],var[name_current]['eps_mu'],lam_theory), linewidth=4,
-                    linestyle='-',label='Theory eps_lam='+str(var[name_current]['eps_lam']))
+            # ax.plot(lam_theory,-shooting.s2_both_small(var[name_current]['eps_lam'],var[name_current]['eps_mu'],lam_theory), linewidth=4,
+            #         linestyle='-',label='Theory eps_lam='+str(var[name_current]['eps_lam']))
             # ax.plot(lam_theory,shooting.action_miki_jason_correction(var[name]['eps_lam'],lam_theory), linewidth=4,
             #         linestyle='--', color='k',label='MJ')
             # ax.plot(lam_theory, epsmu1_epslam0(lam_theory, var[name]['eps_lam'], var[name]['eps_mu']), linewidth=4,
@@ -470,7 +474,7 @@ if __name__=='__main__':
     # name_of_file='eps_mu05_epslam_change_small_stoptime20_with_rad_angle'
     # name_of_file='epslam006_epsmu01_diff_lam'
     # name_of_file=['epslam005_epsmu_change_1_to_0_lam16_stoptime20_linspace20','epslam01_epsmu_change_0_to_1_lam16_stoptime20_linespace_40','epslam015_epsmu_change_1_to_0_lam16_stoptime20_linspace20']
-    name_of_file=['epslam002_epsmu01_diff_lam','epslam004_epsmu01_diff_lam','epslam006_epsmu01_diff_lam','epslam008_epsmu01_diff_lam','epslam012_epsmu01_diff_lam','epslam014_epsmu01_diff_lam','epslam016_epsmu01_diff_lam']
+    name_of_file=['epslam002_epsmu002_diff_lam','epslam004_epsmu004_diff_lam','epslam006_epsmu006_diff_lam','epslam012_epsmu012_diff_lam','epslam014_epsmu014_diff_lam']
 
     # theory=shooting.y1_path_clancy(var[name_of_file]['path'][4][:,2],var[name_of_file]['path'][4][:,3],var[name_of_file]['eps_mu'][4],var[name_of_file]['lam'])
     # plot_one_path(name_of_file,u,pu,pu(var[name_of_file]['path'][4]),'(p1-p1(0))/eps_lam', 'p1', '(p1-p1(0))/eps_lam vs p1','dp1_norm_v_p1',True)
@@ -483,7 +487,7 @@ if __name__=='__main__':
     # plot_one_path(name_of_file,False,p1,0,'phi(p1,y1)/eps_lam', 'time', 'phi(p1,y1) vs time,','phi1_v_time_epsmu05_epslam_changes',False)
     # plot_one_path(name_of_file,False,p2,0,'phi(p2,y2)', 'time', 'phi(p2,y2) vs time,','phi_p2_y2_v_time_non_norm',False)
     # plot_action(name_of_file,action_path(var[name_of_file]['path'][0]), 'action', 'eps_lam', 'Action vs eps_lam', 'action_plot_range_change_epsmu02_lam16_stoptime20', False)
-    plot_action(name_of_file,0, 'S-S0', 'lam', '(S-S0) vs lam','temp', False,0)
+    plot_action(name_of_file,0, 'S/S_theory', 'lam', 'S/S_theory vs lam','s_div_theory_s_lam_only_me', False,0)
     # plot_diff_times(name_of_file, 0, y1, 'y1', 'action', 'Action vs y1', 'action_v_y1_sub', False)
     # plot_diff_times(name_of_file, 0, y1, 'y1', 'S-S(0)', 'S-S(0) vs y1', 'action_v_y1_epslam_changes_clancy_theory_error', False)
     # plot_one_path(name_of_file,False,action_path,action_path(var[name_of_file]['path'][0]),'', '', '','temp',True)

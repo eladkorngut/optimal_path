@@ -4029,23 +4029,23 @@ def plot_numerical_only(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, 
     y1,y2,p1,p2 = path[:, 0],path[:, 1],path[:, 2],path[:, 3]
     delta_mu,delta_lam = 1 - epsilon_mu,1-epsilon_lam
 
-    plt.plot(y1, p1, linewidth=4, label='Numerical, I= ' + str(round(I1, 4)))
-    plt.xlabel('y1')
-    plt.ylabel('p1')
-    plt.scatter((q_star[0], 0), (0, q_star[2]), c=('g', 'r'), s=(100, 100))
-    plt.title('p1 vs y1, lam=' + str(round(lam, 2)))
-    plt.legend()
-    plt.savefig('p1_v_y1_' + case_to_run + '.png', dpi=500)
-    plt.show()
-
-    plt.plot(y2, p2, linewidth=4, label='Numerical')
-    plt.scatter((q_star[1], 0), (0, q_star[3]), c=('g', 'r'), s=(100, 100))
-    plt.xlabel('y2')
-    plt.ylabel('p2')
-    plt.title('p2 vs y2, lam=' + str(round(lam, 2)))
-    plt.legend()
-    plt.savefig('p2_v_y2_' + case_to_run + '.png', dpi=500)
-    plt.show()
+    # plt.plot(y1, p1, linewidth=4, label='Numerical, I= ' + str(round(I1, 4)))
+    # plt.xlabel('y1')
+    # plt.ylabel('p1')
+    # plt.scatter((q_star[0], 0), (0, q_star[2]), c=('g', 'r'), s=(100, 100))
+    # plt.title('p1 vs y1, lam=' + str(round(lam, 2)))
+    # plt.legend()
+    # plt.savefig('p1_v_y1_' + case_to_run + '.png', dpi=500)
+    # plt.show()
+    #
+    # plt.plot(y2, p2, linewidth=4, label='Numerical')
+    # plt.scatter((q_star[1], 0), (0, q_star[3]), c=('g', 'r'), s=(100, 100))
+    # plt.xlabel('y2')
+    # plt.ylabel('p2')
+    # plt.title('p2 vs y2, lam=' + str(round(lam, 2)))
+    # plt.legend()
+    # plt.savefig('p2_v_y2_' + case_to_run + '.png', dpi=500)
+    # plt.show()
 
     w, u, pw, pu = (y1 + y2) / 2, (y1 - y2) / 2, p1 + p2, p1 - p2
     plt.plot(w, pw, linewidth=4,
@@ -4059,28 +4059,28 @@ def plot_numerical_only(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, 
     plt.savefig('pw_v_w_' + case_to_run + '.png', dpi=500)
     plt.show()
 
-    plt.plot(u, pu, linewidth=4,
-             label='Numerical Int=' + str(round((I2 - I1) / delta_mu, 8)))
-    plt.scatter(((q_star[0] - q_star[1]) / 2, 0), (0, q_star[2] - q_star[3]), c=('g', 'r'), s=(100, 100))
-    plt.xlabel('u')
-    plt.ylabel('pu')
-    # plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
-    plt.title('pu vs u, lam=' + str(lam))
-    plt.legend()
-    plt.savefig('pu_v_u_' + case_to_run + '.png', dpi=500)
-    plt.show()
-
-    plt.plot(w,u,linewidth=4, label='Numerical')
-    plt.xlabel('w')
-    plt.ylabel('u')
-    plt.title('w vs u, lam=' + str(round(lam, 2)))
-    plt.savefig('w_v_u_' + case_to_run + '.png', dpi=500)
-    plt.show()
-
-    f=open('sim_results'+'.csv','w')
-    with f:
-        writer = csv.writer(f)
-        writer.writerows([path[:, 0],path[:, 1],path[:, 2],path[:, 3]])
+    # plt.plot(u, pu, linewidth=4,
+    #          label='Numerical Int=' + str(round((I2 - I1) / delta_mu, 8)))
+    # plt.scatter(((q_star[0] - q_star[1]) / 2, 0), (0, q_star[2] - q_star[3]), c=('g', 'r'), s=(100, 100))
+    # plt.xlabel('u')
+    # plt.ylabel('pu')
+    # # plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
+    # plt.title('pu vs u, lam=' + str(lam))
+    # plt.legend()
+    # plt.savefig('pu_v_u_' + case_to_run + '.png', dpi=500)
+    # plt.show()
+    #
+    # plt.plot(w,u,linewidth=4, label='Numerical')
+    # plt.xlabel('w')
+    # plt.ylabel('u')
+    # plt.title('w vs u, lam=' + str(round(lam, 2)))
+    # plt.savefig('w_v_u_' + case_to_run + '.png', dpi=500)
+    # plt.show()
+    #
+    # f=open('sim_results'+'.csv','w')
+    # with f:
+    #     writer = csv.writer(f)
+    #     writer.writerows([path[:, 0],path[:, 1],path[:, 2],path[:, 3]])
 
     # m=y1-y2
     # pm=p1*(1+epsilon_lam)-p2*(1-epsilon_lam)
@@ -4097,146 +4097,146 @@ def plot_numerical_only(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, 
 
 
 
-    if case_to_run is 'dem':
-        delta_mu=1-epsilon_mu
-        action_theory = (1 - lam + lam*np.log(lam))/(2*lam) + (delta_mu*((-1 + lam)*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)) - (2* (-1 + epsilon_lam)*(lam*(-1 + lam - lam*np.log(lam)) + (-3 + (5 - 2*lam)*lam + (-2 + lam)*lam*np.log(lam))*epsilon_lam))/(lam*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam))))/8
-
-        plt.plot((y2 + y1) / 2, p1 + p2, linewidth=4,
-                 label='Numerical Int=' + str(round((A_integration - s0 / 2) / delta_mu, 8)))
-        plt.scatter(((q_star[1] + q_star[0]) / 2, 0), (0, q_star[2] + q_star[3]), c=('g', 'r'), s=(100, 100))
-        plt.xlabel('w')
-        plt.ylabel('pw')
-        plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
-        plt.legend()
-        plt.savefig('pw_v_w_' + case_to_run + '.png', dpi=500)
-        plt.show()
-
-        coef=(-1+epsilon_lam)/(2*(1+epsilon_lam))
-        y2_for_theory=np.linspace(q_star[1],0,10000)
-        # y2_theory= ((1 + (-1 + 2*y2_for_theory)*lam)*(-1 + epsilon_lam)*epsilon_lam)/(-lam + epsilon_lam*(-2 + (-2 + lam)*epsilon_lam))
-        # p2_0_path=-np.log(lam*(1-2*y2*(1+coef*delta_mu)))
-        p2_theory = ((-1 + epsilon_lam)*(y2_for_theory*lam + (-1 + 4*y2_for_theory)*(1 + (-1 + y2_for_theory)*lam)*epsilon_lam))/((-1 + 2*y2_for_theory)*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam))
-        p2_0_path=-np.log(lam*(1-2*y2))
-        p2_numerical_normalized=(p2-p2_0_path)/delta_mu
-
-        # I2_theory_normalized= ((-1 +epsilon_lam)*(lam*(1 - lam +lam*np.log(lam)) +(3 - 5*lam +2*lam**2 -(-2 + lam)*lam*np.log(lam))*epsilon_lam))/(4*lam*(1 +epsilon_lam)*(-lam +(-2 + lam)*epsilon_lam))
-        # I2_numerical_correction=(I2-s0/2)/delta_mu
-        # I2_theory_normalized = ((-1 + lam)**2*(-1 + epsilon_lam)*epsilon_lam)/(4*lam*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam))
-        I2_theory_normalized= ((-1 + epsilon_lam)*(lam*(1 - lam + lam*np.log(lam)) + (3 - 5*lam + 2*lam**2 - (-2 + lam)*lam*np.log(lam))*epsilon_lam))/(4*lam*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam))
-        I2_numerical_correction = simps(p2_numerical_normalized, y2)
-
-        plt.plot(y2, p2_numerical_normalized, linewidth=4,label='Numerical I= '+str(round(I2_numerical_correction,4)),linestyle='None',marker='.')
-        plt.plot(y2_for_theory, p2_theory, linewidth=4,label='Theory, I= '+str(round(I2_theory_normalized,4)),linestyle='--')
-        plt.scatter((q_star[1],0),(p2_numerical_normalized[0], (q_star[3]+np.log(lam))/delta_mu), c=('g', 'r'), s=(100, 100))
-        plt.xlabel('y2')
-        plt.ylabel('(p2-p2(0))/delta_mu')
-        plt.title('(p2-p2(0))/delta_mu vs y2, lam=' + str(round(lam,2)))
-        plt.legend()
-        plt.savefig('p2_v_y2_norm_' + case_to_run + '.png', dpi=500)
-        plt.show()
-
-        y1_for_theory=np.linspace(q_star[0],0,10000)/delta_mu
-        # y1_theory = (4*y1_for_theory*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)))/((-1 + lam)*delta_mu)
-
-        p1_theory= ((1 + 4*(y1_for_theory) - lam)*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)))/(-1 + lam)
-        path_y1_norm=y1/delta_mu
-        I1_norm=simps(p1, path_y1_norm)
-        I1_norm_theory= ((-1 + lam)*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)))/ 8
-        plt.plot(path_y1_norm, p1, linewidth=4,label='Numerical I ='+str(round(I1_norm,4)),linestyle='None',marker='.')
-        plt.plot(y1_for_theory, p1_theory, linewidth=4,linestyle='--',label='Theory I= '+str(round(I1_norm_theory,4)))
-        plt.xlabel('y1/delta_mu')
-        plt.ylabel('p1')
-        plt.scatter((q_star[0]/delta_mu,0),(0, q_star[2]), c=('g', 'r'), s=(100, 100))
-        plt.title('p1 vs y1/delta, lam=' + str(round(lam,2)))
-        plt.legend()
-        plt.savefig('p1_v_y1_norm_' + case_to_run + '.png', dpi=500)
-        plt.show()
-    elif case_to_run is 'del':
-        action_theory = (1 - lam + lam * np.log(lam)) /(2 *lam) +(delta_lam *(-1 +epsilon_mu)*((-1 + lam) ** 2 *lam +(3 - 4 * lam +lam ** 2 +2 * lam * np.log(lam))*epsilon_mu))/ (4 *lam *(1 +epsilon_mu)*(-lam +(-2 + lam) *epsilon_mu))
-
-        plt.plot((y2 + y1) / 2, p1 + p2, linewidth=4,
-                 label='Numerical Int=' + str(round((A_integration - s0 / 2) / delta_mu, 8)))
-        plt.scatter(((q_star[1] + q_star[0]) / 2, 0), (0, q_star[2] + q_star[3]), c=('g', 'r'), s=(100, 100))
-        plt.xlabel('w')
-        plt.ylabel('pw')
-        plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
-        plt.legend()
-        plt.savefig('pw_v_w_' + case_to_run + '.png', dpi=500)
-        plt.show()
-
-
-        coef= -(((-1 +  epsilon_mu)* epsilon_mu)/((1 + epsilon_mu)*(-lam + (-2 + lam)*epsilon_mu)))
-        y2_for_theory=np.linspace(q_star[1],0,10000)
-        p2_theory = ((-1 + epsilon_mu)*(-1 + lam - 2*y2_for_theory*lam + (4*y2_for_theory*epsilon_mu)/((-1 + 2*y2_for_theory)*(-lam + (-2 + lam)*epsilon_mu))))/(2*(1 + epsilon_mu))
-        p2_0_path=-np.log(lam*(1-2*y2))
-        p2_numerical_normalized=(p2-p2_0_path)/delta_lam
-        I2_theory_normalized= -((-1 + epsilon_mu)*(-((-1 + lam)**2*lam) + ((-1 + lam)*(6 + (-3 + lam)*lam)- 4*lam*np.log(lam))*epsilon_mu))/(8*lam*(1 + epsilon_mu)*(-lam + (-2 + lam)*epsilon_mu))
-        I2_numerical_correction = simps(p2_numerical_normalized, y2)
-        plt.plot(y2, p2_numerical_normalized, linewidth=4,label='Numerical I= '+str(round(I2_numerical_correction,4)),linestyle='None',marker='.')
-        plt.plot(y2_for_theory, p2_theory, linewidth=4,label='Theory, I= '+str(round(I2_theory_normalized,4)),linestyle='--')
-        plt.scatter((q_star[1],0),(p2_numerical_normalized[0], (q_star[3]+np.log(lam))/delta_lam), c=('g', 'r'), s=(100, 100))
-        plt.xlabel('y2')
-        plt.ylabel('(p2-p2(0))/delta_lam')
-        plt.title('(p2-p2(0))/delta_lam vs y2, lam=' + str(round(lam,2)))
-        plt.legend()
-        plt.savefig('p2_v_y2_norm_' + case_to_run + '.png', dpi=500)
-        plt.show()
-
-
-        y1_for_theory=np.linspace(q_star[0],0,10000)
-        p1_theory= ((1 - lam +2*y1_for_theory*(-2 + lam -2/(-1 +epsilon_mu))))/2
-        path_p1_norm=p1/delta_lam
-        I1_norm=simps(path_p1_norm, y1)
-
-        I1_norm_theory = ((-1 + lam)**2*(-1 + epsilon_mu))/(-8*lam + 8*(-2 + lam)*epsilon_mu)
-
-        plt.plot(y1, path_p1_norm, linewidth=4,label='Numerical I ='+str(round(I1_norm,4)),linestyle='None',marker='.')
-        plt.plot(y1_for_theory, p1_theory, linewidth=4,linestyle='--',label='Theory I= '+str(round(I1_norm_theory,4)))
-        plt.xlabel('y1')
-        plt.ylabel('p1/delta_lam')
-        plt.scatter((q_star[0],0),(0, q_star[2]/delta_lam), c=('g', 'r'), s=(100, 100))
-        plt.title('p1 vs y1/delta, lam=' + str(round(lam,2)))
-        plt.legend()
-        plt.savefig('p1_v_y1_norm_' + case_to_run + '.png', dpi=500)
-        plt.show()
-    elif case_to_run is 'mu':
-        w,u,pw,pu =(y1+y2)/2, (y1-y2)/2, p1+p2, p1-p2
-        plt.plot(w, pw, linewidth=4,
-                 label='Numerical Int=' + str(round((A_integration - s0) / delta_mu, 8)))
-        plt.scatter(((q_star[1] + q_star[0]) / 2, 0), (0, q_star[2] + q_star[3]), c=('g', 'r'), s=(100, 100))
-        plt.xlabel('w')
-        plt.ylabel('pw')
-        # plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
-        plt.title('pw vs w, lam='+str(lam))
-        plt.legend()
-        plt.savefig('pw_v_w_' + case_to_run + '.png', dpi=500)
-        plt.show()
-
-        plt.plot(u, pu, linewidth=4,
-                 label='Numerical Int=' + str(round((I2-I1) / delta_mu, 8)))
-        plt.scatter(((q_star[0] - q_star[1]) / 2, 0), (0, q_star[2] - q_star[3]), c=('g', 'r'), s=(100, 100))
-        plt.xlabel('u')
-        plt.ylabel('pu')
-        # plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
-        plt.title('pu vs u, lam='+str(lam))
-        plt.legend()
-        plt.savefig('pu_v_u_' + case_to_run + '.png', dpi=500)
-        plt.show()
-
-        pw_0_path = -2*np.log(lam*(1-2*w))
-        pw_norm=(pw-pw_0_path)/epsilon_mu
-        
-        pw_theory= (4*w*epsilon_lam)/(lam - 2*w*lam) + ((1 - (2*w*lam)/(-1 + lam))*epsilon_lam* (-2 + lam - lam*epsilon_lam**2 + np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 + lam**2*epsilon_lam**4)))/np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 + lam**2*epsilon_lam**4)
-        
-        plt.plot(w, pw_norm, linewidth=4,label='Numerical')
-        plt.plot(w, pw_theory, linewidth=4,label='Theory',linestyle='--')
-        plt.xlabel('w')
-        plt.ylabel('(pw-pw(0)/eps_mu')
-        # plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
-        plt.title('(pw-pw(0))/eps_mu vs w, lam='+str(lam))
-        plt.legend()
-        plt.savefig('pw_v_w_norm' + case_to_run + '.png', dpi=500)
-        plt.show()
+    # if case_to_run is 'dem':
+    #     delta_mu=1-epsilon_mu
+    #     action_theory = (1 - lam + lam*np.log(lam))/(2*lam) + (delta_mu*((-1 + lam)*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)) - (2* (-1 + epsilon_lam)*(lam*(-1 + lam - lam*np.log(lam)) + (-3 + (5 - 2*lam)*lam + (-2 + lam)*lam*np.log(lam))*epsilon_lam))/(lam*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam))))/8
+    #
+    #     plt.plot((y2 + y1) / 2, p1 + p2, linewidth=4,
+    #              label='Numerical Int=' + str(round((A_integration - s0 / 2) / delta_mu, 8)))
+    #     plt.scatter(((q_star[1] + q_star[0]) / 2, 0), (0, q_star[2] + q_star[3]), c=('g', 'r'), s=(100, 100))
+    #     plt.xlabel('w')
+    #     plt.ylabel('pw')
+    #     plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
+    #     plt.legend()
+    #     plt.savefig('pw_v_w_' + case_to_run + '.png', dpi=500)
+    #     plt.show()
+    #
+    #     coef=(-1+epsilon_lam)/(2*(1+epsilon_lam))
+    #     y2_for_theory=np.linspace(q_star[1],0,10000)
+    #     # y2_theory= ((1 + (-1 + 2*y2_for_theory)*lam)*(-1 + epsilon_lam)*epsilon_lam)/(-lam + epsilon_lam*(-2 + (-2 + lam)*epsilon_lam))
+    #     # p2_0_path=-np.log(lam*(1-2*y2*(1+coef*delta_mu)))
+    #     p2_theory = ((-1 + epsilon_lam)*(y2_for_theory*lam + (-1 + 4*y2_for_theory)*(1 + (-1 + y2_for_theory)*lam)*epsilon_lam))/((-1 + 2*y2_for_theory)*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam))
+    #     p2_0_path=-np.log(lam*(1-2*y2))
+    #     p2_numerical_normalized=(p2-p2_0_path)/delta_mu
+    #
+    #     # I2_theory_normalized= ((-1 +epsilon_lam)*(lam*(1 - lam +lam*np.log(lam)) +(3 - 5*lam +2*lam**2 -(-2 + lam)*lam*np.log(lam))*epsilon_lam))/(4*lam*(1 +epsilon_lam)*(-lam +(-2 + lam)*epsilon_lam))
+    #     # I2_numerical_correction=(I2-s0/2)/delta_mu
+    #     # I2_theory_normalized = ((-1 + lam)**2*(-1 + epsilon_lam)*epsilon_lam)/(4*lam*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam))
+    #     I2_theory_normalized= ((-1 + epsilon_lam)*(lam*(1 - lam + lam*np.log(lam)) + (3 - 5*lam + 2*lam**2 - (-2 + lam)*lam*np.log(lam))*epsilon_lam))/(4*lam*(1 + epsilon_lam)*(-lam + (-2 + lam)*epsilon_lam))
+    #     I2_numerical_correction = simps(p2_numerical_normalized, y2)
+    #
+    #     plt.plot(y2, p2_numerical_normalized, linewidth=4,label='Numerical I= '+str(round(I2_numerical_correction,4)),linestyle='None',marker='.')
+    #     plt.plot(y2_for_theory, p2_theory, linewidth=4,label='Theory, I= '+str(round(I2_theory_normalized,4)),linestyle='--')
+    #     plt.scatter((q_star[1],0),(p2_numerical_normalized[0], (q_star[3]+np.log(lam))/delta_mu), c=('g', 'r'), s=(100, 100))
+    #     plt.xlabel('y2')
+    #     plt.ylabel('(p2-p2(0))/delta_mu')
+    #     plt.title('(p2-p2(0))/delta_mu vs y2, lam=' + str(round(lam,2)))
+    #     plt.legend()
+    #     plt.savefig('p2_v_y2_norm_' + case_to_run + '.png', dpi=500)
+    #     plt.show()
+    #
+    #     y1_for_theory=np.linspace(q_star[0],0,10000)/delta_mu
+    #     # y1_theory = (4*y1_for_theory*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)))/((-1 + lam)*delta_mu)
+    #
+    #     p1_theory= ((1 + 4*(y1_for_theory) - lam)*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)))/(-1 + lam)
+    #     path_y1_norm=y1/delta_mu
+    #     I1_norm=simps(p1, path_y1_norm)
+    #     I1_norm_theory= ((-1 + lam)*np.log(2 - lam + (2*(-1 + lam))/(1 + epsilon_lam)))/ 8
+    #     plt.plot(path_y1_norm, p1, linewidth=4,label='Numerical I ='+str(round(I1_norm,4)),linestyle='None',marker='.')
+    #     plt.plot(y1_for_theory, p1_theory, linewidth=4,linestyle='--',label='Theory I= '+str(round(I1_norm_theory,4)))
+    #     plt.xlabel('y1/delta_mu')
+    #     plt.ylabel('p1')
+    #     plt.scatter((q_star[0]/delta_mu,0),(0, q_star[2]), c=('g', 'r'), s=(100, 100))
+    #     plt.title('p1 vs y1/delta, lam=' + str(round(lam,2)))
+    #     plt.legend()
+    #     plt.savefig('p1_v_y1_norm_' + case_to_run + '.png', dpi=500)
+    #     plt.show()
+    # elif case_to_run is 'del':
+    #     action_theory = (1 - lam + lam * np.log(lam)) /(2 *lam) +(delta_lam *(-1 +epsilon_mu)*((-1 + lam) ** 2 *lam +(3 - 4 * lam +lam ** 2 +2 * lam * np.log(lam))*epsilon_mu))/ (4 *lam *(1 +epsilon_mu)*(-lam +(-2 + lam) *epsilon_mu))
+    #
+    #     plt.plot((y2 + y1) / 2, p1 + p2, linewidth=4,
+    #              label='Numerical Int=' + str(round((A_integration - s0 / 2) / delta_mu, 8)))
+    #     plt.scatter(((q_star[1] + q_star[0]) / 2, 0), (0, q_star[2] + q_star[3]), c=('g', 'r'), s=(100, 100))
+    #     plt.xlabel('w')
+    #     plt.ylabel('pw')
+    #     plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
+    #     plt.legend()
+    #     plt.savefig('pw_v_w_' + case_to_run + '.png', dpi=500)
+    #     plt.show()
+    #
+    #
+    #     coef= -(((-1 +  epsilon_mu)* epsilon_mu)/((1 + epsilon_mu)*(-lam + (-2 + lam)*epsilon_mu)))
+    #     y2_for_theory=np.linspace(q_star[1],0,10000)
+    #     p2_theory = ((-1 + epsilon_mu)*(-1 + lam - 2*y2_for_theory*lam + (4*y2_for_theory*epsilon_mu)/((-1 + 2*y2_for_theory)*(-lam + (-2 + lam)*epsilon_mu))))/(2*(1 + epsilon_mu))
+    #     p2_0_path=-np.log(lam*(1-2*y2))
+    #     p2_numerical_normalized=(p2-p2_0_path)/delta_lam
+    #     I2_theory_normalized= -((-1 + epsilon_mu)*(-((-1 + lam)**2*lam) + ((-1 + lam)*(6 + (-3 + lam)*lam)- 4*lam*np.log(lam))*epsilon_mu))/(8*lam*(1 + epsilon_mu)*(-lam + (-2 + lam)*epsilon_mu))
+    #     I2_numerical_correction = simps(p2_numerical_normalized, y2)
+    #     plt.plot(y2, p2_numerical_normalized, linewidth=4,label='Numerical I= '+str(round(I2_numerical_correction,4)),linestyle='None',marker='.')
+    #     plt.plot(y2_for_theory, p2_theory, linewidth=4,label='Theory, I= '+str(round(I2_theory_normalized,4)),linestyle='--')
+    #     plt.scatter((q_star[1],0),(p2_numerical_normalized[0], (q_star[3]+np.log(lam))/delta_lam), c=('g', 'r'), s=(100, 100))
+    #     plt.xlabel('y2')
+    #     plt.ylabel('(p2-p2(0))/delta_lam')
+    #     plt.title('(p2-p2(0))/delta_lam vs y2, lam=' + str(round(lam,2)))
+    #     plt.legend()
+    #     plt.savefig('p2_v_y2_norm_' + case_to_run + '.png', dpi=500)
+    #     plt.show()
+    #
+    #
+    #     y1_for_theory=np.linspace(q_star[0],0,10000)
+    #     p1_theory= ((1 - lam +2*y1_for_theory*(-2 + lam -2/(-1 +epsilon_mu))))/2
+    #     path_p1_norm=p1/delta_lam
+    #     I1_norm=simps(path_p1_norm, y1)
+    #
+    #     I1_norm_theory = ((-1 + lam)**2*(-1 + epsilon_mu))/(-8*lam + 8*(-2 + lam)*epsilon_mu)
+    #
+    #     plt.plot(y1, path_p1_norm, linewidth=4,label='Numerical I ='+str(round(I1_norm,4)),linestyle='None',marker='.')
+    #     plt.plot(y1_for_theory, p1_theory, linewidth=4,linestyle='--',label='Theory I= '+str(round(I1_norm_theory,4)))
+    #     plt.xlabel('y1')
+    #     plt.ylabel('p1/delta_lam')
+    #     plt.scatter((q_star[0],0),(0, q_star[2]/delta_lam), c=('g', 'r'), s=(100, 100))
+    #     plt.title('p1 vs y1/delta, lam=' + str(round(lam,2)))
+    #     plt.legend()
+    #     plt.savefig('p1_v_y1_norm_' + case_to_run + '.png', dpi=500)
+    #     plt.show()
+    # elif case_to_run is 'mu':
+    #     w,u,pw,pu =(y1+y2)/2, (y1-y2)/2, p1+p2, p1-p2
+    #     plt.plot(w, pw, linewidth=4,
+    #              label='Numerical Int=' + str(round((A_integration - s0) / delta_mu, 8)))
+    #     plt.scatter(((q_star[1] + q_star[0]) / 2, 0), (0, q_star[2] + q_star[3]), c=('g', 'r'), s=(100, 100))
+    #     plt.xlabel('w')
+    #     plt.ylabel('pw')
+    #     # plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
+    #     plt.title('pw vs w, lam='+str(lam))
+    #     plt.legend()
+    #     plt.savefig('pw_v_w_' + case_to_run + '.png', dpi=500)
+    #     plt.show()
+    #
+    #     plt.plot(u, pu, linewidth=4,
+    #              label='Numerical Int=' + str(round((I2-I1) / delta_mu, 8)))
+    #     plt.scatter(((q_star[0] - q_star[1]) / 2, 0), (0, q_star[2] - q_star[3]), c=('g', 'r'), s=(100, 100))
+    #     plt.xlabel('u')
+    #     plt.ylabel('pu')
+    #     # plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
+    #     plt.title('pu vs u, lam='+str(lam))
+    #     plt.legend()
+    #     plt.savefig('pu_v_u_' + case_to_run + '.png', dpi=500)
+    #     plt.show()
+    #
+    #     pw_0_path = -2*np.log(lam*(1-2*w))
+    #     pw_norm=(pw-pw_0_path)/epsilon_mu
+    #
+    #     pw_theory= (4*w*epsilon_lam)/(lam - 2*w*lam) + ((1 - (2*w*lam)/(-1 + lam))*epsilon_lam* (-2 + lam - lam*epsilon_lam**2 + np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 + lam**2*epsilon_lam**4)))/np.sqrt(lam**2 - 2*(-2 + lam**2)*epsilon_lam**2 + lam**2*epsilon_lam**4)
+    #
+    #     plt.plot(w, pw_norm, linewidth=4,label='Numerical')
+    #     plt.plot(w, pw_theory, linewidth=4,label='Theory',linestyle='--')
+    #     plt.xlabel('w')
+    #     plt.ylabel('(pw-pw(0)/eps_mu')
+    #     # plt.title('pw vs w, lam=' + str(round(lam, 2)) + ' s1=' + str(round((action_theory - s0 / 2) / delta_mu, 8)))
+    #     plt.title('(pw-pw(0))/eps_mu vs w, lam='+str(lam))
+    #     plt.legend()
+    #     plt.savefig('pw_v_w_norm' + case_to_run + '.png', dpi=500)
+    #     plt.show()
     # elif case_to_run is 'x':
     #     w,u,pw,pu =(y1+y2)/2, (y1-y2)/2, p1+p2, p1-p2
     #     # q1 =y1- np.array(
@@ -4433,17 +4433,17 @@ def plot_numerical_only(shot_angle, lin_combo, one_shot_dt, radius, t0, q_star, 
     #     plt.show()
 
 
-    elif case_to_run is 'bc':
-        z_theory =np.array( [z_eps_mu(x1,x2,epsilon_lam,epsilon_mu,lam) for x1,x2 in zip(path[:,0],path[:,1])])
-        y1_clancy_theory = np.array([y1_path_clancy(theta1,theta2,epsilon_mu,lam) for theta1,theta2 in zip(p1,p2)])
-        y2_clancy_theory = np.array([y2_path_clancy(theta1,theta2,epsilon_mu,lam) for theta1,theta2 in zip(p1,p2)])
-        plt.plot(p1,y1,linewidth=4, label='Numerical')
-        plt.plot(p1,y1_clancy_theory,linewidth=4, label='Theory',linestyle='--')
-        title('p1 vs y1 for lambda=' + str(round(lam,2)) + ' epsilon=' + str(epsilon))
-        xlabel('p1')
-        ylabel('y1')
-        plt.legend()
-        plt.show()
+    # elif case_to_run is 'bc':
+    #     z_theory =np.array( [z_eps_mu(x1,x2,epsilon_lam,epsilon_mu,lam) for x1,x2 in zip(path[:,0],path[:,1])])
+    #     y1_clancy_theory = np.array([y1_path_clancy(theta1,theta2,epsilon_mu,lam) for theta1,theta2 in zip(p1,p2)])
+    #     y2_clancy_theory = np.array([y2_path_clancy(theta1,theta2,epsilon_mu,lam) for theta1,theta2 in zip(p1,p2)])
+    #     plt.plot(p1,y1,linewidth=4, label='Numerical')
+    #     plt.plot(p1,y1_clancy_theory,linewidth=4, label='Theory',linestyle='--')
+    #     title('p1 vs y1 for lambda=' + str(round(lam,2)) + ' epsilon=' + str(epsilon))
+    #     xlabel('p1')
+    #     ylabel('y1')
+    #     plt.legend()
+    #     plt.show()
 
 
 def man_div_path_and_fine_tuning(shot_angle,radius,t0,org_lin_combo,one_shot_dt,q_star,J,shot_dq_dt,beta,case_to_run,epsilon,lam):
@@ -4741,11 +4741,11 @@ def record_data(folder_name,beta,gamma,sim,stoptime,int_lin_combo,numpoints,epsi
 
 if __name__=='__main__':
     #Network Parameters
-    beta, gamma = 1.6, 1.0
+    beta, gamma = 1.5, 1.0
 
     # beta=[1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3.0]
     # beta=[1.6,1.8,2.0,2.4,2.8,3.0,3.3]
-    beta=[1.6,1.8,2.0,3.0,3.3]
+    # beta=[1.6,1.8,2.0,3.0,3.3]
     # beta=[1.6,3.3]
     # beta=[2.4]
 
@@ -4765,7 +4765,7 @@ if __name__=='__main__':
     # dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
 
     # ODE parameters
-    stoptime=20.0
+    stoptime=35.0
     numpoints = 10000
 
 
@@ -4780,10 +4780,12 @@ if __name__=='__main__':
     # r=2.56e-06
     # r=1.6384e-06
     # r=1.6384e-05
-    r = 1.6384e-08
+    # r = 1.6384e-08
+    r = 6.7108864e-05
+
     angle=0.04239816339744822
 
-    epsilon=(-0.14,0.5)
+    epsilon=(0.0,1e-7)
     #lin002=0.9999930516412242
     #int_lin_combo001=0.9999658209936237
     # int_lin_combolam5=0.9999658419290037
@@ -4807,8 +4809,8 @@ if __name__=='__main__':
 
 
     # int_lin_combo=1.001321728340301
-    # y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
-    # q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
+    y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
+    q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.000040262472682,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
@@ -4822,9 +4824,10 @@ if __name__=='__main__':
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.0011298699711286,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
 
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.9993800670968565,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
-    # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.999381981145,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
+    # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.9991402897986594,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
+    man_div_path_and_fine_tuning(np.pi/4,r,t,0.9856441102065211,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
 
-    # plot_one_shot(0.04239816339744822, 0.99938586737087754, r, t, dt, q_star, J, dq_dt_sus_inf, beta/(1+epsilon[0]*epsilon[1]))
+    # plot_one_shot(0.04239816339744822, 0.99080347572097068, r, t, dt, q_star, J, dq_dt_sus_inf, beta/(1+epsilon[0]*epsilon[1]))
     # plot_one_shot(0.04239816339744754635,0.9993858673708775895, r, t, dt, q_star, J, dq_dt_sus_inf, beta/(1+epsilon[0]*epsilon[1]))
     # plot_one_shot(2.0, 0.9993858673708775895, r, t, dt, q_star, J, dq_dt_sus_inf, beta/(1+epsilon[0]*epsilon[1]))
     # y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J('el1', 1.5, (1.0,0.5), t, 1.0)
@@ -4989,23 +4992,23 @@ if __name__=='__main__':
     # sim_paths,sim_sampletime,sim_lin_combo,sim_action,sim_qstar,sim_r,sim_angle,sim_part_paths,sim_part_action=[],[],[],[],[],[],[],[],[]
     sim_paths,sim_sampletime,sim_lin_combo,sim_action,sim_qstar,sim_r,sim_angle=[],[],[],[],[],[],[]
 
-    times=np.linspace(0.0000001,20.0,1000)
-    # times=[0.01,10,15,20]
-    # for case,epsilons in zip(sim,epsilon_matrix):
-    for case,b in zip(sim,beta):
-        # path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
-        path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilon_matrix, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
-        # path, sampletime, lin_combo, qstar, path_action, rad, ang,part_path,part_act=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times)
-        # sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times))
-        sim_paths.append(path)
-        sim_sampletime.append(sampletime)
-        sim_lin_combo.append(lin_combo)
-        sim_action.append(path_action)
-        sim_qstar.append(qstar)
-        sim_r.append(rad)
-        sim_angle.append(ang)
-        # sim_part_paths.append(part_path)
-        # sim_part_action.append(part_act)
+    # times=np.linspace(0.0000001,20.0,1000)
+    # # times=[0.01,10,15,20]
+    # # for case,epsilons in zip(sim,epsilon_matrix):
+    # for case,b in zip(sim,beta):
+    #     # path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
+    #     path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilon_matrix, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
+    #     # path, sampletime, lin_combo, qstar, path_action, rad, ang,part_path,part_act=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times)
+    #     # sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times))
+    #     sim_paths.append(path)
+    #     sim_sampletime.append(sampletime)
+    #     sim_lin_combo.append(lin_combo)
+    #     sim_action.append(path_action)
+    #     sim_qstar.append(qstar)
+    #     sim_r.append(rad)
+    #     sim_angle.append(ang)
+    #     # sim_part_paths.append(part_path)
+    #     # sim_part_action.append(part_act)
 
     # # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]/(1-eps[1])] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[1]),lambda p,eps,l:p[:,2]],'dem',['p2','p1'],
     # #              ['y2','y1/delta_mu'],['(p2-p2(0))/delta_mu','p1'],beta/gamma,['(p2-p2(0))/delta_mu vs y2','p1 vs y1/delta'],['p2_norm_v_y2','p1_norm_v_y1'],labeladdon=lambda x,y:'')
@@ -5022,10 +5025,10 @@ if __name__=='__main__':
     # action_numeric_lm,action_theory_lm=plot_integration_clancy_action_partial_epsmu0(sim_paths,epsilon_matrix,sim,beta,gamma,times)
 
 
-    # folder_name='epsmu01_epslam09_difflam_stoptime20_lam16_to33_more2'
-    folder_name='epslam012_epsmu012_diff_lam'
-    # record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle,sim_part_paths,sim_part_action)
-    record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle)
+    # # folder_name='epsmu01_epslam09_difflam_stoptime20_lam16_to33_more2'
+    # folder_name='epslam012_epsmu012_diff_lam'
+    # # record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle,sim_part_paths,sim_part_action)
+    # record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle)
 
     # plot_time_v_action_one_eps_0(sim_paths,epsilon_matrix,sim,beta,gamma,times)
 
