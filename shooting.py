@@ -4741,7 +4741,7 @@ def record_data(folder_name,beta,gamma,sim,stoptime,int_lin_combo,numpoints,epsi
 
 if __name__=='__main__':
     #Network Parameters
-    beta, gamma = 1.5, 1.0
+    beta, gamma = 1.6, 1.0
 
     # beta=[1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3.0]
     # beta=[1.6,1.8,2.0,2.4,2.8,3.0,3.3]
@@ -4765,7 +4765,7 @@ if __name__=='__main__':
     # dq_dt_numerical = lambda q: np.multiply(Jacobian_H(q),np.array([-1,-1,1,1]).reshape(1,4))
 
     # ODE parameters
-    stoptime=35.0
+    stoptime=20.0
     numpoints = 10000
 
 
@@ -4809,8 +4809,8 @@ if __name__=='__main__':
 
 
     # int_lin_combo=1.001321728340301
-    y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
-    q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
+    # y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
+    # q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.000040262472682,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
@@ -4825,7 +4825,7 @@ if __name__=='__main__':
 
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.9993800670968565,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.9991402897986594,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
-    man_div_path_and_fine_tuning(np.pi/4,r,t,0.9856441102065211,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
+    # man_div_path_and_fine_tuning(np.pi/4,r,t,0.9856441102065211,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
 
     # plot_one_shot(0.04239816339744822, 0.99080347572097068, r, t, dt, q_star, J, dq_dt_sus_inf, beta/(1+epsilon[0]*epsilon[1]))
     # plot_one_shot(0.04239816339744754635,0.9993858673708775895, r, t, dt, q_star, J, dq_dt_sus_inf, beta/(1+epsilon[0]*epsilon[1]))
@@ -4984,31 +4984,32 @@ if __name__=='__main__':
     # epsilon_matrix = [[(0.0,0.4),(0.1,0.4),(0.2,0.4),(0.3,0.4),(0.4,0.4),(0.5,0.4),(0.6,0.4),(0.9,0.4)]]
     # epsilon_matrix = [[(0.1,e) for e in np.linspace(0.00001,0.9999,4)]]
     # epsilon_matrix = [[(-0.14,0.1),(-0.1,0.1),(-0.06,0.1),(-0.02,0.1),(0.02,0.1),(0.06,0.1),(0.1,0.1),(0.14,0.1)]]
-    # epsilon_matrix = [[(0.15,e) for e in np.linspace(0.00001,0.99999,20)]]
-    epsilon_matrix = (0.1,0.1)
+    # epsilon_matrix = [[(0.05,e) for e in np.linspace(-0.15,0.15,20)]]
+    # epsilon_matrix = (0.1,0.1)
+    epsilon_matrix = [[(0.025,e) for e in np.linspace(-0.15,0.15,20)]]
 
 
 
     # sim_paths,sim_sampletime,sim_lin_combo,sim_action,sim_qstar,sim_r,sim_angle,sim_part_paths,sim_part_action=[],[],[],[],[],[],[],[],[]
     sim_paths,sim_sampletime,sim_lin_combo,sim_action,sim_qstar,sim_r,sim_angle=[],[],[],[],[],[],[]
 
-    # times=np.linspace(0.0000001,20.0,1000)
-    # # times=[0.01,10,15,20]
-    # # for case,epsilons in zip(sim,epsilon_matrix):
+    times=np.linspace(0.0000001,20.0,1000)
+    # times=[0.01,10,15,20]
+    for case,epsilons in zip(sim,epsilon_matrix):
     # for case,b in zip(sim,beta):
-    #     # path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
-    #     path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilon_matrix, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
-    #     # path, sampletime, lin_combo, qstar, path_action, rad, ang,part_path,part_act=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times)
-    #     # sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times))
-    #     sim_paths.append(path)
-    #     sim_sampletime.append(sampletime)
-    #     sim_lin_combo.append(lin_combo)
-    #     sim_action.append(path_action)
-    #     sim_qstar.append(qstar)
-    #     sim_r.append(rad)
-    #     sim_angle.append(ang)
-    #     # sim_part_paths.append(part_path)
-    #     # sim_part_action.append(part_act)
+        path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
+        # path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilon_matrix, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
+        # path, sampletime, lin_combo, qstar, path_action, rad, ang,part_path,part_act=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times)
+        # sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times))
+        sim_paths.append(path)
+        sim_sampletime.append(sampletime)
+        sim_lin_combo.append(lin_combo)
+        sim_action.append(path_action)
+        sim_qstar.append(qstar)
+        sim_r.append(rad)
+        sim_angle.append(ang)
+        # sim_part_paths.append(part_path)
+        # sim_part_action.append(part_act)
 
     # # plot_deltas(sim_paths,epsilon_matrix,[lambda p,eps,l:p[:,1],lambda p,eps,l:p[:,0]/(1-eps[1])] ,[lambda p,eps,l:(p[:,3]+np.log(l*(1-2*p[:,1])))/(1-eps[1]),lambda p,eps,l:p[:,2]],'dem',['p2','p1'],
     # #              ['y2','y1/delta_mu'],['(p2-p2(0))/delta_mu','p1'],beta/gamma,['(p2-p2(0))/delta_mu vs y2','p1 vs y1/delta'],['p2_norm_v_y2','p1_norm_v_y1'],labeladdon=lambda x,y:'')
@@ -5026,9 +5027,9 @@ if __name__=='__main__':
 
 
     # # folder_name='epsmu01_epslam09_difflam_stoptime20_lam16_to33_more2'
-    # folder_name='epslam012_epsmu012_diff_lam'
-    # # record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle,sim_part_paths,sim_part_action)
-    # record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle)
+    folder_name='epslam0025_eps_mu_change_small015_linspace20_lam16'
+    # record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle,sim_part_paths,sim_part_action)
+    record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle)
 
     # plot_time_v_action_one_eps_0(sim_paths,epsilon_matrix,sim,beta,gamma,times)
 
