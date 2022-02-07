@@ -1603,7 +1603,7 @@ def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,
                 sampleingtime = [10.0]
             elif l<=4.4:
                 # sampleingtime = [3.0, 7.0]
-                sampleingtime = [7.0]
+                sampleingtime = [3.0]
             else:
                 # sampleingtime = [3.0, 5.0]
                 sampleingtime = [5.0]
@@ -1628,7 +1628,7 @@ def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,
             # sampleingtime = np.linspace(7.0,40.0,10)
             # sampleingtime=[7.0,9.0,10.0]
             # sampleingtime=[3.0,4.0,7.0,8.0,10.0]
-            sampleingtime=[20.0]
+            sampleingtime=[15.0]
             # sampleingtime=[11.0]
 
 
@@ -4741,10 +4741,11 @@ def record_data(folder_name,beta,gamma,sim,stoptime,int_lin_combo,numpoints,epsi
 
 if __name__=='__main__':
     #Network Parameters
-    beta, gamma = 1.6, 1.0
+    beta, gamma = 2.4, 1.0
 
     # beta=[1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3.0]
-    # beta=[1.6,1.8,2.0,2.4,2.8,3.0,3.3]
+    beta=[1.6,1.8,2.0,2.4,2.8,3.0,3.3]
+    # beta=[3.0,3.3]
     # beta=[1.6,1.8,2.0,3.0,3.3]
     # beta=[1.6,3.3]
     # beta=[2.4]
@@ -4985,8 +4986,9 @@ if __name__=='__main__':
     # epsilon_matrix = [[(0.1,e) for e in np.linspace(0.00001,0.9999,4)]]
     # epsilon_matrix = [[(-0.14,0.1),(-0.1,0.1),(-0.06,0.1),(-0.02,0.1),(0.02,0.1),(0.06,0.1),(0.1,0.1),(0.14,0.1)]]
     # epsilon_matrix = [[(0.05,e) for e in np.linspace(-0.15,0.15,20)]]
-    # epsilon_matrix = (0.1,0.1)
-    epsilon_matrix = [[(0.025,e) for e in np.linspace(-0.15,0.15,20)]]
+    # epsilon_matrix = [[(0.15,e) for e in np.linspace(-0.2,0.2,10)]]
+    epsilon_matrix = [0.1,0.05]
+    # epsilon_matrix = 0.1
 
 
 
@@ -4995,10 +4997,10 @@ if __name__=='__main__':
 
     times=np.linspace(0.0000001,20.0,1000)
     # times=[0.01,10,15,20]
-    for case,epsilons in zip(sim,epsilon_matrix):
-    # for case,b in zip(sim,beta):
-        path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
-        # path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilon_matrix, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
+    # for case,epsilons in zip(sim,epsilon_matrix):
+    for case,b in zip(sim,beta):
+        # path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
+        path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilon_matrix, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
         # path, sampletime, lin_combo, qstar, path_action, rad, ang,part_path,part_act=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times)
         # sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times))
         sim_paths.append(path)
@@ -5027,7 +5029,7 @@ if __name__=='__main__':
 
 
     # # folder_name='epsmu01_epslam09_difflam_stoptime20_lam16_to33_more2'
-    folder_name='epslam0025_eps_mu_change_small015_linspace20_lam16'
+    folder_name='epslam01_eps_mu005_lam_change_weak_hetro'
     # record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle,sim_part_paths,sim_part_action)
     record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle)
 
