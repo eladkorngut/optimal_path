@@ -268,10 +268,11 @@ def plot_action(name,paramter=0,ylabel='',xlabel='',title='',savename='action_pl
             #     lam)) * eps_lam * (-1 + eps_mu)) / (4 * lam ** 2))
             # epsmu0_epslam0 = lambda lam, eps_lam, eps_mu: -(1 / 2) * x0 ** 2 * (
             #             eps_mu * eps_lam + eps_lam ** 2)
-            # # eps_lam_theory = np.linspace(min(var[name]['eps_lam']),max(var[name]['eps_lam']),1000)
-            # eps_lam_theory = min(var[name_current]['eps_lam'])
+            # eps_lam_theory = np.linspace(min(var[name]['eps_lam']),max(var[name]['eps_lam']),1000)
+            eps_lam_theory = min(var[name_current]['eps_lam'])
             # eps_mu_theory_low = np.linspace(0.0, eps_mu_regime_change, 1000)
             # eps_mu_theory_high = np.linspace(eps_mu_regime_change, 1.0, 1000)
+            eps_mu_theory = np.linspace(min(var[name_current]['eps_mu']), max(var[name_current]['eps_mu']), 1000)
 
             if divide_by_eps is True:
                 # ax.plot(xaxis, (var[name]['action_paths'] - paramter) /var[name]['eps_lam'],
@@ -281,12 +282,15 @@ def plot_action(name,paramter=0,ylabel='',xlabel='',title='',savename='action_pl
                 # ax.plot(var[name_current]['eps_mu'], (var[name_current]['action_paths'] - shooting.action_clancy(
                 #     var[name_current]['eps_mu'], lam,1.0)) / var[name_current]['eps_lam'],label='Sim eps_lam=' +
                 #     str(eps_lam_theory), linewidth=4, linestyle='None', markersize=10,Marker='o')
-                alph=var[name_current]['eps_mu']/var[name_current]['eps_lam']
-                alpha_array.append(min(alph))
-                alpha_array.append(max(alph))
+                ax.plot(1-var[name_current]['eps_mu'], (var[name_current]['action_paths'] - s0(var[name_current]['lam'])/2) / (1-var[name_current]['eps_mu']),
+                    linewidth=8, linestyle='None', markersize=20,Marker=next(marker))
+                ax.plot(1-eps_mu_theory,shooting.s1_epslam_large_norm(eps_mu_theory,var[name_current]['lam']) ,label='Theory eps='+str(var[name_current]['epsilon']), linewidth=8, linestyle='-')
+                # alph=var[name_current]['eps_mu']/var[name_current]['eps_lam']
+                # alpha_array.append(min(alph))
+                # alpha_array.append(max(alph))
                 # alph_theory=np.linspace(min(alph),max(alph),1000)
-                ax.plot(alph, -2*(var[name_current]['action_paths'] - s0(lam)) /(x0*var[name_current]['eps_lam'])**2,
-                        linewidth=4,linestyle='None',markersize=10,label='Sim eps_lam='+str(var[name_current]['eps_lam'][0]), Marker=next(marker))
+                # ax.plot(alph, -2*(var[name_current]['action_paths'] - s0(lam)) /(x0*var[name_current]['eps_lam'])**2,
+                #         linewidth=4,linestyle='None',markersize=10,label='Sim eps_lam='+str(var[name_current]['eps_lam'][0]), Marker=next(marker))
                 # ax.plot(var[name_current]['eps_mu'], -2*(var[name_current]['action_paths'] - s0(lam)) /(x0*var[name_current]['eps_lam'])**2,
                 #         label='Sim',linewidth=4,linestyle='None',markersize=10, Marker='o')
                 # popt, pcov = curve_fit(alpha_func, alph, -2*(var[name_current]['action_paths'] - s0(lam)) /(x0*var[name_current]['eps_lam'])**2)
@@ -296,8 +300,12 @@ def plot_action(name,paramter=0,ylabel='',xlabel='',title='',savename='action_pl
             else:
                 # ax.plot(xaxis, (var[name]['action_paths'] - paramter),label='Sim',
                 #         linewidth=4,linestyle='None',markersize=10, Marker='o',)
-                ax.plot(var[name_current]['eps_mu'], (var[name_current]['action_paths'] - shooting.action_clancy(var[name_current]['eps_mu'], lam, 1.0)),
-                        label='Sim'+' eps='+str(eps_lam_theory),linewidth=4, linestyle='None', markersize=10, Marker='o')
+                # ax.plot(var[name_current]['eps_mu'], (var[name_current]['action_paths'] - shooting.action_clancy(var[name_current]['eps_mu'], lam, 1.0)),
+                #         label='Sim'+' eps='+str(eps_lam_theory),linewidth=4, linestyle='None', markersize=10, Marker='o')
+                ax.plot(1-var[name_current]['eps_mu'], (var[name_current]['action_paths'] - s0(var[name_current]['lam'])/2),
+                    linewidth=8, linestyle='None', markersize=20,Marker=next(marker))
+                ax.plot(1-eps_mu_theory,shooting.s1_epslam_large(eps_mu_theory,eps_lam_theory,var[name_current]['lam']) ,label='Theory eps='+str(var[name_current]['epsilon']), linewidth=8, linestyle='-')
+
             # if divide_by_eps is False:
             #     ax.plot(eps_mu_theory_low, epsmu0_epslam0(lam, eps_lam_theory, eps_mu_theory_low), linewidth=4,
             #             linestyle='-', color='r')
@@ -310,8 +318,8 @@ def plot_action(name,paramter=0,ylabel='',xlabel='',title='',savename='action_pl
             #             linestyle='--', color='k')
 
             # ax.plot(np.linspace(0.01,0.99,1000),shooting.action_o1_epsmu(eps_lam_theory,np.linspace(0.001,0.99,1000),lam),color='tab:orange',linewidth=4,linestyle=':')
-        alph_theory = np.linspace(min(alpha_array), max(alpha_array), 1000)
-        ax.plot(alph_theory, 1 + alph_theory + alph_theory ** 2,label='Theory', linewidth=4, linestyle='-')
+        # alph_theory = np.linspace(min(alpha_array), max(alpha_array), 1000)
+        # ax.plot(alph_theory, 1 + alph_theory + alph_theory ** 2,label='Theory', linewidth=4, linestyle='-')
 
     def plot_diff_lam():
         lam_theory = np.linspace(min(var[name]['lam']),max(var[name]['lam']),1000)
@@ -353,9 +361,9 @@ def plot_action(name,paramter=0,ylabel='',xlabel='',title='',savename='action_pl
                 #         label='Sim',linewidth=4,linestyle='None',markersize=10, Marker='o',)
                 # ax.plot(var[name_current]['lam'], (var[name_current]['action_paths'] - s0(var[name_current]['lam']) / 2) / var[name]['eps_lam'],
                 #         label='Sim', linewidth=4, linestyle='None', markersize=10, Marker='o')
-                ax.plot(var[name_current]['lam'], (var[name_current]['action_paths'] - s0(var[name_current]['lam'])) / (var[name_current]['eps_lam']**2+var[name_current]['eps_lam']*var[name_current]['eps_mu']+var[name_current]['eps_mu']**2),
+                ax.plot(var[name_current]['lam'], (var[name_current]['action_paths'] - s0(var[name_current]['lam'])/2) / (1-var[name_current]['eps_lam']),
                         label='Sim eps='+str(var[name_current]['epsilon']), linewidth=4, linestyle='None', markersize=15, Marker=next(marker))
-                ax.plot(lam_theory,-(1/2)*(1-1/lam_theory)**2 ,label='Theory eps='+str(var[name_current]['epsilon']), linewidth=8, linestyle='-')
+                ax.plot(lam_theory,shooting.s1_epslam_large_norm(var[name_current]['eps_mu'],lam_theory) ,label='Theory eps='+str(var[name_current]['epsilon']), linewidth=8, linestyle='-')
 
             else:
                 # ax.plot(var[name_current]['lam'], (var[name_current]['action_paths'] - shooting.action_clancy(var[name_current]['eps_mu'],var[name_current]['lam'],1.0)),label='Sim',
@@ -396,8 +404,8 @@ def plot_action(name,paramter=0,ylabel='',xlabel='',title='',savename='action_pl
     plt.rcParams.update({'font.size': 20})
     ax.tick_params(axis='both', which='major', labelsize=20)
     # plt.rcParams.update({'font.weight': 'bold'})
-    # plot_multi_epslam_const_epsmu_change()
-    plot_diff_lam_multi()
+    plot_multi_epslam_const_epsmu_change()
+    # plot_diff_lam_multi()
     plt.xlabel(xlabel,fontsize=20)
     plt.ylabel(ylabel,fontsize=20)
     # plt.title(title+ ', lam='+str(var[name[0]]['lam'])+ ', eps_lam='+str(var[name[0]]['eps_lam'][0]))
@@ -495,7 +503,7 @@ def import_folder_dict(dict):
 
 def import_all_folders_from_data():
     # import all the data from the files
-    os.chdir('/home/elad/optimal_path_numeric/Data')
+    os.chdir(os.getcwd()+ '/Data')
     # var=[]
     var={}
     for root, dirs, files in os.walk(".", topdown=False):
@@ -510,19 +518,20 @@ def import_all_folders_from_data():
 
 if __name__=='__main__':
     var,filenames= import_all_folders_from_data()
-    name_of_file='epslam01_eps_mu008_minus_lam_change_weak_hetro'
+    # name_of_file='epslam01_eps_mu008_minus_lam_change_weak_hetro'
     # name_of_file='epslam006_epsmu01_diff_lam'
     # name_of_file=['epslam005_epsmu_change_1_to_0_lam16_stoptime20_linspace20','epslam01_epsmu_change_0_to_1_lam16_stoptime20_linespace_40','epslam015_epsmu_change_1_to_0_lam16_stoptime20_linspace20']
     # name_of_file=['epslam002_epsmu002_diff_lam','epslam004_epsmu004_diff_lam','epslam006_epsmu006_diff_lam','epslam012_epsmu012_diff_lam','epslam014_epsmu014_diff_lam']
     # name_of_file=['epslam01_eps_mu01_minus_lam_change_weak_hetro','epslam01_eps_mu01_minus_lam_change_weak_hetro','epslam01_eps_mu008_minus_lam_change_weak_hetro','epslam01_eps_mu006_minus_lam_change_weak_hetro','epslam01_eps_mu004_minus_lam_change_weak_hetro','epslam01_eps_mu002_minus_lam_change_weak_hetro','epslam01_eps_mu002_lam_change_weak_hetro',
     #               'epslam01_eps_mu004_lam_change_weak_hetro','epslam01_eps_mu006_lam_change_weak_hetro','epslam01_eps_mu008_lam_change_weak_hetro','epslam01_eps_mu01_lam_change_weak_hetro','epslam01_eps_mu012_lam_change_weak_hetro',
     #               'epslam01_eps_mu014_lam_change_weak_hetro','epslam01_eps_mu016_lam_change_weak_hetro']
-    name_of_file=['epslam01_eps_mu0_lam_change_weak_hetro','epslam01_eps_mu002_lam_change_weak_hetro',
-                  'epslam01_eps_mu004_lam_change_weak_hetro','epslam01_eps_mu006_lam_change_weak_hetro','epslam01_eps_mu008_lam_change_weak_hetro','epslam01_eps_mu01_lam_change_weak_hetro','epslam01_eps_mu012_lam_change_weak_hetro',
-                  'epslam01_eps_mu014_lam_change_weak_hetro','epslam01_eps_mu016_lam_change_weak_hetro']
+    # name_of_file=['epslam01_eps_mu0_lam_change_weak_hetro','epslam01_eps_mu002_lam_change_weak_hetro',
+    #               'epslam01_eps_mu004_lam_change_weak_hetro','epslam01_eps_mu006_lam_change_weak_hetro','epslam01_eps_mu008_lam_change_weak_hetro','epslam01_eps_mu01_lam_change_weak_hetro','epslam01_eps_mu012_lam_change_weak_hetro',
+    #               'epslam01_eps_mu014_lam_change_weak_hetro','epslam01_eps_mu016_lam_change_weak_hetro']
     # name_of_file=['epslam005_minus_eps_mu005_lam_change_weak_hetro','epslam01_minus_eps_mu005_lam_change_weak_hetro','epslam01_eps_mu005_lam_change_weak_hetro']
 
-    # name_of_file=['epslam005_eps_mu_change_small02_linspace20_lam24','epslam01_eps_mu_change_small02_linspace20_lam24','epslam015_eps_mu_change_small02_linspace10_lam24']
+    # name_of_file=['epslam03_epsmu_changes_lam16_strong_hetro','epslam03_epsmu_changes_lam18_strong_hetro','epslam03_epsmu_changes_lam20_strong_hetro','epslam03_epsmu_changes_lam24_strong_hetro','epslam03_epsmu_changes_lam30_strong_hetro']
+    name_of_file=['epslam005_epsmu_changes_lam16_strong_hetro','epslam005_epsmu_changes_lam20_strong_hetro','epslam005_epsmu_changes_lam24_strong_hetro','epslam005_epsmu_changes_lam34_strong_hetro']
 
     # theory=shooting.y1_path_clancy(var[name_of_file]['path'][4][:,2],var[name_of_file]['path'][4][:,3],var[name_of_file]['eps_mu'][4],var[name_of_file]['lam'])
     # plot_one_path(name_of_file,u,pu,pu(var[name_of_file]['path'][4]),'(p1-p1(0))/eps_lam', 'p1', '(p1-p1(0))/eps_lam vs p1','dp1_norm_v_p1',True)
@@ -537,7 +546,7 @@ if __name__=='__main__':
     # plot_action(name_of_file,action_path(var[name_of_file]['path'][0]), 'action', 'eps_lam', 'Action vs eps_lam', 'action_plot_range_change_epsmu02_lam16_stoptime20', False)
     # plot_action(name_of_file,0, r'$\frac{2(A-S_{0})}{\epsilon_{\mu}^{2}+\epsilon_{\lambda}\epsilon_{\mu}+\epsilon_{\lambda}^{2}}$', r'$\Lambda$', '-2(S-S0)/(x0*eps_mu)^2 vs alpha','temp', True,0)
 
-    plot_action(name_of_file,0, r'$\frac{A-S_{0}}{\epsilon^{2}(1+\alpha+\alpha^{2})}$', r'$\Lambda$', '','temp', True,0)
+    plot_action(name_of_file,0, r'$A-\frac{1}{2}S_{0}$', r'$\Delta_{\mu}$', '','strong_hetro_action_v_delta_mu_hamilton_eq', False,0)
 
     # plot_diff_times(name_of_file, 0, y1, 'y1', 'action', 'Action vs y1', 'action_v_y1_sub', False)
     # plot_diff_times(name_of_file, 0, y1, 'y1', 'S-S(0)', 'S-S(0) vs y1', 'action_v_y1_epslam_changes_clancy_theory_error', False)
