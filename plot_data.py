@@ -144,8 +144,10 @@ def plot_diff_times(name,parameter,xfun,xlabel,ylabel,title,savename,divide_by_e
 
 def plot_one_path(name,xfun=None,yfun=None,paramter=0,ylabel='',xlabel='',title='',savename='path_plot',divide_by_eps=False):
     fig=plt.figure()
-    ax_p1=fig.add_subplot(1, 2, 1)
-    ax_p2=fig.add_subplot(1, 2, 2)
+    # ax_p1=fig.add_subplot(1, 2, 1)
+    # ax_p2=fig.add_subplot(1, 2, 2)
+    fig=plt.figure()
+    ax=fig.add_subplot(1, 1, 1)
     if xfun is False:
         if divide_by_eps is True:
             # paths_clancy, action_clancy, action_p_clancy = sim_diff_time(var[name], var[name]['epsilon'][4], var[name]['lin'][4],
@@ -170,10 +172,10 @@ def plot_one_path(name,xfun=None,yfun=None,paramter=0,ylabel='',xlabel='',title=
         else:
             for p,e,eps_lam in zip(var[name]['path'],var[name]['eps_mu'],var[name]['eps_lam']):
                 # ax.plot(var[name]['time_series'][9500:10000], (yfun(p)[9500:10000] - paramter),label='eps_lam='+str(eps_lam),linewidth=4)
-                # ax.plot(var[name]['time_series'], (yfun(p) - paramter),label='eps_lam='+str(eps_lam),linewidth=4)
-                ax.plot(var[name]['time_series'],
-                        phi_const(p2(p), y2(p), y1(p), y2(p), 1 + e, var[name]['lam']) ,
-                        linewidth=4, label='eps=' + str(eps_lam))
+                ax.plot(var[name]['time_series'], (yfun(p) - paramter),label='eps_lam='+str(eps_lam),linewidth=4)
+                # ax.plot(var[name]['time_series'],
+                #         phi_const(p2(p), y2(p), y1(p), y2(p), 1 + e, var[name]['lam']) ,
+                #         linewidth=4, label='eps=' + str(eps_lam))
 
                 # ax.plot(var[name]['time_series'], phi_const(p2(p), y2(p), y1(p), y2(p), 1 + e,var[name]['lam']), linewidth=4,label='eps_mu='+str(e))
                 # ax.plot(var[name]['time_series'], (shooting.y1star_epslam0(e,var[name]['lam'])/shooting.y2star_epslam0(e,var[name]['lam']) - paramter),label='eps_mu='+str(e),linewidth=4,linestyle='--')
@@ -186,8 +188,9 @@ def plot_one_path(name,xfun=None,yfun=None,paramter=0,ylabel='',xlabel='',title=
             # for p in var[name]['path']:
                 if not eps_lam==0:
                 # if not var[name]['eps_lam']==0:
-                    # ax.plot(xfun(p), (yfun(p) - paramter) /eps_lam,label='eps='+str(eps),linewidth=4)
-                    # w_theory = (shooting.y1_path_clancy_epslam0(p1(p), p2(p), eps_mu,var[name]['lam'])
+                    ax.plot(xfun(p), (yfun(p) - paramter) /eps_lam,label='eps='+str(eps),linewidth=4)
+
+                # w_theory = (shooting.y1_path_clancy_epslam0(p1(p), p2(p), eps_mu,var[name]['lam'])
                     #             + shooting.y2_path_clancy_epslam0(p1(p), p2(p), eps_mu, var[name]['lam'])) / 2
                     # u_theory = (shooting.y1_path_clancy_epslam0(p1(p), p2(p), eps_mu,var[name]['lam'])
                     #             - shooting.y2_path_clancy_epslam0(p1(p), p2(p), eps_mu, var[name]['lam'])) / 2
@@ -219,33 +222,156 @@ def plot_one_path(name,xfun=None,yfun=None,paramter=0,ylabel='',xlabel='',title=
         else:
             # for p,e,eps in zip(var[name]['path'],var[name]['eps_mu'],var[name]['epsilon']):
             for p in var[name]['path']:
-                ax.plot(xfun(p), (yfun(p) -paramter),linewidth=4)
+                # ax.plot(xfun(p), (yfun(p) +2*np.log(var[name]['lam']*(1-2*w(p)))),linewidth=4,label=r'Sim $\epsilon_{\mu}=$' + str(var[name]['eps_mu'][0]))
+
+
+                ax.plot(xfun(p), (yfun(p) -paramter),linewidth=4,label=r'Sim $\epsilon_{\mu}=\epsilon_{\lambda}=$' + str(var[name]['eps_mu'][0]))
+                # ax.plot(xfun(p),shooting.pu_miki_jason(u(p),var[name]['lam'],var[name]['eps_mu'][0]),linewidth=4,linestyle='--',label=r'Theory $\epsilon_{\mu}=\epsilon_{\lambda}=$' + str(var[name]['eps_mu'][0]))
+
+                # ax.plot(xfun(p), (yfun(p) -shooting.pw0_miki_jason_paper(w(p)*(1+(2/var[name]['lam'])*var[name]['eps_mu'][0]**2 ),var[name]['lam'] )),linewidth=4,label=r'Sim $\epsilon_{\mu}=\epsilon_{\lambda}=$' + str(var[name]['eps_mu'][0]))
+                # ax.plot(xfun(p),shooting.pw_miki_jason(w(p)*(1+(2/var[name]['lam'])*var[name]['eps_mu'][0]**2 ),var[name]['lam'],var[name]['eps_mu'][0]),linewidth=4,linestyle='--',label=r'Theory $\epsilon_{\mu}=\epsilon_{\lambda}=$' + str(var[name]['eps_mu'][0]))
+
+
+                # ax.plot(xfun(p),shooting.p2_path_clancy(y1(p),y2(p),var[name]['eps_mu'],var[name]['lam']),linewidth=4,linestyle='--',label=r'Theory $\epsilon_{\mu}=$' + str(var[name]['eps_mu'][0]))
+                y1star, y2star, p10, p20, p1star, p2star=shooting.eq_points_exact([var[name]['eps_lam'][0],var[name]['eps_mu'][0]],var[name]['lam'],1.0)
+                f = open(name_of_file + '_elad_data' '.csv', 'w')
+                with f:
+                    writer = csv.writer(f)
+                    writer.writerows([y1(p), y2(p), p1(p), p2(p)])
+                f = open('data_list' + '.txt', '+a')
+                with f:
+                    f.write('file name '+ name_of_file + '_elad_data: '+'\Lambda = '+str(var[name]['lam']) + ' eps_mu = ' +str(var[name]['eps_mu'][0]) + ' eps_lam = '+str(var[name]['eps_lam'][0]) +' y1= ' +str(y1star)+' y2 = '+
+                            str(y2star)+ ' p1star ='+ str(p1star) + ' p2star = '+str(p2star)+'\n')
+
                 # ax.plot(xfun(p), (yfun(p) -xfun(p)/shooting.linear_y1_div_y2(e,xfun(p))),linewidth=4)
                 # ax.plot(xfun(p), shooting.linear_y1_div_y2(e,xfun(p)),linewidth=4,linestyle='--')
                 # w_theory=(shooting.y1_path_clancy_epslam0(p1(p),p2(p),e,var[name]['lam'])+shooting.y2_path_clancy_epslam0(p1(p),p2(p),e,var[name]['lam']))/2
                 # ax.plot(xfun(p), (yfun(p) -w_theory),label='eps='+str(eps),linewidth=4)
-    y2_for_theory = np.linspace(q_star[1], 0, 10000)
-    y1_for_theory = np.linspace(q_star[0],0,10000)
-    ax_p1.plot(y1_for_theory,p1_strong_theory(y1_for_theory,eps_mu,var[name]['lam']), label='eps=' + str(eps), linewidth=4, linestyle='--')
-    ax_p2.plot(y2_for_theory,p2_strong_theory(y2_for_theory,eps_mu,var[name]['lam']), label='eps=' + str(eps), linewidth=4, linestyle='--')
-    plt.rcParams.update({'font.size': 15})
-    ax_p1.tick_params(axis='both', which='major', labelsize=20)
-    ax_p2.tick_params(axis='both', which='major', labelsize=20)
+    # y2_for_theory = np.linspace(q_star[1], 0, 10000)
+    # y1_for_theory = np.linspace(q_star[0],0,10000)
+    # ax_p1.plot(y1_for_theory,p1_strong_theory(y1_for_theory,eps_mu,var[name]['lam']), label='eps=' + str(eps), linewidth=4, linestyle='--')
+    # ax_p2.plot(y2_for_theory,p2_strong_theory(y2_for_theory,eps_mu,var[name]['lam']), label='eps=' + str(eps), linewidth=4, linestyle='--')
+    plt.rcParams.update({'font.size': 20})
+    ax.tick_params(axis='both', which='major', labelsize=20)
+    ax.tick_params(axis='both', which='major', labelsize=20)
     # plt.rcParams.update({'font.weight': 'bold'})
-    ax_p1.set_xlabel(xlabel,fontsize=20)
-    ax_p1.set_ylabel(ylabel,fontsize=20)
-    ax_p2.set_xlabel( r'$y_{2}$',fontsize=20)
-    ax_p2.set_ylabel('$(p_{2}-p_{2}^{(0)})/\Delta_{\lambda}}$',fontsize=20)
+    # ax_p1.set_xlabel(xlabel,fontsize=20)
+    # ax_p1.set_ylabel(ylabel,fontsize=20)
+    # ax_p2.set_xlabel( r'$y_{2}$',fontsize=20)
+    # ax_p2.set_ylabel('$(p_{2}-p_{2}^{(0)})/\Delta_{\lambda}}$',fontsize=20)
     # ax_p2.set_xticks([0.0,0.05,0.1,0.15,0.2])
     # ax_p1.set_xticks([-0.15,-0.1,-0.05,0.0])
     fig.set_size_inches((11.57,6.51),forward=False)
-    # plt.title(title+' lam='+str(var[name]['lam']))
+    plt.title(title+r' $\Lambda=$'+str(var[name]['lam']))
     # plt.title(title)
-    # plt.legend()
+    plt.legend()
+    plt.xlabel(xlabel,fontsize=15)
+    plt.ylabel(ylabel,fontsize=15)
     plt.tight_layout()
     fig.savefig(savename + '.png', dpi=500)
     plt.show()
     return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def plot_one_path_multi(name,xfun=None,yfun=None,paramter=0,ylabel='',xlabel='',title='',savename='path_plot',divide_by_eps=False):
+    fig=plt.figure()
+    # ax_p1=fig.add_subplot(1, 2, 1)
+    # ax_p2=fig.add_subplot(1, 2, 2)
+    fig=plt.figure()
+    ax=fig.add_subplot(1, 1, 1)
+    if xfun is False:
+        if divide_by_eps is True:
+            # paths_clancy, action_clancy, action_p_clancy = sim_diff_time(var[name], var[name]['epsilon'][4], var[name]['lin'][4],
+            #                                         var[name]['radius'][4], var[name]['shot_angle'][4])
+            for p,e,eps_mu,l,rad,shot,epsilon in zip(var[name]['path'],var[name]['eps_lam'],var[name]['eps_mu'],var[name]['lin'],var[name]['radius']
+                ,var[name]['shot_angle'],var[name]['epsilon']):
+                if not e==0:
+                    # ax.plot(var[name]['time_series'][9500:10000], (yfun(p) - paramter) /e,label='eps_lam='+str(e),linewidth=4)
+                    ax.plot(var[name]['time_series'], (yfun(p) - paramter) /e,label='eps_lam='+str(e),linewidth=4)
+        else:
+            for p,e,eps_lam in zip(var[name]['path'],var[name]['eps_mu'],var[name]['eps_lam']):
+                # ax.plot(var[name]['time_series'][9500:10000], (yfun(p)[9500:10000] - paramter),label='eps_lam='+str(eps_lam),linewidth=4)
+                ax.plot(var[name]['time_series'], (yfun(p) - paramter),label=r'$\epsilon_{\lambda}=$'+str(eps_lam),linewidth=4)
+                # ax.plot(var[name]['time_series'], yfun(p)/paramter,label=r'$\epsilon_{\lambda}=$'+str(eps_lam),linewidth=4)
+                # ax.plot(var[name]['time_series'], (yfun(p) - (shooting.y1_path_clancy_epslam0(p1(p),p2(p),e,var[name_of_file]['lam'])  - shooting.y2_path_clancy_epslam0(p1(p),p2(p),e,var[name_of_file]['lam']))/2),label=r'$\epsilon_{\lambda}=$'+str(eps_lam),linewidth=4)
+                # ax.plot(var[name]['time_series'], (  (shooting.y1_path_clancy_epslam0(p1(p),p2(p),e,var[name_of_file]['lam'])  - shooting.y2_path_clancy_epslam0(p1(p),p2(p),e,var[name_of_file]['lam']))/2 - paramter),label=r'$\epsilon_{\lambda}=$'+str(eps_lam),linewidth=4,linestyle='--')
+
+
+    else:
+        if divide_by_eps is True:
+            for p,eps_mu,eps,eps_lam,q_star in zip(var[name]['path'],var[name]['eps_mu'],var[name]['epsilon'],var[name]['eps_lam'],var[name]['qstar']):
+            # for p in var[name]['path']:
+                if not eps_lam==0:
+                # if not var[name]['eps_lam']==0:
+                    ax.plot(xfun(p), (yfun(p) - paramter) /eps_lam,label='eps='+str(eps),linewidth=4)
+
+        else:
+            # for p,e,eps in zip(var[name]['path'],var[name]['eps_mu'],var[name]['epsilon']):
+            for p,e in zip(var[name]['path'],var[name]['eps_lam']):
+                # ax.plot(xfun(p), (yfun(p) +2*np.log(var[name]['lam']*(1-2*w(p)))),linewidth=4,label=r'Sim $\epsilon_{\mu}=$' + str(var[name]['eps_mu'][0]))
+
+                if e!=0:
+                    ax.plot(xfun(p)/e, (yfun(p) -paramter),linewidth=4,label=r'Sim $\epsilon_{\mu}=\epsilon_{\lambda}=$' + str(var[name]['eps_mu'][0]))
+                # ax.plot(xfun(p), ((shooting.y1_path_clancy_epslam0(p1(p), p2(p), var[name_of_file]['eps_mu'][0],
+                #     var[name_of_file]['lam']) - shooting.y2_path_clancy_epslam0(p1(p),p2(p),var[name_of_file]['eps_mu'][0]
+                #     ,var[name_of_file]['lam'])) / 2 - paramter), label=r'$\epsilon_{\lambda}=$', linewidth=4, linestyle='--')
+
+                y1star, y2star, p10, p20, p1star, p2star=shooting.eq_points_exact([var[name]['eps_lam'][0],var[name]['eps_mu'][0]],var[name]['lam'],1.0)
+                f = open(name_of_file + '_elad_data' '.csv', 'w')
+                with f:
+                    writer = csv.writer(f)
+                    writer.writerows([y1(p), y2(p), p1(p), p2(p)])
+                f = open('data_list' + '.txt', '+a')
+                with f:
+                    f.write('file name '+ name_of_file + '_elad_data: '+'\Lambda = '+str(var[name]['lam']) + ' eps_mu = ' +str(var[name]['eps_mu'][0]) + ' eps_lam = '+str(var[name]['eps_lam'][0]) +' y1= ' +str(y1star)+' y2 = '+
+                            str(y2star)+ ' p1star ='+ str(p1star) + ' p2star = '+str(p2star)+'\n')
+
+    plt.rcParams.update({'font.size': 20})
+    ax.tick_params(axis='both', which='major', labelsize=20)
+    ax.tick_params(axis='both', which='major', labelsize=20)
+    fig.set_size_inches((11.57,6.51),forward=False)
+    plt.title(title+r' $\Lambda=$'+str(var[name]['lam'])+r', $\epsilon_{\mu}=$'+str(var[name]['eps_mu'][0]))
+    # plt.title(title)
+    # plt.legend()
+    plt.xlabel(xlabel,fontsize=15)
+    plt.ylabel(ylabel,fontsize=15)
+    plt.tight_layout()
+    fig.savefig(savename + '.png', dpi=500)
+    plt.show()
+    return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def plot_action(name,paramter=0,ylabel='',xlabel='',title='',savename='action_plot',divide_by_eps=False,xaxis=None):
@@ -559,16 +685,19 @@ def import_all_folders_from_data():
 if __name__=='__main__':
     var,filenames= import_all_folders_from_data()
     # name_of_file='epslam05_lam16_epsmu_linspace_086_to_098_linspace6_stoptime25'
+    name_of_file='eps_mu01_epslam_small_change_stoptime20'
+    # name_of_file='epsmu05_eplam_change_lam16_time20'
+    # name_of_file='epslam01_eps_mu_change_small015_linspace20_lam16'
 
-    name_of_file = ['epslam005_eps_mu_change_small02_linspace20_lam24',
-                    'epslam01_eps_mu_change_small02_linspace20_lam24',
-                    'epslam015_eps_mu_change_small02_linspace10_lam24',
-                    'epslam005_eps_mu_change_small02_linspace20_lam16',
-                    'epslam01_eps_mu_change_small02_linspace20_lam16',
-                    'epslam01_eps_mu_change_small02_linspace20_lam16',
-                    'epslam005_eps_mu_change_small02_linspace20_lam20',
-                    'epslam01_eps_mu_change_small02_linspace20_lam20',
-                    'epslam015_eps_mu_change_small02_linspace10_lam20']
+    # name_of_file = ['epslam005_eps_mu_change_small02_linspace20_lam24',
+    #                 'epslam01_eps_mu_change_small02_linspace20_lam24',
+    #                 'epslam015_eps_mu_change_small02_linspace10_lam24',
+    #                 'epslam005_eps_mu_change_small02_linspace20_lam16',
+    #                 'epslam01_eps_mu_change_small02_linspace20_lam16',
+    #                 'epslam01_eps_mu_change_small02_linspace20_lam16',
+    #                 'epslam005_eps_mu_change_small02_linspace20_lam20',
+    #                 'epslam01_eps_mu_change_small02_linspace20_lam20',
+    #                 'epslam015_eps_mu_change_small02_linspace10_lam20']
 
 
     # name_of_file = ['epslam01_eps_mu_change_small02_linspace20_lam16']
@@ -592,6 +721,10 @@ if __name__=='__main__':
 
     # theory=shooting.y1_path_clancy(var[name_of_file]['path'][4][:,2],var[name_of_file]['path'][4][:,3],var[name_of_file]['eps_mu'][4],var[name_of_file]['lam'])
     # plot_one_path(name_of_file,u,pu,pu(var[name_of_file]['path'][4]),'(p1-p1(0))/eps_lam', 'p1', '(p1-p1(0))/eps_lam vs p1','dp1_norm_v_p1',True)
+    plot_one_path_multi(name_of_file,False,u,u(var[name_of_file]['path'][4]),'u', 'Time', r'$u$-$u_{0}$ vs time','u_v_time_epsmu01_epslam_change_lam16_norm_no_legend',False)
+    # plot_one_path_multi(name_of_file,pu,u,0,'u', r'$p_{u}/\epsilon_{\lambda}$', r'$p_{u}$ vs u','u_v_pu_epsmu01_theory',False)
+
+
     # plot_one_path(name_of_file,y1,y1,0,'(p2-p2(0))/eps_lam', 'p2', '(p2-p2(0))/eps_lam vs p2','dp2_v_p2',False)
     # plot_one_path(name_of_file,u,pu,0,'w', 'time', 'w vs time','w_v_time_non_norm',True)
     # plot_one_path(name_of_file,y1,p1,0,r'$p_{1}/\Delta{\lambda}$', r'$y_{1}$', '','path_p1_v_y1_p2_v_y2_strong_hetro',True)
@@ -601,7 +734,7 @@ if __name__=='__main__':
     # plot_one_path(name_of_file,False,p1,0,'phi(p1,y1)/eps_lam', 'time', 'phi(p1,y1) vs time,','phi1_v_time_epsmu05_epslam_changes',False)
     # plot_one_path(name_of_file,False,p2,0,'phi(p2,y2)', 'time', 'phi(p2,y2) vs time,','phi_p2_y2_v_time_non_norm',False)
     # plot_action(name_of_file,action_path(var[name_of_file]['path'][0]), 'action', 'eps_lam', 'Action vs eps_lam', 'action_plot_range_change_epsmu02_lam16_stoptime20', False)
-    plot_action(name_of_file,0, r'$\widetilde{\phi}$', r'$\alpha$', '-2(S-S0)/(x0*eps_mu)^2 vs alpha','third_order_phi_v_alpha_multi_results', True,0)
+    # plot_action(name_of_file,0, r'$\widetilde{\phi}$', r'$\alpha$', '-2(S-S0)/(x0*eps_mu)^2 vs alpha','third_order_phi_v_alpha_multi_results', True,0)
 
     # plot_action(name_of_file,0, r'$\frac{s-\frac{1}{2}s_{0}}{\Delta_{\lambda}}$', r'$\Lambda$', '','strong_hetro_action_v_lam_hamilton_eq', True,0)
 

@@ -1072,6 +1072,13 @@ action_miki_jason_correction = lambda epsilon,lam:-(( (lam-1)*(1-12*lam+3*lam**2
 
 action_miki_jason_correction_norm = lambda lam:-(( (lam-1)*(1-12*lam+3*lam**2)+8*(lam**2)*np.log(lam) )/(4*lam**3))
 
+pu_miki_jason = lambda u,lam,epsilon: (2*epsilon*(lam-1)/lam)*(1+lam**2*2*u/(epsilon*(lam-1)))
+
+pw_miki_jason = lambda w,lam,epsilon: (3*(1-2*w)- (1+2*lam)/lam**2 + 2*w*(3+2*w)/(lam*(1-2*w)) )*epsilon**2
+
+# pw_miki_jason = lambda w,lam,epsilon: (3*(1-w)- (1+2*lam)/lam**2 + w*(3+w)/(lam*(1-w)) )*epsilon**2
+
+pw0_miki_jason_paper = lambda w,lam: -2*np.log(lam*(1-2*w))
 
 y1_path_clancy_epsmu0 = lambda p1,epsilon_lam,lam: 1/2+np.exp(-p1)/(lam*(-1+epsilon_lam))+1/(2 - (4*np.exp(p1)*epsilon_lam)/(1+epsilon_lam))
 
@@ -1191,6 +1198,9 @@ s1_epslam_large_norm = lambda eps_mu,lam: ((-1 + eps_mu)*((-1 + lam)**2*lam + (3
 s1_epslam_large_minus_clancy = lambda eps_lam,eps_mu,lam: (1/2)*(1/lam-1+np.log(lam)) + ((1 - eps_lam)*(-1 + eps_mu)*((-1 +
          lam)**2*lam + (3 - 4*lam +lam**2 + 2*lam*np.log(lam))*eps_mu))/(4*lam*(1 + eps_mu)*(-lam + (-2 +
          lam)*eps_mu)) - action_clancy(eps_mu,lam,1.0)
+
+
+
 
 
 def action_clancy(eps,beta,gamma):
@@ -1659,7 +1669,7 @@ def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,
             # sampleingtime = np.linspace(7.0,40.0,10)
             # sampleingtime=[7.0,9.0,10.0]
             # sampleingtime=[3.0,4.0,7.0,8.0,10.0]
-            sampleingtime=[25.0]
+            sampleingtime=[20.0]
             # sampleingtime=[11.0]
 
 
@@ -4867,7 +4877,7 @@ if __name__=='__main__':
 
 
     # int_lin_combo=1.001321728340301
-    # y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
+    y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
     # q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
     # y_0, p_0, y_star ,p_star, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
     # q_star=[y_0, p_star]
@@ -5042,12 +5052,13 @@ if __name__=='__main__':
     # epsilon_matrix = [[(0.0,0.1)]]
     # epsilon_matrix = [[(-0.5,0.98),(-0.4,0.98),(-0.1,0.98),(0.1,0.98),(0.4,0.98),(0.5,0.98)]]
     # epsilon_matrix = [[(0.0,0.1),(0.0,0.2),(0.0,0.3),(0.0,0.4),(0.0,0.5),(0.0,0.6),(0.0,0.9)]]
-    # epsilon_matrix = [[(-0.14,0.4),(-0.1,0.4),(-0.06,0.4),(-0.02,0.4),(0.0,0.4),(0.02,0.4),(0.06,0.4),(0.1,0.4),(0.14,0.4)]]
+    # epsilon_matrix = [[(-0.14,0.05),(-0.1,0.05),(-0.06,0.05),(-0.02,0.05),(0.0,0.05),(0.02,0.05),(0.06,0.05),(0.1,0.05),(0.14,0.05)]]
+    epsilon_matrix = [[(0.1,-0.14),(0.1,-0.1),(0.1,-0.06),(0.1,-0.02),(0.1,0.0),(0.1,0.02),(0.1,0.06),(0.1,0.1),(0.1,0.14)]]
     # epsilon_matrix = [[(0.0,0.4),(0.1,0.4),(0.2,0.4),(0.3,0.4),(0.4,0.4),(0.5,0.4),(0.6,0.4),(0.9,0.4)]]
     # epsilon_matrix = [[(0.1,e) for e in np.linspace(0.00001,0.9999,4)]]
     # epsilon_matrix = [[(-0.14,0.1),(-0.1,0.1),(-0.06,0.1),(-0.02,0.1),(0.02,0.1),(0.06,0.1),(0.1,0.1),(0.14,0.1)]]
     # epsilon_matrix = [[(0.05,e) for e in np.linspace(-0.15,0.15,20)]]
-    epsilon_matrix = [[(e,0.5) for e in np.linspace(0.86,0.98,6)]]
+    # epsilon_matrix = [[(0.5,-0.4)]]
     # epsilon_matrix = [0.84,0.5]
     # epsilon_matrix = [(0.0,0.0)]
     #
@@ -5090,7 +5101,7 @@ if __name__=='__main__':
     #
     #
     # # # folder_name='epsmu01_epslam09_difflam_stoptime20_lam16_to33_more2'
-    folder_name='epslam05_lam16_epsmu_linspace_086_to_098_linspace6_stoptime25'
+    folder_name='eps_lam01_epsmu_small_change_stoptime20'
     # record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle,sim_part_paths,sim_part_action)
     record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle)
 
