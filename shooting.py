@@ -49,6 +49,36 @@ def eq_points_exact(epsilon,beta,gamma):
     p2star= -np.log(-(lam - 2*epsilon_lam- epsilon_lam**2*(lam + 2*epsilon_mu) +np.sqrt(lam**2 + 4*lam*epsilon_lam*epsilon_mu- 4*(-2 + lam)*epsilon_lam**3*epsilon_mu+ epsilon_lam**4*(lam**2 - 4*(-1 + lam)*epsilon_mu**2) + epsilon_lam**2*(4 - 2*lam**2 + 4*lam*epsilon_mu**2)))/(2*(-1 + epsilon_lam)*(1 + epsilon_lam*epsilon_mu)))
     return y1star, y2star, 0.0, 0.0, p1star, p2star
 
+def eq_points_fraction(epsilon,beta,gamma,f):
+    epsilon_lam, epsilon_mu,lam = epsilon[0], epsilon[1],beta/gamma
+    y1star = (f*(-16*f**3*lam + 8*f**4*lam + (1 - 2*lam)*epsilon_lam*epsilon_mu**2 + 2*f*epsilon_mu*(2 - 2*lam +
+            lam*epsilon_mu + lam*epsilon_lam*(2 + epsilon_mu)) - 2*f**2*(-4*lam + epsilon_mu*(2 - 2*lam +
+            2*lam*epsilon_lam + lam*epsilon_mu)) - np.sqrt(4*(-1 + f)*f*(-1 + lam)*(-2 + 2*f - epsilon_mu)*
+            (2*f - epsilon_mu)*(-4*(-1 + f)*f + epsilon_lam*epsilon_mu)**2 + (8*(-1 + f)**2*f**2*(-2 + lam) -
+            4*(-1 + f)*f*((-1 + 2*f)*(-1 + lam) - epsilon_lam)*epsilon_mu + (2*(-1 + f)*f*lam + (1 - 2*f)*epsilon_lam)*
+            epsilon_mu**2)**2)))/(2*(-1 + f)*lam*(2*f - epsilon_lam)*(2*f - epsilon_mu)*epsilon_mu)
+    y2star = -(((-1 + f)*(8*f**4*(-2 + lam) + epsilon_lam*epsilon_mu**2 + 8*f**3*(4 - 2*lam - (-1 + lam)*epsilon_mu) +
+            2*f*epsilon_mu*(-2*(-1 + lam + epsilon_lam) - (lam + epsilon_lam)*epsilon_mu) + 2*f**2*(4*(-2 + lam) +
+            epsilon_mu*(-6 + 6*lam + 2*epsilon_lam +lam*epsilon_mu)) + np.sqrt(4*(-1 + f)*f*(-1 + lam)*(-2 + 2*f - epsilon_mu)
+            *(2*f - epsilon_mu)*(-4*(-1 + f)*f + epsilon_lam*epsilon_mu)**2 + (8*(-1 + f)**2*f**2*(-2 + lam) - 4*(-1 + f)*f*
+            ((-1 + 2*f)*(-1 + lam) - epsilon_lam)*epsilon_mu + (2*(-1 + f)*f*lam + (1 - 2*f)*epsilon_lam)*epsilon_mu**2)**2)))/
+            (8*f**4*lam - epsilon_lam*epsilon_mu**2 - 8*f**3*lam*(2 + epsilon_mu) - 2*f*epsilon_mu*(2 + 2*lam + lam*epsilon_mu) +
+            2*f**2*(4*lam + epsilon_mu*(2 + 6*lam + lam*epsilon_mu)) + np.sqrt(4*(-1 + f)*f*(-1 + lam)*(-2 + 2*f - epsilon_mu)*
+            (2*f - epsilon_mu)*(-4*(-1 + f)*f + epsilon_lam*epsilon_mu)**2 + (8*(-1 + f)**2*f**2*(-2 + lam) - 4*(-1 + f)*f*
+            ((-1 + 2*f)*(-1 + lam) - epsilon_lam)*epsilon_mu + (2*(-1 + f)*f*lam + (1 - 2*f)*epsilon_lam)*epsilon_mu**2)**2)))
+    p1star = np.log(2) + np.log(f) -np.log((8*f**4*lam - 8*f**3*lam*(2 + epsilon_lam) -2*f*epsilon_lam*(-2 + 2*lam
+            + lam*epsilon_lam) +2*f**2*(4*lam +epsilon_lam*(-2 + 6*lam + lam*epsilon_lam))+ epsilon_lam**2*epsilon_mu +
+            np.sqrt(4*(-1 + f)*f*(-1 + lam)*(-2 + 2*f - epsilon_lam)*(2*f - epsilon_lam)*(-4*(-1 + f)*f
+            + epsilon_lam*epsilon_mu)**2 + (8*(-1 + f)**2*f**2*(-2 + lam) -4*(-1 + f)*f*epsilon_lam*((-1 + 2*f)*
+            (-1 + lam) - epsilon_mu) +epsilon_lam**2*(2*(-1 + f)*f*lam + (1 - 2*f)*epsilon_mu))**2))/((-2 + 2*f - epsilon_lam)*
+            (4*(-1 + f)*f - epsilon_lam*epsilon_mu)))
+    p2star = np.log(2) - np.log((8*f**4*lam - 8*f**3*lam*(2 + epsilon_lam) - 2*f*epsilon_lam*(2 + 2*lam + lam*epsilon_lam)
+             + 2*f**2*(4*lam + epsilon_lam*(2 + 6*lam + lam*epsilon_lam)) - epsilon_lam**2*epsilon_mu +
+             np.sqrt(4*(-1+ f)*f*(-1 + lam)*(-2 + 2*f - epsilon_lam)*(2*f - epsilon_lam)*(-4*(-1 + f)*f+epsilon_lam*epsilon_mu)**2
+             + (8*(-1 + f)**2*f**2*(-2 + lam) - 4*(-1 + f)*f*epsilon_lam*((-1 + 2*f)*(-1 + lam) - epsilon_mu) + epsilon_lam**2*
+             (2*(-1 + f)*f*lam + (1 - 2*f)*epsilon_mu))**2))/((-1 + f)*(2*f - epsilon_lam)*(4*(-1 + f)*f - epsilon_lam*epsilon_mu)))
+    return y1star, y2star, 0.0, 0.0, p1star, p2star
+
 
 def plot_generic_theory(epsilon_lam,path,x0,lam,theory_type,ax,numeric_x,case_to_run,tf,alpha):
     if theory_type is 'zw':
@@ -1297,7 +1327,7 @@ def eq_points_epslam_one(epsilon,beta,gamma):
 
 
 
-def eq_hamilton_J(case_to_run,beta,epsilon=0.0,t=None,gamma=1.0):
+def eq_hamilton_J(case_to_run,beta,epsilon=0.0,t=None,gamma=1.0,f=1/2):
 
     def bimodal_mu_lam(lam=beta):
         epsilon_lam,epsilon_mu=epsilon[0],epsilon[1]
@@ -1315,6 +1345,25 @@ def eq_hamilton_J(case_to_run,beta,epsilon=0.0,t=None,gamma=1.0):
                                                    1 + epsilon_mu) * (np.exp(q[3]) - 1) - gamma * (np.exp(-q[3]) - 1)
         dq_dt_sus_inf = lambda q, t=None: np.array(
             [dy1_dt_sus_inf(q), dy2_dt_sus_inf(q), dtheta1_dt_sus_inf(q), dtheta2_dt_sus_inf(q)])
+        return dq_dt_sus_inf
+
+    def bimodal_clancy(lam=beta,f=1/2):
+        epsilon_lam,epsilon_mu=epsilon[0],epsilon[1]
+        dy1_dt = lambda q: -(q[0]/np.exp(q[2])) + (np.exp(q[2])*lam*(f - q[0])*(2*(-1 + f)*f*(q[0] + q[1])
+            + (q[0] - f*q[0] - f*q[1])*epsilon_lam)*(2*f - epsilon_mu))/(f*(4*(-1 + f)*f - epsilon_lam*epsilon_mu))
+        dy2_dt = lambda q: -(q[1]/np.exp(q[3])) - (np.exp(q[3])*lam*(-1 + f + q[1])*(2*(-1 + f)*f*(q[0] + q[1])
+                  +(q[0] - f*q[0] - f*q[1])*epsilon_lam)*(-2 + 2*f - epsilon_mu))/((-1 + f)*(4*(-1 + f)*f -epsilon_lam*epsilon_mu))
+        dp1_dt = lambda q: 1 - np.exp(-q[2]) + ((-1 + np.exp(q[2]))*lam*(2*(-1 + f)*f*(q[0] + q[1]) +
+                    (q[0] - f*q[0] - f*q[1])*epsilon_lam)*(2*f - epsilon_mu))/(f*(4*(-1 + f)*f - epsilon_lam*epsilon_mu)) -\
+                    (4*(-1 + f)*f*lam*(1 - epsilon_lam/(2*f))*(-((-1 + np.exp(q[3]))*(-1 + f + q[1])*
+                    (-2 + 2*f - epsilon_mu))/(2*(-1 + f)) +(-1 + np.exp(q[2]))*(f - q[0])*
+                    (1 - epsilon_mu/(2*f))))/(4*(-1 + f)*f - epsilon_lam*epsilon_mu)
+        dp2_dt = lambda q: 1 - np.exp(-q[3]) + ((-1 + np.exp(q[3]))*lam*(2*(-1 + f)*f*(q[0] + q[1]) +
+                         (q[0] - f*q[0] - f*q[1])*epsilon_lam)*(-2 + 2*f - epsilon_mu))/((-1 + f)*(4*(-1 + f)*f
+                        - epsilon_lam*epsilon_mu)) - (4*(-1 + f)*f*lam*(1 + epsilon_lam/(2 - 2*f))*(-((-1 + np.exp(q[3]))
+                        *(-1 + f + q[1])*(-2 + 2*f - epsilon_mu))/(2*(-1 + f)) + (-1 + np.exp(q[2]))*
+                        (f - q[0])*(1 - epsilon_mu/(2*f))))/(4*(-1 + f)*f - epsilon_lam*epsilon_mu)
+        dq_dt_sus_inf = lambda q, t=None: np.array([dy1_dt(q), dy2_dt(q), dp1_dt(q), dp2_dt(q)])
         return dq_dt_sus_inf
 
     if case_to_run is '1d':
@@ -1441,6 +1490,11 @@ def eq_hamilton_J(case_to_run,beta,epsilon=0.0,t=None,gamma=1.0):
         dq_dt_sus_inf = bimodal_mu_lam(beta/(1+epsilon[0]*epsilon[1]))
         y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy = eq_points_epslam_one(epsilon, beta, gamma)
         return y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, ndft.Jacobian(dq_dt_sus_inf)
+    elif case_to_run is 'f':
+        dq_dt_sus_inf = bimodal_clancy(beta,f)
+        y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy = eq_points_fraction(epsilon, beta, gamma,f)
+        return y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf, ndft.Jacobian(dq_dt_sus_inf)
+
     return None
 
 
@@ -1622,7 +1676,7 @@ def guess_path_lam(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,org_rad
     return lin_combo,radius, one_shot(shot_angle, lin_combo,q_star,radius,np.linspace(0.0,s,sample_size),one_shot_dt,J,shot_dq_dt)
 
 
-def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,one_shot_dt,radius,lin_combo=1.00008204478397,org_shot_angle=np.pi/4-0.785084,action_times=None):
+def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,one_shot_dt,radius,lin_combo=1.00008204478397,org_shot_angle=np.pi/4-0.785084,action_times=None,f=1/2):
     guessed_paths,guessed_lin_combo,guessed_qstar,guessed_action,guessed_r,guessed_angle,guess_action_time_series,guessed_action_part=[],[],[],[],[],[],[],[]
     shot_angle=org_shot_angle
     if type(beta) is list:
@@ -1673,7 +1727,7 @@ def multi_eps_normalized_path(case_to_run,list_of_epsilons,beta,gamma,numpoints,
             # sampleingtime=[11.0]
 
 
-            y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,eps,t,gamma)
+            y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, shot_dq_dt,J = eq_hamilton_J(case_to_run,beta,eps,t,gamma,f)
             q_star = [y1_0, y2_0, p1_star_clancy, p2_star_clancy]
             # lam=beta if type(beta) is float else beta/(1+eps[0]*eps[1])
             lin_combo,temp_radius,shot_angle,path=guess_path(sampleingtime,shot_angle,lin_combo,q_star,one_shot_dt,radius,numpoints,J,shot_dq_dt)
@@ -4801,7 +4855,7 @@ def record_data(folder_name,beta,gamma,sim,stoptime,int_lin_combo,numpoints,epsi
 if __name__=='__main__':
     #Network Parameters
     beta, gamma = 1.6, 1.0
-
+    f=1/4
     # beta=[1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3.0]
     # beta=[1.6,1.8,2.0,2.4,2.8,3.0,3.3]
     # beta=[1.4,1.6,1.8,2.2,2.4]
@@ -4819,7 +4873,7 @@ if __name__=='__main__':
     # list_of_epsilons=[(0.002,0.1)]
     # list_of_epsilons = [(0.5, 0.05)]
     # list_of_epsilons=0.1
-    sim='x'
+    sim='f'
 
     # A way to confirm the hamiltion's numericaly
     # Jacobian_H = ndft.Jacobian(H)
@@ -4846,13 +4900,17 @@ if __name__=='__main__':
     # r=1.6384e-05
     # r = 1.6384e-08
     # r = 6.7108864e-05
-    r = 5e-10
+    # r = 5e-10
+    # r = 1e-9
+    r = 0.001048576
+
+
 
 
     angle=2.510116743320488
 
     # epsilon=(0.0,1e-5)
-    epsilon=(0.5,0.9)
+    epsilon=(0.1,-0.0675)
     #lin002=0.9999930516412242
     #int_lin_combo001=0.9999658209936237
     # int_lin_combolam5=0.9999658419290037
@@ -4872,13 +4930,17 @@ if __name__=='__main__':
     # int_lin_combo=0.9999994244804999
     # int_lin_combo = 1.0032283170284608
     # int_lin_combo = 1.0035317699739623
-    int_lin_combo = 1.000092580681047
+    # int_lin_combo = 1.000092580681047
+    # int_lin_combo = 0.9998363674450926
+    int_lin_combo = 0.6314170593040642
+
+
 
 
 
     # int_lin_combo=1.001321728340301
-    y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
-    # q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
+    y1_0, y2_0, p1_0, p2_0, p1_star_clancy, p2_star_clancy, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma,f)
+    q_star=[y1_0, y2_0,  p1_star_clancy, p2_star_clancy]
     # y_0, p_0, y_star ,p_star, dq_dt_sus_inf,J=eq_hamilton_J(sim, beta, epsilon, t, gamma)
     # q_star=[y_0, p_star]
     # man_div_path_and_fine_tuning(-np.pi/2,r,t,0.9920007999,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim)
@@ -4893,7 +4955,7 @@ if __name__=='__main__':
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.999446100281335,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
     # man_div_path_and_fine_tuning(0.031415926535897934,r,t,0.9999999991570927,dt,np.array(q_star),J,dq_dt_sus_inf,beta,sim,epsilon,beta/gamma)
     # man_div_path_and_fine_tuning(2.510116743320488,r,t,1.0010598135825204,dt,np.array(q_star),J,dq_dt_sus_inf,beta,sim,epsilon,beta/gamma)
-    # man_div_path_and_fine_tuning(0.04239816339744822,r,t,1.001128480225469,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
+    man_div_path_and_fine_tuning(2.510116743320488,r,t,0.9998483208545411,dt,q_star,J,dq_dt_sus_inf,beta,sim,epsilon,beta/gamma)
 
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.9993800670968565,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
     # man_div_path_and_fine_tuning(0.04239816339744822,r,t,0.9991402897986594,dt,q_star,J,dq_dt_sus_inf,beta/(1+epsilon[0]*epsilon[1]),sim,epsilon,beta/gamma)
@@ -5001,7 +5063,7 @@ if __name__=='__main__':
     # epsilon_matrix = [[(0.0,0.1),(0.0,0.2),(0.0,0.3),(0.0,0.4),(0.0,0.5),(0.0,0.6),(0.0,0.9),(0.0,0.98)]]
     # epsilon_matrix = [[(0.0,0.5),(-0.14,0.5),(-0.1,0.5),(-0.06,0.5),(-0.02,0.5),(0.02,0.5),(0.06,0.5),(0.1,0.5),(0.14,0.5)]]
     # epsilon_matrix = [[0.5]]
-    epsilon_matrix = [[(-0.14,0.5),(-0.1,0.5),(-0.06,0.5),(-0.02,0.5),(0.0,0.5),(0.02,0.5),(0.06,0.5),(0.1,0.5),(0.14,0.5)]]
+    # epsilon_matrix = [[(-0.14,0.5),(-0.1,0.5),(-0.06,0.5),(-0.02,0.5),(0.0,0.5),(0.02,0.5),(0.06,0.5),(0.1,0.5),(0.14,0.5)]]
 
 
 
@@ -5015,7 +5077,7 @@ if __name__=='__main__':
     #
     # sim=['x','x','x','x','x']
     # sim=['x','x','x']
-    sim=['x']
+    sim=['f']
     # sim=['x','lm']
     # sim=['lm']
 
@@ -5053,12 +5115,13 @@ if __name__=='__main__':
     # epsilon_matrix = [[(-0.5,0.98),(-0.4,0.98),(-0.1,0.98),(0.1,0.98),(0.4,0.98),(0.5,0.98)]]
     # epsilon_matrix = [[(0.0,0.1),(0.0,0.2),(0.0,0.3),(0.0,0.4),(0.0,0.5),(0.0,0.6),(0.0,0.9)]]
     # epsilon_matrix = [[(-0.14,0.05),(-0.1,0.05),(-0.06,0.05),(-0.02,0.05),(0.0,0.05),(0.02,0.05),(0.06,0.05),(0.1,0.05),(0.14,0.05)]]
-    epsilon_matrix = [[(0.1,-0.14),(0.1,-0.1),(0.1,-0.06),(0.1,-0.02),(0.1,0.0),(0.1,0.02),(0.1,0.06),(0.1,0.1),(0.1,0.14)]]
+    # epsilon_matrix = [[(0.1,-0.14),(0.1,-0.1),(0.1,-0.06),(0.1,-0.02),(0.1,0.0),(0.1,0.02),(0.1,0.06),(0.1,0.1),(0.1,0.14)]]
+    epsilon_matrix = [[(0.0,0.0)]]
     # epsilon_matrix = [[(0.0,0.4),(0.1,0.4),(0.2,0.4),(0.3,0.4),(0.4,0.4),(0.5,0.4),(0.6,0.4),(0.9,0.4)]]
     # epsilon_matrix = [[(0.1,e) for e in np.linspace(0.00001,0.9999,4)]]
     # epsilon_matrix = [[(-0.14,0.1),(-0.1,0.1),(-0.06,0.1),(-0.02,0.1),(0.02,0.1),(0.06,0.1),(0.1,0.1),(0.14,0.1)]]
     # epsilon_matrix = [[(0.05,e) for e in np.linspace(-0.15,0.15,20)]]
-    # epsilon_matrix = [[(0.5,-0.4)]]
+    # epsilon_matrix = [[(0.1,0.1)]]
     # epsilon_matrix = [0.84,0.5]
     # epsilon_matrix = [(0.0,0.0)]
     #
@@ -5071,7 +5134,7 @@ if __name__=='__main__':
     # times=[0.01,10,15,20]
     for case,epsilons in zip(sim,epsilon_matrix):
     # for case,b in zip(sim,beta):
-        path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
+        path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,None,f)
         # path,sampletime,lin_combo,qstar,path_action,rad,ang=multi_eps_normalized_path(case, epsilon_matrix, beta, gamma, numpoints, dt, r, int_lin_combo,angle)
         # path, sampletime, lin_combo, qstar, path_action, rad, ang,part_path,part_act=multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times)
         # sim_paths.append(multi_eps_normalized_path(case, epsilons, beta, gamma, numpoints, dt, r, int_lin_combo,angle,times))
@@ -5101,8 +5164,9 @@ if __name__=='__main__':
     #
     #
     # # # folder_name='epsmu01_epslam09_difflam_stoptime20_lam16_to33_more2'
-    folder_name='eps_lam01_epsmu_small_change_stoptime20'
-    # record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle,sim_part_paths,sim_part_action)
+    # folder_name='fraction025_sim_lam16_epslam01_epsmu_change_minus014_to014_stoptime20'
+    folder_name = 'temp3'
+# record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle,sim_part_paths,sim_part_action)
     record_data(folder_name,beta,gamma,sim,sim_sampletime,sim_lin_combo,numpoints,epsilon_matrix,sim_paths,sim_action,sim_qstar,sim_r,sim_angle)
 
     # # plot_time_v_action_one_eps_0(sim_paths,epsilon_matrix,sim,beta,gamma,times)

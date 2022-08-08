@@ -272,23 +272,6 @@ def plot_one_path(name,xfun=None,yfun=None,paramter=0,ylabel='',xlabel='',title=
     plt.show()
     return
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def plot_one_path_multi(name,xfun=None,yfun=None,paramter=0,ylabel='',xlabel='',title='',savename='path_plot',divide_by_eps=False):
     fig=plt.figure()
     # ax_p1=fig.add_subplot(1, 2, 1)
@@ -355,24 +338,6 @@ def plot_one_path_multi(name,xfun=None,yfun=None,paramter=0,ylabel='',xlabel='',
     fig.savefig(savename + '.png', dpi=500)
     plt.show()
     return
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 def plot_action(name,paramter=0,ylabel='',xlabel='',title='',savename='action_plot',divide_by_eps=False,xaxis=None):
     fig=plt.figure()
@@ -686,6 +651,7 @@ if __name__=='__main__':
     var,filenames= import_all_folders_from_data()
     # name_of_file='epslam05_lam16_epsmu_linspace_086_to_098_linspace6_stoptime25'
     name_of_file='eps_mu01_epslam_small_change_stoptime20'
+    # name_of_file='temp2'
     # name_of_file='epsmu05_eplam_change_lam16_time20'
     # name_of_file='epslam01_eps_mu_change_small015_linspace20_lam16'
 
